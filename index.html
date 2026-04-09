@@ -35,10 +35,7 @@
   --shl:0 6px 28px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:clamp(13px,3.8vw,16px);overscroll-behavior:none}
-
-@media(min-width:480px){html,body{font-size:15px}}
-@media(min-width:768px){html,body{font-size:16px}}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;overscroll-behavior:none}
 
 /* ── HEADER ── */
 .hdr{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:center;gap:11px;height:54px;box-shadow:var(--sh)}
@@ -327,17 +324,7 @@ tr:last-child td{border-bottom:none}
 .list-item-del{background:var(--rlt);color:var(--red);border:none;border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;flex-shrink:0}
 .list-item-input{flex:1;font-size:13px;padding:5px 8px}
 
-@media(min-width:600px){
-  .sec-top,.sec-body{max-width:680px;margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px}
-  .frow{gap:14px}
-  .bnav{justify-content:center;gap:40px}
-  .nbtn .ni-wrap{width:52px;height:52px;font-size:22px}
-}
-@media(min-width:900px){
-  .sec-top,.sec-body{max-width:820px;padding-left:28px;padding-right:28px}
-  .frow{gap:16px}
-  .frow.c3{grid-template-columns:1fr 1fr 1fr 1fr}
-}
+@media(min-width:700px){.sec-top,.sec-body{max-width:700px;margin-left:auto;margin-right:auto;padding-left:18px;padding-right:18px}.frow{gap:12px}}
 </style>
 </head>
 <body>
@@ -357,7 +344,7 @@ tr:last-child td{border-bottom:none}
 <div class="sec active" id="sec-income">
   <div class="sec-top">
     <div class="ptitle">📥 Приход <span class="pill" id="in-pill">новая запись</span></div>
-    <div class="ccard" id="cc-income">
+    <div class="ccard open" id="cc-income">
       <div class="ccard-head" onclick="toggleCard('cc-income')">
         <div class="ccard-title">✏️ <span id="cc-income-label">Добавить приход</span></div>
         <span class="ccard-arrow">▼</span>
@@ -406,7 +393,7 @@ tr:last-child td{border-bottom:none}
 <div class="sec" id="sec-expense">
   <div class="sec-top">
     <div class="ptitle">📤 Расход <span class="pill" id="out-pill">списание</span></div>
-    <div class="ccard" id="cc-expense">
+    <div class="ccard open" id="cc-expense">
       <div class="ccard-head" onclick="toggleCard('cc-expense')">
         <div class="ccard-title">✏️ <span id="cc-expense-label">Добавить расход</span></div>
         <span class="ccard-arrow">▼</span>
@@ -469,7 +456,7 @@ tr:last-child td{border-bottom:none}
     </div>
     <!-- Top controls for Обрезки: add form + place filter -->
     <div id="panel-top-rem" style="display:none">
-      <div class="ccard" id="cc-rem">
+      <div class="ccard open" id="cc-rem">
         <div class="ccard-head" onclick="toggleCard('cc-rem')">
           <div class="ccard-title">✏️ Добавить обрезок</div>
           <span class="ccard-arrow">▼</span>
@@ -539,7 +526,7 @@ tr:last-child td{border-bottom:none}
   <div class="sec-body">
 
   <!-- История — сворачиваемая -->
-  <div class="ccard" id="cc-hist">
+  <div class="ccard open" id="cc-hist">
     <div class="ccard-head" onclick="toggleCard('cc-hist')">
       <div class="ccard-title">📋 История операций</div>
       <span class="ccard-arrow">▼</span>
@@ -781,7 +768,7 @@ async function manualSync(){
     localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
     localStorage.setItem('lm7_places',JSON.stringify(PLACES));
     fillAllSelects();
-    renderAll();
+    renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist();
     setSyncStatus('ok');
     toast('✅ Данные обновлены','ok');
   } else {
@@ -844,7 +831,7 @@ function upStats(){ document.getElementById('hdr-s').textContent=`${db.income.le
 // ══════════════════════════════════════ INIT
 async function init(){
   load(); fillAllSelects();
-  renderAll();
+  renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist();
 
   // Тянем свежие данные из облака
   setSyncStatus('load');
@@ -858,7 +845,7 @@ async function init(){
     localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
     localStorage.setItem('lm7_places',JSON.stringify(PLACES));
     fillAllSelects();
-    renderAll();
+    renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist();
     setSyncStatus('ok');
   } else {
     setSyncStatus('err');
@@ -872,7 +859,7 @@ async function init(){
       if(fresh){
         applyPayload(fresh);
         fillAllSelects();
-        renderAll();
+        renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist();
         setSyncStatus('ok');
       }
     }
@@ -1055,7 +1042,7 @@ function saveIncome(){
     rec.id=Date.now(); rec.dt=now(); db.income.push(rec);
     document.getElementById('cc-income').classList.remove('open'); toast('✅ Приход записан','ok');
   }
-  save(); renderAll();
+  save(); renderIn(); renderStock();
 }
 function editIncome(id){
   const r=db.income.find(x=>x.id===id); if(!r) return;
@@ -1121,7 +1108,7 @@ function saveExpense(){
     const idx=db.expense.findIndex(r=>r.id===editMode.expense);
     if(idx>=0) db.expense[idx]={...db.expense[idx],...rec};
     cancelEdit('expense'); toast('✏️ Расход обновлён','ok');
-    save(); renderAll(); return;
+    save(); renderOut(); renderStock(); renderRemByMat(); return;
   }
   rec.id=Date.now(); rec.dt=now(); db.expense.push(rec);
   let newScrapRecId=null;
@@ -1149,7 +1136,7 @@ function saveExpense(){
     setTimeout(()=>openScrapFindModal(mat, det.w, det.l), 400);
     return;
   }
-  save(); renderAll();
+  save(); renderOut(); renderRemByMat();
   ['out-det','out-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('out-qty').value='1';
   document.getElementById('out-pre').value=DEFAULT_SIZE;
@@ -1465,22 +1452,11 @@ function renderRemByMat(){
   });
 }
 
-// ══════════════════════════════════════ RENDER ALL
-// Перерисовывает всё — вызывать после любого изменения данных
-function renderAll(){
-  renderAll();
-}
-
 // ══════════════════════════════════════ DELETE
 function del(tbl,id){
   confirm2('Удалить эту запись?',()=>{
-    if(tbl==='expense'){
-      // Удаляем связанные авто-обрезки (созданные этим расходом)
-      // Они идут сразу после записи расхода по id (id+1, id+2)
-      db.remainders=db.remainders.filter(r=>r.id!==id+1&&r.id!==id+2);
-    }
     db[tbl]=db[tbl].filter(r=>r.id!==id);
-    save(); renderAll();
+    save(); renderIn(); renderOut(); renderRemByMat(); renderStock(); renderHist();
     toast('Запись удалена');
   });
 }
