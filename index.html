@@ -738,14 +738,17 @@ function sbPayload(){
 }
 
 async function sbPush(){
-  // Сохраняем в Supabase (upsert)
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/material_data?id=eq.main`,{
-      method:'PATCH',
-      headers:{...SB_HDR,'Prefer':'return=minimal'},
-      body:JSON.stringify({payload:sbPayload(), updated_at:new Date().toISOString()})
+    // Upsert — создаёт или обновляет запись с id='main'
+    const r=await fetch(`${SB_URL}/rest/v1/material_data`,{
+      method:'POST',
+      headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify({id:'main', payload:sbPayload(), updated_at:new Date().toISOString()})
     });
-    if(!r.ok) throw new Error(r.status);
+    if(!r.ok){
+      const txt=await r.text();
+      throw new Error(`${r.status}: ${txt}`);
+    }
     setSyncStatus('ok');
   }catch(e){
     setSyncStatus('err');
@@ -1496,7 +1499,7 @@ function renderRemByMat(){
 // ══════════════════════════════════════ RENDER ALL
 // Перерисовывает всё — вызывать после любого изменения данных
 function renderAll(){
-  renderAll();
+  renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist();
 }
 
 // ══════════════════════════════════════ DELETE
