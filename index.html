@@ -757,9 +757,20 @@ tr:last-child td{border-bottom:none}
     <p id="scrap-find-desc" style="color:var(--muted);font-size:12px;margin-bottom:12px;line-height:1.5"></p>
     <div id="scrap-find-list"></div>
     <div id="scrap-find-actions" style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
-      <button class="btn bprim bfull" id="scrap-plan-btn" onclick="applyScrapPlan()" style="display:none">✅ Применить план автоматически</button>
+      <button class="btn bprim bfull" id="scrap-plan-btn" onclick="confirmScrapPlan()" style="display:none">✅ Применить план автоматически</button>
       <button class="btn bghost bfull" onclick="closeScrapFindModal()">Закрыть</button>
     </div>
+  </div>
+</div>
+
+<!-- ════ МОДАЛКА: Подтверждение вырезки из обрезка ════ -->
+<div class="overlay" id="scrap-cut-modal">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="scrap-cut-title">✂️ Вырезать из обрезка?</div>
+    <div id="scrap-cut-body" style="margin-bottom:16px"></div>
+    <button class="btn bsuc bfull" id="scrap-cut-yes" style="margin-bottom:9px" onclick="confirmScrapCut()">✂️ Да, вырезать</button>
+    <button class="btn bghost bfull" onclick="closeScrapCutModal()">Отмена</button>
   </div>
 </div>
 </main>
@@ -2187,7 +2198,102 @@ function applyScrapPlan(){
   save(); renderRemByMat(); renderOut(); closeScrapFindModal();
 }
 
+// ── Pending cut state ──
+let pendingCutIdx = null;   // индекс в matches для ручного выбора
+let pendingCutPlan = false; // true = применяем весь план
+
+function _scrapCutInfoHtml(m){
+  // Строит информационный блок о том что произойдёт с обрезком
+  const p = m.piece;
+  const remText = m.remaining.length
+    ? m.remaining.map(r=>`<b>${r.w}×${r.l} мм</b> (${+(r.w*r.l/1e6).toFixed(3)} м²)`).join(' + ')
+    : null;
+  const willDelete = m.remaining.length === 0 || p.qty <= 1;
+  const rows = [
+    `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:10px 13px;font-size:13px;line-height:1.8">`,
+    `<div><span style="color:var(--muted);font-size:11px;font-weight:800">ОБРЕЗОК</span><br><b style="color:var(--accent);font-size:15px">${p.w}×${p.l} мм</b>${p.qty>1?` · <span style="color:var(--muted)">${p.qty} шт.</span>`:''}</div>`,
+    `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">`,
+  ];
+  if(remText){
+    rows.push(`<span style="color:var(--muted);font-size:11px;font-weight:800">ОСТАНЕТСЯ</span><br><span style="color:var(--green)">${remText}</span>`);
+  } else {
+    rows.push(`<span style="color:var(--muted);font-size:11px;font-weight:800">ОСТАНЕТСЯ</span><br><span style="color:var(--red)">🗑️ Обрезок будет удалён (отход &lt; 300 мм)</span>`);
+  }
+  if(p.qty > 1){
+    rows.push(`<div style="margin-top:6px;color:var(--muted);font-size:12px">Будет использована 1 шт., останется ${p.qty-1} шт.</div>`);
+  }
+  rows.push('</div></div>');
+  return rows.join('');
+}
+
+function _scrapPlanInfoHtml(plan, matches){
+  const rows = plan.map(p=>{
+    const m = matches[p.matchIdx];
+    const remText = m.remaining.length
+      ? m.remaining.map(r=>`${r.w}×${r.l}`).join(' + ')
+      : '🗑️ отход';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--accent);font-weight:800">${m.piece.w}×${m.piece.l}</span>
+      <span style="color:var(--muted)">→</span>
+      <span style="color:var(--green);font-weight:800">${p.takeTotal} шт.</span>
+      <span style="flex:1;text-align:right;font-size:11px;color:var(--muted)">${remText}</span>
+    </div>`;
+  }).join('');
+  return `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:10px 13px;font-size:13px">${rows}</div>`;
+}
+
 function selectScrapFind(i){
+  if(!pendingScrapFind) return;
+  const m = pendingScrapFind.matches[i];
+  const rec = db.remainders.find(r=>r.id===m.recId);
+  if(!rec) return;
+  const p = rec.pieces[m.pi];
+  if(!p) return;
+
+  // Показываем модалку подтверждения
+  pendingCutIdx = i;
+  pendingCutPlan = false;
+  document.getElementById('scrap-cut-title').textContent = '✂️ Вырезать из этого обрезка?';
+  document.getElementById('scrap-cut-body').innerHTML = _scrapCutInfoHtml(m);
+  document.getElementById('scrap-cut-modal').classList.add('show');
+}
+
+function confirmScrapPlan(){
+  if(!pendingScrapFind) return;
+  const {plan, matches} = pendingScrapFind;
+  if(!plan.length){ toast('Нет обрезков для применения','err'); return; }
+
+  pendingCutPlan = true;
+  pendingCutIdx = null;
+  const needQty = pendingScrapFind.needQty;
+  const taken = plan.reduce((s,p)=>s+p.takeTotal, 0);
+  document.getElementById('scrap-cut-title').textContent = `✅ Применить план?`;
+  document.getElementById('scrap-cut-body').innerHTML =
+    `<p style="color:var(--muted);font-size:12px;margin-bottom:10px;line-height:1.5">
+      Нужно: <b>${needQty} шт.</b> · Будет взято: <b style="color:var(--green)">${taken} шт.</b> из ${plan.length} обрезков
+    </p>`
+    + _scrapPlanInfoHtml(plan, matches);
+  document.getElementById('scrap-cut-yes').textContent = '✅ Применить план';
+  document.getElementById('scrap-cut-modal').classList.add('show');
+}
+
+function confirmScrapCut(){
+  closeScrapCutModal();
+  if(pendingCutPlan){
+    applyScrapPlan();
+  } else if(pendingCutIdx !== null){
+    _doSelectScrapFind(pendingCutIdx);
+  }
+}
+
+function closeScrapCutModal(){
+  document.getElementById('scrap-cut-modal').classList.remove('show');
+  // Сбрасываем кнопку на дефолт
+  const btn = document.getElementById('scrap-cut-yes');
+  if(btn) btn.textContent = '✂️ Да, вырезать';
+}
+
+function _doSelectScrapFind(i){
   if(!pendingScrapFind) return;
   const m = pendingScrapFind.matches[i];
   const rec = db.remainders.find(r=>r.id===m.recId);
@@ -2202,7 +2308,6 @@ function selectScrapFind(i){
   if(!p) return;
 
   if(m.remaining.length === 0){
-    // Обрезок полностью уходит
     if(p.qty > 1) p.qty--;
     else {
       rec.pieces.splice(m.pi, 1);
