@@ -34,6 +34,43 @@
   --sh:0 3px 14px rgba(0,0,0,.4);
   --shl:0 6px 28px rgba(0,0,0,.6);
 }
+
+/* ── СВЕТЛАЯ ТЕМА ── */
+body.theme-light{
+  --bg:#F0F2F5;
+  --surface:#FFFFFF;
+  --card:#FFFFFF;
+  --card2:#F0F2F5;
+  --border:#D8DDE3;
+  --text:#1A2027;
+  --muted:#6B7A87;
+  --accent:#D4A800;
+  --aclt:rgba(212,168,0,.12);
+  --green:#1FA363;
+  --glt:rgba(31,163,99,.12);
+  --blue:#2B85C2;
+  --blt:rgba(43,133,194,.12);
+  --red:#D94F4F;
+  --rlt:rgba(217,79,79,.12);
+  --gold:#D4A800;
+  --goldlt:rgba(212,168,0,.11);
+  --fav:#FFF8DC;
+  --favborder:#E8D48A;
+  --edit:#8B46D4;
+  --editlt:rgba(139,70,212,.11);
+  --sh:0 2px 10px rgba(0,0,0,.10);
+  --shl:0 4px 20px rgba(0,0,0,.15);
+}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:14px 0 6px}
+.theme-toggle-label{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.theme-toggle-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px}
+.tgl-track{width:52px;height:28px;border-radius:14px;background:var(--card2);border:1.5px solid var(--border);position:relative;cursor:pointer;transition:background .22s,border-color .22s;flex-shrink:0}
+.tgl-track.on{background:var(--accent);border-color:var(--accent)}
+.tgl-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .22s,background .22s;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1}
+.tgl-track.on .tgl-thumb{transform:translateX(24px)}
+body.theme-light .tgl-thumb{background:#fff}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:clamp(13px,3.8vw,16px);overscroll-behavior:none}
 
@@ -169,7 +206,16 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .stkmath .res.zero{color:var(--muted)}
 .stkmath .res.low{color:var(--gold)}
 
-/* ── SEARCH ── */
+/* ── AUTOCOMPLETE ── */
+.ac-wrap{position:relative}
+.ac-dropdown{position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--card);border:1px solid var(--accent);border-top:none;border-radius:0 0 var(--rs) var(--rs);max-height:200px;overflow-y:auto;box-shadow:var(--shl);display:none}
+.ac-dropdown.show{display:block}
+.ac-item{padding:10px 12px;font-size:14px;font-weight:600;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);transition:background .12s}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item.focused{background:var(--aclt);color:var(--accent)}
+.ac-item mark{background:none;color:var(--accent);font-weight:800}
+
+
 .swrap{position:relative}
 .swrap input{padding-left:38px}
 .swrap::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
@@ -375,8 +421,10 @@ tr:last-child td{border-bottom:none}
         </div>
         <div class="fg" style="margin-bottom:9px">
           <label>Материал</label>
-          <select id="in-mat" onchange="onSelectChange('in-mat','in-mat-custom')"></select>
-          <div class="custom-input-wrap" id="in-mat-custom"><input type="text" placeholder="Название материала"><button class="custom-add-btn" onclick="addCustomOption('in-mat','in-mat-custom','mats')">+ Добавить</button></div>
+          <div class="ac-wrap">
+            <input type="text" id="in-mat" placeholder="Начните вводить..." autocomplete="off" oninput="acInput('in-mat')" onfocus="acInput('in-mat')" onblur="acBlur('in-mat')" onkeydown="acKey(event,'in-mat')">
+            <div class="ac-dropdown" id="ac-in-mat"></div>
+          </div>
         </div>
         <div class="fg" style="margin-bottom:9px">
           <label>Стандартный размер</label>
@@ -399,6 +447,7 @@ tr:last-child td{border-bottom:none}
   <div class="sec-body">
     <div class="ptitle" style="font-size:14px;margin-bottom:4px;margin-top:10px">Последние поступления</div>
     <p style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:700">Нажмите строку для редактирования</p>
+    <div id="in-place-filter" class="place-filter-row" style="margin-bottom:8px;flex-wrap:wrap;gap:5px;display:flex"></div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="twrap" style="border:none;border-radius:0">
         <table><thead><tr><th>#</th><th>Дата</th><th>Материал</th><th>Размер</th><th>Кол-во</th><th>Место</th><th></th></tr></thead>
@@ -424,11 +473,13 @@ tr:last-child td{border-bottom:none}
         </div>
         <div class="fg" style="margin-bottom:9px">
           <label>Материал</label>
-          <select id="out-mat" onchange="onSelectChange('out-mat','out-mat-custom')"></select>
-          <div class="custom-input-wrap" id="out-mat-custom"><input type="text" placeholder="Название"><button class="custom-add-btn" onclick="addCustomOption('out-mat','out-mat-custom','mats')">+ Добавить</button></div>
+          <div class="ac-wrap">
+            <input type="text" id="out-mat" placeholder="Начните вводить..." autocomplete="off" oninput="acInput('out-mat')" onfocus="acInput('out-mat')" onblur="acBlur('out-mat')" onkeydown="acKey(event,'out-mat')">
+            <div class="ac-dropdown" id="ac-out-mat"></div>
+          </div>
         </div>
         <div class="fg" style="margin-bottom:9px">
-          <label>Стандартный размер листа <span style="font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">(без листа — только изделие)</span></label>
+          <label>Размер листа</label>
           <select id="out-pre" onchange="onSelectChange('out-pre','out-pre-custom'); parseDetSize()"></select>
           <div class="custom-input-wrap" id="out-pre-custom"><input type="text" placeholder="напр. 1300х2500"><button class="custom-add-btn" onclick="addCustomOption('out-pre','out-pre-custom','sizes')">+ Добавить</button></div>
         </div>
@@ -447,7 +498,12 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="sec-body">
     <div class="ptitle" style="font-size:14px;margin-bottom:4px;margin-top:10px">Последние расходы</div>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:700">Нажмите строку для редактирования</p>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700">Нажмите строку для редактирования</p>
+    <div class="fchips" style="margin-bottom:8px">
+      <div class="fchip on" id="out-fchip-all"   onclick="setOutFilter('')">Все</div>
+      <div class="fchip"    id="out-fchip-full"  onclick="setOutFilter('full')">📋 Листы</div>
+      <div class="fchip"    id="out-fchip-partial" onclick="setOutFilter('partial')">✂️ Обрезки</div>
+    </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="twrap" style="border:none;border-radius:0">
         <table><thead><tr><th>#</th><th>Дата</th><th>Материал</th><th>Размер</th><th>Кол-во</th><th>Изделие</th><th></th></tr></thead>
@@ -460,14 +516,16 @@ tr:last-child td{border-bottom:none}
 <!-- ══ СКЛАД ══ -->
 <div class="sec" id="sec-stock">
   <div class="sec-top">
-    <div class="ptitle">📦 Склад</div>
+    <div class="ptitle" style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+      <span>📦 Склад</span>
+      <div class="swrap" style="flex:1;margin:0"><input type="text" id="stk-s" placeholder="Поиск..." oninput="renderStock();renderRemByMat()"></div>
+    </div>
     <div class="itabrow">
-      <button class="itab active" onclick="setStockTab(this,'balance')">📊 Наличие</button>
+      <button class="itab active" onclick="setStockTab(this,'balance')">📊 Листы</button>
       <button class="itab" onclick="setStockTab(this,'rem')">✂️ Обрезки</button>
     </div>
-    <!-- Top controls for Наличие -->
+    <!-- Top controls for Листы -->
     <div id="panel-top-balance">
-      <div class="swrap" style="margin-bottom:9px"><input type="text" id="stk-s" placeholder="Поиск материала..." oninput="renderStock()"></div>
       <div class="fchips">
         <div class="fchip" id="fchip-low" onclick="toggleFilter('low')">⚠️ Мало (≤2)</div>
         <div class="fchip" id="fchip-fav" onclick="toggleFilter('fav')">⭐ Избранные</div>
@@ -483,17 +541,18 @@ tr:last-child td{border-bottom:none}
         <div class="ccard-body">
           <div class="fg" style="margin-bottom:9px">
             <label>Материал</label>
-            <select id="rem-mat" onchange="onSelectChange('rem-mat','rem-mat-custom')"></select>
-            <div class="custom-input-wrap" id="rem-mat-custom"><input type="text" placeholder="Название"><button class="custom-add-btn" onclick="addCustomOption('rem-mat','rem-mat-custom','mats')">+ Добавить</button></div>
+            <div class="ac-wrap">
+              <input type="text" id="rem-mat" placeholder="Начните вводить..." autocomplete="off" oninput="acInput('rem-mat')" onfocus="acInput('rem-mat')" onblur="acBlur('rem-mat')" onkeydown="acKey(event,'rem-mat')">
+              <div class="ac-dropdown" id="ac-rem-mat"></div>
+            </div>
           </div>
           <div class="fg" style="margin-bottom:9px">
             <label>Место хранения</label>
             <select id="rem-place" onchange="onSelectChange('rem-place','rem-place-custom')"></select>
             <div class="custom-input-wrap" id="rem-place-custom"><input type="text" placeholder="Стеллаж А, ящик 3..."><button class="custom-add-btn" onclick="addCustomOption('rem-place','rem-place-custom','places')">+ Добавить</button></div>
           </div>
-          <div class="frow c3" style="margin-bottom:9px">
-            <div class="fg"><label>Ширина (мм)</label><input type="number" id="rem-w" placeholder="300" inputmode="numeric"></div>
-            <div class="fg"><label>Длина (мм)</label><input type="number" id="rem-l" placeholder="500" inputmode="numeric"></div>
+          <div class="frow" style="margin-bottom:9px">
+            <div class="fg"><label>Размер (мм)</label><input type="text" id="rem-size" placeholder="234×2132" autocomplete="off" inputmode="text"></div>
             <div class="fg"><label>Кол-во шт.</label><input type="number" id="rem-qty" value="1" inputmode="numeric" min="1"></div>
           </div>
           <button class="btn bprim bfull" onclick="addPiece()">➕ Добавить обрезок</button>
@@ -505,6 +564,7 @@ tr:last-child td{border-bottom:none}
       </div>
       <div class="fchips" style="margin-bottom:8px">
         <div class="fchip" id="fchip-rem-big" onclick="toggleRemBig()">📐 ≥ 0,5 м²</div>
+        <div class="fchip" id="fchip-rem-small" onclick="toggleRemSmall()">✂️ ≤ 0,5 м²</div>
       </div>
     </div>
   </div><!-- /sec-top -->
@@ -621,6 +681,23 @@ tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <!-- Тема -->
+  <div class="card">
+    <div class="ctitle">Внешний вид</div>
+    <div class="theme-toggle-wrap">
+      <div class="theme-toggle-label">
+        <span id="theme-icon">🌙</span>
+        <div>
+          <div id="theme-name">Тёмная тема</div>
+          <div class="theme-toggle-sub" id="theme-sub">Текущая тема приложения</div>
+        </div>
+      </div>
+      <div class="tgl-track" id="theme-track" onclick="toggleTheme()">
+        <div class="tgl-thumb" id="theme-thumb">🌙</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Резервная копия -->
   <div class="card">
     <div class="ctitle">Резервная копия и синхронизация</div>
@@ -679,7 +756,10 @@ tr:last-child td{border-bottom:none}
     <div class="mtitle">🔍 Подобрать из обрезков</div>
     <p id="scrap-find-desc" style="color:var(--muted);font-size:12px;margin-bottom:12px;line-height:1.5"></p>
     <div id="scrap-find-list"></div>
-    <button class="btn bghost bfull" style="margin-top:10px" onclick="closeScrapFindModal()">Закрыть</button>
+    <div id="scrap-find-actions" style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn bprim bfull" id="scrap-plan-btn" onclick="applyScrapPlan()" style="display:none">✅ Применить план автоматически</button>
+      <button class="btn bghost bfull" onclick="closeScrapFindModal()">Закрыть</button>
+    </div>
   </div>
 </div>
 </main>
@@ -703,6 +783,39 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <script>
+// ══════════════════════════════════════ THEME
+(function(){
+  // Применяем тему до первого рендера — без мигания
+  function applyStoredTheme(){
+    if(localStorage.getItem('lm_theme')==='light') document.body.classList.add('theme-light');
+  }
+  if(document.body) applyStoredTheme();
+  else document.addEventListener('DOMContentLoaded', applyStoredTheme);
+})();
+
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('theme-light');
+  localStorage.setItem('lm_theme', isLight ? 'light' : 'dark');
+  updateThemeUI();
+  toast(isLight ? '☀️ Светлая тема' : '🌙 Тёмная тема', 'info');
+}
+
+function updateThemeBtns(){
+  updateThemeUI();
+}
+
+function updateThemeUI(){
+  const isLight = document.body.classList.contains('theme-light');
+  const track  = document.getElementById('theme-track');
+  const thumb  = document.getElementById('theme-thumb');
+  const icon   = document.getElementById('theme-icon');
+  const name   = document.getElementById('theme-name');
+  if(track)  track.classList.toggle('on', isLight);
+  if(thumb)  thumb.textContent = isLight ? '☀️' : '🌙';
+  if(icon)   icon.textContent  = isLight ? '☀️' : '🌙';
+  if(name)   name.textContent  = isLight ? 'Светлая тема' : 'Тёмная тема';
+}
+
 // ══════════════════════════════════════ CONSTANTS
 let MATS=["ПВХ 1 мм","ПВХ 2 мм","ПВХ 3 мм","ПВХ 3 мм (чёр.)","ПВХ 5 мм","ПВХ 5 мм (чёр.)","ПВХ 8 мм","ПВХ 10 мм","Акрил 2 мм","Акрил 2 мм (про.)","Акрил 3 мм","Акрил 3 мм (про.)","Акрил 5 мм","Акрил 5 мм (про.)","Акрил 8 мм (про.)","Акрил 10 мм","Акрил 10 мм (про.)","Акрил 3 мм (гол.)","Акрил 3 мм (жёл.)","Акрил 3 мм (зел.)","Акрил 3 мм (кра.)","Акрил 3 мм (ора.)","Акрил 3 мм (роз.)","Акрил 3 мм (син.)","Акрил 3 мм (зер.)","Акрил 3 мм (чёр.)","Акрил 5 мм (чёр.)","АКП 3 мм","АКП 4 мм","АКП 3 мм (дер.)","АКП 3 мм (зол.)","АКП 3 мм (кор.)","АКП 3 мм (кра.)","АКП 3 мм (сер.)","АКП 3 мм (серы.)","АКП 3 мм (чёр.)","АКП 3 мм (иск.сер.)","АБС 1 мм","АБС 1 мм (зер.)","АБС 1 мм (зол.)","АБС 1 мм (брон.)","АБС 1 мм (сере.)","АБС 1 мм (ц.зол.)","АБС 1 мм (ц.сер.)","Аллюминий","Жесть","Полик-нат 3 мм","Полик-нат 4 мм","Полик-нат 5 мм","Полик-нат 6 мм","ПЭТ 0,3 мм","ПЭТ 0,7 мм","ПЭТ 1 мм","ПЭТ 2 мм","ПЭТ 3 мм","Фанера 3 мм","Фанера 4 мм","Фанера 6 мм","Фанера 10 мм","МДФ 8 мм","МДФ 10 мм","МДФ 16 мм","МДФ 25 мм","МДФ 50 мм","ДСП 16 мм"];
 let SIZES=["1220х2440","2050х3050","1500х2440","1500х4000","1220х4000","1500х5000","1200х600","2750х2070","1250х2050","1240х615","1220х900","1500х1500","1250х2500","2800х2070"];
@@ -715,7 +828,10 @@ let pending=[];
 let htab='', stockTab='balance', filterLow=false, filterFav=false;
 let favorites=new Set();
 let remPlaceFilter='';
+let inPlaceFilter='';
+let outFilter='';
 let remBigFilter=false;
+let remSmallFilter=false;
 let pendingScrapRecId=null;
 let editMode={income:null,expense:null};
 let pieceEditState=null;
@@ -845,6 +961,7 @@ function upStats(){ document.getElementById('hdr-s').textContent=`${db.income.le
 async function init(){
   load(); fillAllSelects();
   renderAll();
+  updateThemeBtns();
 
   // Тянем свежие данные из облака
   setSyncStatus('load');
@@ -877,11 +994,27 @@ async function init(){
       }
     }
   });
+
+  // Периодическая синхронизация каждые 5 минут
+  setInterval(async()=>{
+    if(document.visibilityState!=='visible') return;
+    const fresh=await sbPull();
+    if(fresh){
+      applyPayload(fresh);
+      localStorage.setItem('lm7',JSON.stringify(db));
+      localStorage.setItem('lm7_fav',JSON.stringify([...favorites]));
+      localStorage.setItem('lm7_mats',JSON.stringify(MATS));
+      localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
+      localStorage.setItem('lm7_places',JSON.stringify(PLACES));
+      fillAllSelects();
+      renderAll();
+      setSyncStatus('ok');
+    }
+  }, 5*60*1000);
 }
 function fillAllSelects(){
-  fillSelect('in-mat',MATS,true); fillSelect('out-mat',MATS,true); fillSelect('rem-mat',MATS,true);
   fillSelect('in-pre',SIZES,false,DEFAULT_SIZE);
-  fillSelect('out-pre',SIZES,true,DEFAULT_SIZE,'— без листа —');
+  fillSelect('out-pre',SIZES,true,null,'— без листа —');
   fillSelect('in-place',PLACES,true); fillSelect('rem-place',PLACES,true);
   const op=document.getElementById('out-pre');
   if(op){
@@ -899,6 +1032,66 @@ function fillSelect(id,list,withCustom,defaultVal,noSheetLabel){
   if(prev&&prev!==CUSTOM_VAL&&[...el.options].some(o=>o.value===prev)) el.value=prev;
   else if(defaultVal) el.value=defaultVal;
 }
+// ══════════════════════════════════════ AUTOCOMPLETE
+let acFocusIdx={};
+function acHighlight(s,q){
+  if(!q) return s;
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return s.replace(re,'<mark>$1</mark>');
+}
+function acInput(id){
+  const inp=document.getElementById(id);
+  const drop=document.getElementById('ac-'+id);
+  if(!inp||!drop) return;
+  const q=inp.value.trim().toLowerCase();
+  const matches=q
+    ? MATS.filter(m=>m.toLowerCase().includes(q))
+    : MATS;
+  acFocusIdx[id]=-1;
+  if(!matches.length){drop.classList.remove('show');return;}
+  drop.innerHTML=matches.map((m,i)=>`<div class="ac-item" data-val="${m}" onmousedown="acSelect('${id}','${m.replace(/'/g,"\\'")}')"><span>${acHighlight(m,q)}</span></div>`).join('');
+  drop.classList.add('show');
+}
+// Алиас — принимает elem и id отдельно (для динамических id в шаблонах)
+function acInputEl(elem, id){
+  const drop=document.getElementById('ac-'+id);
+  if(!elem||!drop) return;
+  const q=elem.value.trim().toLowerCase();
+  const matches=q ? MATS.filter(m=>m.toLowerCase().includes(q)) : MATS;
+  acFocusIdx[id]=-1;
+  if(!matches.length){drop.classList.remove('show');return;}
+  drop.innerHTML=matches.map(m=>`<div class="ac-item" data-val="${m}" onmousedown="acSelect('${id}','${m.replace(/'/g,"\\'")}')"><span>${acHighlight(m,q)}</span></div>`).join('');
+  drop.classList.add('show');
+}
+function acSelect(id,val){
+  const inp=document.getElementById(id);
+  if(inp) inp.value=val;
+  const drop=document.getElementById('ac-'+id);
+  if(drop) drop.classList.remove('show');
+  acFocusIdx[id]=-1;
+}
+function acBlur(id){
+  setTimeout(()=>{
+    const drop=document.getElementById('ac-'+id);
+    if(drop) drop.classList.remove('show');
+  },150);
+}
+function acKey(e,id){
+  const drop=document.getElementById('ac-'+id);
+  if(!drop||!drop.classList.contains('show')) return;
+  const items=drop.querySelectorAll('.ac-item');
+  if(!items.length) return;
+  let idx=acFocusIdx[id]??-1;
+  if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(idx+1,items.length-1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(idx-1,-1);}
+  else if(e.key==='Enter'&&idx>=0){e.preventDefault();acSelect(id,items[idx].dataset.val);return;}
+  else if(e.key==='Escape'){drop.classList.remove('show');acFocusIdx[id]=-1;return;}
+  else return;
+  acFocusIdx[id]=idx;
+  items.forEach((it,i)=>it.classList.toggle('focused',i===idx));
+  if(idx>=0) items[idx].scrollIntoView({block:'nearest'});
+}
+
 function onSelectChange(selId,wrapId){
   const wrap=document.getElementById(wrapId); if(!wrap) return;
   const sel=document.getElementById(selId); if(!sel) return;
@@ -911,8 +1104,7 @@ function addCustomOption(selId,wrapId,listKey){
   if(!val){toast('Введите значение','err');return;}
   const list=listKey==='mats'?MATS:listKey==='sizes'?SIZES:PLACES;
   if(!list.includes(val)) list.push(val);
-  if(listKey==='mats'){fillSelect('in-mat',MATS,true);fillSelect('out-mat',MATS,true);fillSelect('rem-mat',MATS,true);}
-  if(listKey==='sizes'){fillSelect('in-pre',SIZES,false,DEFAULT_SIZE);fillSelect('out-pre',SIZES,true,DEFAULT_SIZE,'— без листа —');}
+  if(listKey==='sizes'){fillSelect('in-pre',SIZES,false,DEFAULT_SIZE);fillSelect('out-pre',SIZES,true,null,'— без листа —');}
   if(listKey==='places'){fillSelect('in-place',PLACES,true);fillSelect('rem-place',PLACES,true);}
   const selEl=document.getElementById(selId);
   if(selEl) selEl.value=val;
@@ -1015,6 +1207,7 @@ function calcScraps(shW, shL, detW, detL){
 function isSheetSelected(){ const v=document.getElementById('out-pre').value; return v&&v!==''&&v!==CUSTOM_VAL; }
 function getSizeWL(selectId){ const v=document.getElementById(selectId).value; const m=v.replace(/[хxX×]/,'|').split('|').map(n=>parseInt(n)); return(m.length===2&&m[0]>0&&m[1]>0)?{w:m[0],l:m[1]}:{w:1220,l:2440}; }
 function parseSizeStr(s){ if(!s) return null; const m=s.replace(/[хxX×*]/,'|').split('|').map(v=>parseInt(v.trim())); return(m.length===2&&m[0]>0&&m[1]>0)?{w:m[0],l:m[1]}:null; }
+function normSizeStr(s){ if(!s) return s; const p=parseSizeStr(s); return p?`${p.w}×${p.l}`:s; }
 
 function parseDetSize(){
   const detStr=document.getElementById('out-det').value; const det=parseSizeStr(detStr);
@@ -1041,10 +1234,12 @@ function parseDetSize(){
 
 // ══════════════════════════════════════ INCOME
 function saveIncome(){
-  const mat=document.getElementById('in-mat').value; const size=document.getElementById('in-pre').value;
+  const mat=(document.getElementById('in-mat').value||'').trim();
+  const size=document.getElementById('in-pre').value;
   const placeVal=document.getElementById('in-place').value; const qty=parseInt(document.getElementById('in-qty').value);
-  if(!mat||mat===CUSTOM_VAL||!size||size===CUSTOM_VAL||!qty||qty<1){toast('Заполните все поля','err');return;}
+  if(!mat||!size||size===CUSTOM_VAL||!qty||qty<1){toast('Заполните все поля','err');return;}
   const place=placeVal===CUSTOM_VAL?'':placeVal;
+  if(!MATS.includes(mat)){MATS.push(mat);save();}
   const sz=getSizeWL('in-pre');
   const rec={mat,size,w:sz.w,l:sz.l,qty,place,note:document.getElementById('in-note').value.trim()};
   if(editMode.income!==null){
@@ -1053,6 +1248,9 @@ function saveIncome(){
     cancelEdit('income'); toast('✏️ Приход обновлён','ok');
   } else {
     rec.id=Date.now(); rec.dt=now(); db.income.push(rec);
+    document.getElementById('in-mat').value='';
+    document.getElementById('in-qty').value='1';
+    document.getElementById('in-note').value='';
     document.getElementById('cc-income').classList.remove('open'); toast('✅ Приход записан','ok');
   }
   save(); renderAll();
@@ -1066,9 +1264,11 @@ function editIncome(id){
   document.getElementById('in-save-btn').textContent='💾 Сохранить изменения';
   document.getElementById('in-save-btn').className='btn bedit bbig';
   document.getElementById('in-pill').textContent='редактирование'; document.getElementById('in-pill').className='pill edit';
-  document.getElementById('in-mat').value=r.mat; document.getElementById('in-pre').value=r.size;
-  document.getElementById('in-qty').value=r.qty; document.getElementById('in-note').value=r.note||'';
-  const sel=document.getElementById('in-place'); if(r.place&&[...sel.options].some(o=>o.value===r.place)) sel.value=r.place;
+  document.getElementById('in-mat').value=r.mat; document.getElementById('in-pre').value=r.size;  document.getElementById('in-qty').value=r.qty; document.getElementById('in-note').value=r.note||'';
+  const sel=document.getElementById('in-place');
+  if(r.place&&[...sel.options].some(o=>o.value===r.place)) sel.value=r.place;
+  else if(!r.place&&sel.options.length>0) sel.selectedIndex=0;
+  onSelectChange('in-place','in-place-custom');
   renderIn(); document.querySelector('#sec-income .sec-body').scrollTop=0;
 }
 function cancelEdit(type){
@@ -1089,17 +1289,30 @@ function cancelEdit(type){
     document.getElementById('out-save-btn').textContent='📤 Записать расход';
     document.getElementById('out-save-btn').className='btn bdng bbig';
     document.getElementById('out-pill').textContent='списание'; document.getElementById('out-pill').className='pill';
+    document.getElementById('out-mat').value='';
     document.getElementById('scrap-preview').style.display='none';
     document.getElementById('scrap-neg-preview').style.display='none';
     renderOut();
   }
 }
 function renderIn(){
+  // ── Place filter chips ──
+  const filterRow=document.getElementById('in-place-filter');
+  if(filterRow){
+    const usedPlaces=[...new Set(db.income.map(r=>r.place||'').filter(Boolean))].sort();
+    if(usedPlaces.length>1){
+      filterRow.style.display='flex';
+      filterRow.innerHTML=usedPlaces.map(p=>`<span class="place-chip ${inPlaceFilter===p?'on':''}" onclick="setInPlace('${p.replace(/'/g,"\\'")}')">${p}</span>`).join('');
+    } else { filterRow.style.display='none'; filterRow.innerHTML=''; }
+  }
   const tb=document.getElementById('in-tbody');
-  const rows=[...db.income].reverse().slice(0,60);
+  let rows=[...db.income].reverse();
+  if(inPlaceFilter) rows=rows.filter(r=>(r.place||'')=== inPlaceFilter);
+  rows=rows.slice(0,60);
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>';return;}
+  const total=db.income.filter(r=>!inPlaceFilter||(r.place||'')=== inPlaceFilter).length;
   tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.income===r.id?'is-editing':''}" onclick="editIncome(${r.id})">
-    <td style="color:var(--muted);font-size:11px">${db.income.length-i}</td>
+    <td style="color:var(--muted);font-size:11px">${total-i}</td>
     <td style="font-size:11px;color:var(--muted)">${r.dt}</td>
     <td style="font-weight:800;font-size:12px;color:var(--accent)">${r.mat}</td>
     <td style="font-size:12px">${r.size}</td>
@@ -1108,11 +1321,13 @@ function renderIn(){
     <td><button class="dbtn" onclick="event.stopPropagation();del('income',${r.id})">✕</button></td>
   </tr>`).join('');
 }
+function setInPlace(p){inPlaceFilter=(inPlaceFilter===p?'':p);renderIn();}
 
 // ══════════════════════════════════════ EXPENSE
 function saveExpense(){
-  const mat=document.getElementById('out-mat').value; const qty=parseInt(document.getElementById('out-qty').value);
-  if(!mat||mat===CUSTOM_VAL||!qty||qty<1){toast('Заполните все поля','err');return;}
+  const mat=(document.getElementById('out-mat').value||'').trim(); const qty=parseInt(document.getElementById('out-qty').value);
+  if(!mat||!qty||qty<1){toast('Заполните все поля','err');return;}
+  if(!MATS.includes(mat)){MATS.push(mat);save();}
   const detStr=document.getElementById('out-det').value.trim(); const det=parseSizeStr(detStr);
   const sheetSel=isSheetSelected(); let size='—',w=0,l=0,etype='partial';
   if(sheetSel){const sz=getSizeWL('out-pre');size=document.getElementById('out-pre').value;w=sz.w;l=sz.l;etype='full';}
@@ -1139,20 +1354,22 @@ function saveExpense(){
   } else if(etype==='partial'&&det){
     // Показываем модалку поиска подходящих обрезков
     save(); renderOut();
+    document.getElementById('out-mat').value='';
     ['out-det','out-note'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('out-qty').value='1';
-    document.getElementById('out-pre').value=DEFAULT_SIZE;
+    document.getElementById('out-pre').value='';
     document.getElementById('scrap-preview').style.display='none';
     document.getElementById('scrap-neg-preview').style.display='none';
     document.getElementById('cc-expense').classList.remove('open');
     toast('📤 Расход записан','ok'); renderStock();
-    setTimeout(()=>openScrapFindModal(mat, det.w, det.l), 400);
+    setTimeout(()=>openScrapFindModal(mat, det.w, det.l, qty), 400);
     return;
   }
   save(); renderAll();
+  document.getElementById('out-mat').value='';
   ['out-det','out-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('out-qty').value='1';
-  document.getElementById('out-pre').value=DEFAULT_SIZE;
+  document.getElementById('out-pre').value='';
   document.getElementById('scrap-preview').style.display='none';
   document.getElementById('scrap-neg-preview').style.display='none';
   document.getElementById('cc-expense').classList.remove('open');
@@ -1175,12 +1392,28 @@ function editExpense(id){
   document.getElementById('out-note').value=r.note||'';
   parseDetSize(); renderOut(); window.scrollTo(0,0);
 }
+function setOutFilter(f){
+  outFilter=f;
+  ['all','full','partial'].forEach(k=>{
+    const el=document.getElementById(`out-fchip-${k}`);
+    if(el) el.classList.toggle('on', (k===''||k==='all') ? f==='' : f===k);
+  });
+  renderOut();
+}
 function renderOut(){
+  // Update filter chip active state
+  ['all','full','partial'].forEach(k=>{
+    const el=document.getElementById(`out-fchip-${k}`);
+    if(el) el.classList.toggle('on', k==='all' ? outFilter==='' : outFilter===k);
+  });
   const tb=document.getElementById('out-tbody');
-  const rows=[...db.expense].reverse().slice(0,60);
+  let rows=[...db.expense].reverse();
+  if(outFilter==='full')    rows=rows.filter(r=>r.etype==='full');
+  if(outFilter==='partial') rows=rows.filter(r=>r.etype==='partial');
+  const total=rows.length;
+  rows=rows.slice(0,60);
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>';return;}
   tb.innerHTML=rows.map((r,i)=>{
-    // Колонка "Размер": целый лист — показываем размер листа, без листа — обрезок из которого резали
     let sizeCell;
     if(r.etype==='full'&&r.size&&r.size!=='—'){
       sizeCell=`<span style="font-size:12px">${r.size}</span>`;
@@ -1192,12 +1425,12 @@ function renderOut(){
       sizeCell=`<span style="font-size:12px;color:var(--muted)">—</span>`;
     }
     return `<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">
-      <td style="color:var(--muted);font-size:11px">${db.expense.length-i}</td>
+      <td style="color:var(--muted);font-size:11px">${total-i}</td>
       <td style="font-size:11px;color:var(--muted)">${r.dt}</td>
       <td style="font-weight:800;font-size:12px;color:var(--accent)">${r.mat}</td>
       <td>${sizeCell}</td>
       <td><span class="badge bout">${r.qty} л.</span></td>
-      <td style="font-size:12px;color:var(--muted)">${r.det||'—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${normSizeStr(r.det)||'—'}</td>
       <td><button class="dbtn" onclick="event.stopPropagation();del('expense',${r.id})">✕</button></td>
     </tr>`;
   }).join('');
@@ -1218,26 +1451,34 @@ function renderStock(){
   const by=calcStockDetailed(); const grid=document.getElementById('stk-grid');
   let keys=Object.keys(by).filter(m=>!q||m.toLowerCase().includes(q));
   if(filterFav) keys=keys.filter(m=>favorites.has(m));
-  if(filterLow) keys=keys.filter(m=>by[m].some(s=>s.qty<=2));
+  if(filterLow) keys=keys.filter(m=>by[m].some(s=>s.qty>0&&s.qty<=2));
+  // Убираем нулевые и отрицательные размеры
+  keys=keys.filter(m=>by[m].some(s=>s.qty>0));
   keys.sort();
   if(!keys.length){grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';return;}
   grid.innerHTML=keys.map(mat=>{
     const isFav=favorites.has(mat);
-    let sizes=by[mat]; if(filterLow) sizes=sizes.filter(s=>s.qty<=2);
-    const rows=sizes.map(s=>`<div class="stkrow"><span class="stksz">${s.size}</span><span class="stkmath"><span class="inc">${s.inc}</span><span class="sep">−</span><span class="dec">${s.dec}</span><span class="eq">=</span><span class="res ${s.qty<=0?'zero':s.qty<=2?'low':''}">${s.qty} шт.</span></span></div>`).join('');
+    let sizes=by[mat].filter(s=>s.qty>0);
+    if(filterLow) sizes=sizes.filter(s=>s.qty<=2);
+    const rows=sizes.map(s=>`<div class="stkrow"><span class="stksz">${s.size}</span><span class="stkmath"><span class="inc">${s.inc}</span><span class="sep">−</span><span class="dec">${s.dec}</span><span class="eq">=</span><span class="res ${s.qty<=2?'low':''}">${s.qty} шт.</span></span></div>`).join('');
+    if(!rows) return '';
     return `<div class="stkcard ${isFav?'fav':''}"><div class="stkcard-head"><div class="stkmat">${mat}</div><button class="star-btn" onclick="toggleFav('${mat.replace(/'/g,"\\'")}')"> ${isFav?'⭐':'☆'}</button></div>${rows}</div>`;
-  }).join('');
+  }).filter(Boolean).join('');
+  if(!grid.innerHTML) grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';
 }
 
 // ══════════════════════════════════════ REMAINDERS — ADD PENDING
 function addPiece(){
-  const mat=document.getElementById('rem-mat').value;
-  const w=parseInt(document.getElementById('rem-w').value);
-  const l=parseInt(document.getElementById('rem-l').value);
+  const mat=(document.getElementById('rem-mat').value||'').trim();
+  const sizeStr=(document.getElementById('rem-size').value||'').trim();
+  const parsed=parseSizeStr(sizeStr);
   const qty=parseInt(document.getElementById('rem-qty').value)||1;
   const placeVal=document.getElementById('rem-place').value;
   const place=placeVal===CUSTOM_VAL?'':placeVal;
-  if(!mat||mat===CUSTOM_VAL||!w||!l){toast('Введите материал и размеры','err');return;}
+  if(!mat){toast('Введите материал','err');return;}
+  if(!parsed){toast('Введите размер в формате 234×2132','err');return;}
+  const {w,l}=parsed;
+  if(!MATS.includes(mat)){MATS.push(mat);save();}
 
   // Сразу сохраняем в базу — без промежуточного буфера
   const piece={mat,w,l,qty,type:'scrap_add',place};
@@ -1250,8 +1491,7 @@ function addPiece(){
   save(); renderRemByMat();
 
   // Сброс полей размеров
-  document.getElementById('rem-w').value='';
-  document.getElementById('rem-l').value='';
+  document.getElementById('rem-size').value='';
   document.getElementById('rem-qty').value='1';
   toast(`✅ ${mat} ${w}×${l} добавлен`,'ok');
 }
@@ -1301,12 +1541,16 @@ function savePieceEdit(){
   const{recId,pi}=pieceEditState;
   const rec=db.remainders.find(r=>r.id===recId); if(!rec) return;
   const p=rec.pieces[pi]; if(!p) return;
+  const matEl=document.getElementById(`pef-mat-${recId}-${pi}`);
+  const mat=(matEl?matEl.value.trim():p.mat)||p.mat;
   const w=parseInt(document.getElementById(`pef-w-${recId}-${pi}`).value);
   const l=parseInt(document.getElementById(`pef-l-${recId}-${pi}`).value);
   const qty=parseInt(document.getElementById(`pef-qty-${recId}-${pi}`).value)||1;
   const placeVal=document.getElementById(`pef-place-${recId}-${pi}`).value;
+  if(!mat){toast('Введите материал','err');return;}
   if(!w||!l){toast('Введите размеры','err');return;}
-  p.w=w; p.l=l; p.qty=qty;
+  if(!MATS.includes(mat)) MATS.push(mat);
+  p.mat=mat; p.w=w; p.l=l; p.qty=qty;
   p.place=placeVal===CUSTOM_VAL?'':placeVal;
   rec.totalM2=+rec.pieces.filter(x=>x.type!=='scrap_sub').reduce((s,x)=>s+x.w*x.l*x.qty/1e6,0).toFixed(4)
              -+rec.pieces.filter(x=>x.type==='scrap_sub').reduce((s,x)=>s+x.w*x.l*x.qty/1e6,0).toFixed(4);
@@ -1339,7 +1583,7 @@ function getAllRemPlaces(){
   // Порядок — как в PLACES
   return PLACES.filter(p => usedInDB.has(p));
 }
-function setRemPlace(p){remPlaceFilter=p;renderRemByMat();}
+function setRemPlace(p){remPlaceFilter=(remPlaceFilter===p?'':p);renderRemByMat();}
 
 function renderRemByMat(){
   // ── Place filter buttons (in sec-top) ──
@@ -1347,12 +1591,12 @@ function renderRemByMat(){
   if(filterRow){
     const allPlaces=getAllRemPlaces();
     if(allPlaces.length>=1){
-      filterRow.innerHTML=`<span class="place-chip ${!remPlaceFilter?'on':''}" onclick="setRemPlace('')">Все</span>`
-        +allPlaces.map(p=>`<span class="place-chip ${remPlaceFilter===p?'on':''}" onclick="setRemPlace('${p.replace(/'/g,"\\'")}')">${p}</span>`).join('');
+      filterRow.innerHTML=allPlaces.map(p=>`<span class="place-chip ${remPlaceFilter===p?'on':''}" onclick="setRemPlace('${p.replace(/'/g,"\\'")}')">${p}</span>`).join('');
     } else { filterRow.innerHTML=''; }
   }
 
   const container=document.getElementById('rem-by-mat');
+  const stkQ=(document.getElementById('stk-s')?.value||'').toLowerCase();
 
   // Add dt to allPieces lookup
   const allPieces=[];
@@ -1360,18 +1604,21 @@ function renderRemByMat(){
     rec.pieces.forEach((p,pi)=>{
       const piecePlace=p.place||rec.place||'';
       if(remPlaceFilter&&piecePlace!==remPlaceFilter) return;
+      if(stkQ&&!p.mat.toLowerCase().includes(stkQ)) return;
       allPieces.push({recId:rec.id,pi,mat:p.mat,w:p.w,l:p.l,qty:p.qty,type:p.type,place:piecePlace,m2:p.w*p.l*p.qty/1e6, dt:rec.dt||''});
     });
   });
 
   if(!allPieces.length){container.innerHTML='<div class="empty"><div class="ei">✂️</div>Нет данных об обрезках</div>';return;}
 
-  // Apply ≥0.5м² filter per individual piece BEFORE grouping
+  // Apply ≥0.5м² or ≤0.5м² filter per individual piece BEFORE grouping
   const visiblePieces = remBigFilter
     ? allPieces.filter(p => p.m2 >= 0.5)
-    : allPieces;
+    : remSmallFilter
+      ? allPieces.filter(p => p.m2 <= 0.5)
+      : allPieces;
 
-  if(!visiblePieces.length){container.innerHTML='<div class="empty"><div class="ei">📐</div>Нет обрезков ≥ 0,5 м²</div>';return;}
+  if(!visiblePieces.length){container.innerHTML=`<div class="empty"><div class="ei">📐</div>${remBigFilter?'Нет обрезков ≥ 0,5 м²':'Нет обрезков ≤ 0,5 м²'}</div>`;return;}
 
   // Group by material
   const byMat={};
@@ -1383,7 +1630,8 @@ function renderRemByMat(){
     const totalAdd=pieces.filter(p=>p.type!=='scrap_sub').reduce((s,p)=>s+p.m2,0);
     const totalSub=pieces.filter(p=>p.type==='scrap_sub').reduce((s,p)=>s+p.m2,0);
     const netM2=totalAdd-totalSub;
-    const netTag=`<span class="remarea-badge rem-net">${netM2.toFixed(3)} м²</span>`;
+    const totalQty=pieces.filter(p=>p.type!=='scrap_sub').reduce((s,p)=>s+(p.qty||1),0);
+    const netTag=`<span class="remarea-badge rem-net" style="display:inline-flex;align-items:center;gap:5px"><span style="color:var(--text);font-weight:800">${totalQty} шт.</span><span style="opacity:.5">·</span>${netM2.toFixed(3)} м²</span>`;
 
     const groupKeys=pieces.map(p=>`${p.recId}-${p.pi}`);
     const groupAllSel=selMode&&groupKeys.length>0&&groupKeys.every(k=>selSet.has(k));
@@ -1400,11 +1648,13 @@ function renderRemByMat(){
       const isSel=selSet.has(pieceKey);
       const m2Html=`<span class="piece-m2 pm2-pos">${p.m2.toFixed(3)} м²</span>`;
       const placeTag=p.place?`<span class="piece-place">📍 ${p.place}</span>`:'';
-      const dateTag=p.dt?`<span style="font-size:10px;color:var(--muted);flex-shrink:0">${p.dt.split(' ')[0]}</span>`:'';
+      const dateTag=p.dt?`<span style="font-size:10px;color:var(--muted);flex-shrink:0">${p.dt}</span>`:'';
       const placeOpts=PLACES.map(pl=>`<option value="${pl}"${p.place===pl?' selected':''}>${pl}</option>`).join('')+`<option value="${CUSTOM_VAL}">✏️ Свой вариант...</option>`;
+      const matOptsAc=`<div class="ac-wrap"><input type="text" id="pef-mat-${p.recId}-${p.pi}" value="${p.mat.replace(/"/g,'&quot;')}" autocomplete="off" oninput="acInputEl(this,'pef-mat-${p.recId}-${p.pi}')" onfocus="acInputEl(this,'pef-mat-${p.recId}-${p.pi}')" onblur="acBlur('pef-mat-${p.recId}-${p.pi}')" onkeydown="acKey(event,'pef-mat-${p.recId}-${p.pi}')"><div class="ac-dropdown" id="ac-pef-mat-${p.recId}-${p.pi}"></div></div>`;
       const editForm=isEd?`
         <div class="piece-edit-form show" id="pef-form-${p.recId}-${p.pi}">
           <div class="edit-banner" style="margin-bottom:8px">✏️ Редактировать обрезок<button class="edit-cancel" onclick="cancelPieceEdit()">✕ Отмена</button></div>
+          <div class="fg" style="margin-bottom:7px"><label>Материал</label>${matOptsAc}</div>
           <div class="frow c3">
             <div class="fg"><label>Ширина</label><input type="number" id="pef-w-${p.recId}-${p.pi}" value="${p.w}" inputmode="numeric"></div>
             <div class="fg"><label>Длина</label><input type="number" id="pef-l-${p.recId}-${p.pi}" value="${p.l}" inputmode="numeric"></div>
@@ -1437,7 +1687,6 @@ function renderRemByMat(){
         <span style="flex:1">${mat}</span>
         <span style="display:flex;align-items:center;gap:6px">
           ${netTag}
-          ${!selMode?`<button class="move-group-btn" onclick="event.stopPropagation();openGroupMoveModal('${matEsc}',${mi})" title="Переместить группу">📍</button>`:''}
           <span style="font-size:12px;color:var(--muted);transition:transform .2s;${isOpen?'transform:rotate(180deg)':''}">▼</span>
         </span>
       </div>
@@ -1520,17 +1769,38 @@ function del(tbl,id){
 function setTab(el,val){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');htab=val;renderHist();}
 function renderHist(){
   const q=(document.getElementById('hs')?.value||'').toLowerCase();
-  const fr=document.getElementById('hf')?.value||'';
+  const fr=document.getElementById('hf')?.value||''; // YYYY-MM-DD
   const to=document.getElementById('ht')?.value||'';
+
+  // Парсим дату из формата "dd.mm.yy HH:MM" или старого "dd.mm.yyyy HH:MM" в объект Date
+  function parseDt(dt){
+    if(!dt) return null;
+    // Новый формат: "02.04.26 15:32"
+    let m=dt.match(/^(\d{2})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2})$/);
+    if(m) return new Date(2000+parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]),parseInt(m[4]),parseInt(m[5]));
+    // Старый формат: "02.04.2026, 15:32" или "02.04.2026 15:32"
+    m=dt.match(/^(\d{2})\.(\d{2})\.(\d{4})[,\s]+(\d{2}):(\d{2})/);
+    if(m) return new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]),parseInt(m[4]),parseInt(m[5]));
+    return null;
+  }
+  // YYYY-MM-DD → Date (начало/конец дня)
+  const frDate = fr ? new Date(fr+'T00:00:00') : null;
+  const toDate = to ? new Date(to+'T23:59:59') : null;
+
   let rows=[];
   db.income.forEach(r=>rows.push({...r,type:'income'}));
   db.expense.forEach(r=>rows.push({...r,type:'expense'}));
   db.remainders.forEach(r=>rows.push({...r,type:'remainder',mat:[...new Set(r.pieces.map(p=>p.mat))].join(', '),size:'—'}));
-  rows.sort((a,b)=>b.id-a.id);
+  // Сортировка по дате — новейшие сверху
+  rows.sort((a,b)=>{
+    const da=parseDt(a.dt), db2=parseDt(b.dt);
+    if(da&&db2) return db2-da;
+    return b.id-a.id;
+  });
   if(htab) rows=rows.filter(r=>r.type===htab);
   if(q) rows=rows.filter(r=>r.mat&&r.mat.toLowerCase().includes(q));
-  if(fr) rows=rows.filter(r=>r.dt>=fr);
-  if(to) rows=rows.filter(r=>r.dt<=to+'z');
+  if(frDate) rows=rows.filter(r=>{ const d=parseDt(r.dt); return d&&d>=frDate; });
+  if(toDate) rows=rows.filter(r=>{ const d=parseDt(r.dt); return d&&d<=toDate; });
   const tb=document.getElementById('hist-tbody');
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">📋</div>Нет записей</div></td></tr>';return;}
   tb.innerHTML=rows.map(r=>{
@@ -1605,12 +1875,21 @@ function clrAll(){
 function confirm2(txt,cb){document.getElementById('ov-txt').textContent=txt;document.getElementById('ov-yes').onclick=()=>{cb();closeOv();};document.getElementById('ov').classList.add('show');}
 function closeOv(){document.getElementById('ov').classList.remove('show');}
 function toast(msg,type=''){const el=document.getElementById('tst');el.textContent=msg;el.className='toast show'+(type?' '+type:'');clearTimeout(window._tt);window._tt=setTimeout(()=>el.className='toast',2800);}
-function now(){const d=new Date();return`${d.toLocaleDateString('ru-RU')} ${d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}`;}
+function now(){const d=new Date();const dd=String(d.getDate()).padStart(2,'0');const mm=String(d.getMonth()+1).padStart(2,'0');const yy=String(d.getFullYear()).slice(2);const hh=String(d.getHours()).padStart(2,'0');const min=String(d.getMinutes()).padStart(2,'0');return`${dd}.${mm}.${yy} ${hh}:${min}`;}
 
 // ══════════════════════════════════════ REM BIG FILTER
 function toggleRemBig(){
   remBigFilter=!remBigFilter;
+  if(remBigFilter) remSmallFilter=false;
   document.getElementById('fchip-rem-big').classList.toggle('on',remBigFilter);
+  document.getElementById('fchip-rem-small').classList.toggle('on',false);
+  renderRemByMat();
+}
+function toggleRemSmall(){
+  remSmallFilter=!remSmallFilter;
+  if(remSmallFilter) remBigFilter=false;
+  document.getElementById('fchip-rem-small').classList.toggle('on',remSmallFilter);
+  document.getElementById('fchip-rem-big').classList.toggle('on',false);
   renderRemByMat();
 }
 
@@ -1699,102 +1978,253 @@ function closeScrapModal(){
 }
 
 // ══════════════════════════════════════ MODAL 2: ПОДОБРАТЬ ОБРЕЗОК ПОД ИЗДЕЛИЕ
-// Ищем в db.remainders кусок того же материала, куда влезает изделие detW×detL
-// Возвращает список подходящих: {recId, pi, piece, newPieces}
 
-function findMatchingScraps(mat, detW, detL){
+// Сколько штук изделия detW×detL влезает в обрезок pw×pl (оптимальная раскладка — простая сетка)
+function countFits(pw, pl, detW, detL){
+  // Пробуем оба поворота изделия, берём максимум
+  const a = Math.floor(pw/detW) * Math.floor(pl/detL);
+  const b = Math.floor(pw/detL) * Math.floor(pl/detW);
+  return Math.max(a, b);
+}
+
+// Ориентация при которой влезает больше
+function bestOrientation(pw, pl, detW, detL){
+  const a = Math.floor(pw/detW) * Math.floor(pl/detL);
+  const b = Math.floor(pw/detL) * Math.floor(pl/detW);
+  if(b > a) return {dW: detL, dL: detW};
+  return {dW: detW, dL: detL};
+}
+
+// Собирает все обрезки нужного материала с количеством вмещаемых штук
+function findMatchingScraps(mat, detW, detL, needQty){
   const results = [];
   db.remainders.forEach(rec=>{
     rec.pieces.forEach((p,pi)=>{
       if(p.mat !== mat) return;
       if(p.type === 'scrap_sub') return;
-      // Изделие должно влезать (в любой ориентации)
-      const fits = (p.w >= detW && p.l >= detL) || (p.w >= detL && p.l >= detW);
-      if(!fits) return;
-
-      // Нормализуем ориентацию — поворачиваем изделие если надо
-      let dW = detW, dL = detL;
-      if(!(p.w >= detW && p.l >= detL)){
-        dW = detL; dL = detW; // повернули
-      }
-
-      // Считаем остатки после вырезки
-      const remaining = calcScraps(p.w, p.l, dW, dL);
+      const fits = countFits(p.w, p.l, detW, detL);
+      if(fits <= 0) return;
       const place = p.place || rec.place || '—';
       const m2 = +(p.w*p.l/1e6).toFixed(4);
-
-      results.push({ recId: rec.id, pi, piece: p, remaining, place, m2, dW, dL });
+      const {dW, dL} = bestOrientation(p.w, p.l, detW, detL);
+      // Для одной штуки считаем остатки (для отображения)
+      const remaining = calcScraps(p.w, p.l, dW, dL);
+      const waste = p.w*p.l - dW*dL;
+      // qty в обрезке: сколько реально штук есть (piece.qty)
+      const pieceQty = p.qty || 1;
+      const totalFits = fits * pieceQty; // всего штук из всех единиц этого обрезка
+      results.push({ recId: rec.id, pi, piece: p, remaining, place, m2, dW, dL, waste, fits, pieceQty, totalFits });
     });
   });
+  // Сортировка: сначала наибольшее совпадение (наименьший остаток от одной штуки)
+  results.sort((a,b) => a.waste - b.waste);
   return results;
 }
 
-let pendingScrapFind = null; // { mat, detW, detL, expenseRec }
+// Автоматически строит план раскладки для needQty штук по доступным обрезкам
+function buildAllocationPlan(matches, needQty){
+  // plan: [{matchIdx, useQty (штук из piece.qty), fitsPerPiece}]
+  const plan = [];
+  let remaining = needQty;
+  // Работаем с копией qty чтобы не портить оригинал
+  const usedQty = matches.map(()=>0);
+  for(let i=0; i<matches.length && remaining>0; i++){
+    const m = matches[i];
+    const canGetFromThis = m.totalFits; // максимум штук из этого обрезка
+    if(canGetFromThis <= 0) continue;
+    const take = Math.min(remaining, canGetFromThis);
+    // Сколько единиц обрезка нужно израсходовать
+    const piecesNeeded = Math.ceil(take / m.fits);
+    usedQty[i] = Math.min(piecesNeeded, m.pieceQty);
+    plan.push({ matchIdx: i, useQty: usedQty[i], fitsPerPiece: m.fits, takeTotal: Math.min(take, usedQty[i]*m.fits) });
+    remaining -= usedQty[i] * m.fits;
+  }
+  return { plan, shortage: Math.max(0, remaining) };
+}
 
-function openScrapFindModal(mat, detW, detL){
-  const matches = findMatchingScraps(mat, detW, detL);
+let pendingScrapFind = null;
+
+function openScrapFindModal(mat, detW, detL, needQty){
+  needQty = needQty || 1;
+  const matches = findMatchingScraps(mat, detW, detL, needQty);
   const desc = document.getElementById('scrap-find-desc');
   const list = document.getElementById('scrap-find-list');
 
-  desc.textContent = `Материал: ${mat} | Изделие: ${detW}×${detL} мм. Выберите обрезок из которого вырезать:`;
+  const detArea = detW * detL;
+  const totalAvail = matches.reduce((s,m)=>s+m.totalFits,0);
+  const {plan, shortage} = buildAllocationPlan(matches, needQty);
+
+  desc.innerHTML = `<b>${mat}</b> · Изделие: <b>${detW}×${detL} мм</b> · Нужно: <b>${needQty} шт.</b>`;
 
   if(!matches.length){
     list.innerHTML = `<div class="empty"><div class="ei">🔍</div>Подходящих обрезков не найдено</div>`;
-  } else {
-    list.innerHTML = matches.map((m,i)=>{
-      const remText = m.remaining.length
-        ? m.remaining.map(r=>`${r.w}×${r.l} мм (${+(r.w*r.l/1e6).toFixed(3)} м²)`).join(', ')
-        : 'отход — кусок будет удалён';
-      const cls = m.remaining.length ? 'keep' : 'del';
-      return `
-      <div class="scrap-find-item" id="sfi-${i}" onclick="selectScrapFind(${i})">
-        <div class="sfi-head">
-          <span class="sfi-size">${m.piece.w}×${m.piece.l} мм</span>
-          <span class="sfi-m2">${m.m2} м²</span>
-        </div>
-        <div class="sfi-place">📍 ${m.place}</div>
-        <div class="sfi-result ${cls} show">
-          ${m.remaining.length ? '✂️ Остаток: ' : '🗑️ '}${remText}
-        </div>
-      </div>`;
-    }).join('');
+    pendingScrapFind = { mat, detW, detL, needQty, matches, plan };
+    document.getElementById('scrap-find-modal').classList.add('show');
+    return;
   }
 
-  pendingScrapFind = { mat, detW, detL, matches };
+  // Шапка плана
+  let planHtml = '';
+  if(needQty > 1){
+    const planRows = plan.map(p=>{
+      const m = matches[p.matchIdx];
+      return `<span style="display:flex;align-items:center;gap:6px;padding:3px 0">
+        <span style="font-weight:800;color:var(--accent)">${m.piece.w}×${m.piece.l}</span>
+        <span style="color:var(--muted)">→</span>
+        <span style="font-weight:800;color:var(--green)">${p.takeTotal} шт.</span>
+        <span style="font-size:10px;color:var(--muted)">(${p.fitsPerPiece} шт/обрезок × ${p.useQty} обр.)</span>
+      </span>`;
+    }).join('');
+    const shortageHtml = shortage > 0
+      ? `<div style="margin-top:6px;padding:6px 10px;background:var(--rlt);color:var(--red);border-radius:var(--rs);font-size:12px;font-weight:800">⚠️ Не хватает обрезков на ${shortage} шт. — остаток вырезать из нового листа</div>`
+      : `<div style="margin-top:6px;padding:6px 10px;background:var(--glt);color:var(--green);border-radius:var(--rs);font-size:12px;font-weight:800">✅ Хватает обрезков на все ${needQty} шт.</div>`;
+    planHtml = `
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px">
+        <div style="font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.07em;margin-bottom:6px">ПЛАН РАСКЛАДКИ</div>
+        ${planRows}
+        ${shortageHtml}
+      </div>`;
+  }
+
+  // Список обрезков
+  const planIdxSet = new Set(plan.map(p=>p.matchIdx));
+  list.innerHTML = planHtml + matches.map((m,i)=>{
+    const inPlan = planIdxSet.has(i);
+    const planEntry = plan.find(p=>p.matchIdx===i);
+    const matchPct = Math.round(detArea / (m.piece.w * m.piece.l) * 100);
+    const bestLabel = i===0 ? `<span style="background:var(--glt);color:var(--green);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:6px">★ Лучший</span>` : '';
+    const planLabel = inPlan ? `<span style="background:var(--blt);color:var(--blue);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:4px">В плане</span>` : '';
+    const remText = m.remaining.length
+      ? m.remaining.map(r=>`${r.w}×${r.l} (${+(r.w*r.l/1e6).toFixed(3)} м²)`).join(', ')
+      : 'отход';
+    const cls = m.remaining.length ? 'keep' : 'del';
+    const fitsInfo = m.pieceQty > 1
+      ? `${m.fits} шт/обрезок · ${m.pieceQty} обрезков = ${m.totalFits} шт.`
+      : `${m.fits} шт. из этого обрезка`;
+    return `
+    <div class="scrap-find-item${inPlan?' selected':''}" id="sfi-${i}" onclick="selectScrapFind(${i})">
+      <div class="sfi-head">
+        <span class="sfi-size">${m.piece.w}×${m.piece.l} мм${bestLabel}${planLabel}</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-weight:800;color:${matchPct>=80?'var(--green)':matchPct>=50?'var(--accent)':'var(--muted)'}">${matchPct}%</span>
+          <span class="sfi-m2">${m.m2} м²</span>
+        </span>
+      </div>
+      <div style="font-size:11px;color:var(--blue);font-weight:700;margin:2px 0 4px">${fitsInfo}</div>
+      <div class="sfi-place">📍 ${m.place}</div>
+      <div class="sfi-result ${cls} show">
+        ${m.remaining.length ? '✂️ Остаток: ' : '🗑️ '}${remText}
+      </div>
+    </div>`;
+  }).join('');
+
+  pendingScrapFind = { mat, detW, detL, needQty, matches, plan };
+  const planBtn = document.getElementById('scrap-plan-btn');
+  if(planBtn) planBtn.style.display = plan.length ? '' : 'none';
   document.getElementById('scrap-find-modal').classList.add('show');
+}
+
+// Применить план — списывает все обрезки из плана автоматически
+function applyScrapPlan(){
+  if(!pendingScrapFind) return;
+  const {matches, plan, needQty, mat} = pendingScrapFind;
+  if(!plan.length){ toast('Нет обрезков для применения','err'); return; }
+
+  // Собираем реальные объекты для обновления (важно: работаем snapshot чтобы не сломать индексы)
+  const toProcess = plan.map(p=>({
+    match: matches[p.matchIdx],
+    useQty: p.useQty,
+    fitsPerPiece: p.fitsPerPiece
+  }));
+
+  toProcess.forEach(({match, useQty})=>{
+    const rec = db.remainders.find(r=>r.id===match.recId);
+    if(!rec) return;
+    const p = rec.pieces[match.pi];
+    if(!p) return;
+
+    if(useQty >= p.qty){
+      // Израсходовать весь обрезок (все штуки)
+      if(match.remaining.length === 0 || useQty >= p.qty){
+        rec.pieces.splice(match.pi, 1);
+      } else {
+        // Заменяем на остатки
+        const newPieces = match.remaining.map(r=>({
+          mat: p.mat, w: r.w, l: r.l, qty: 1,
+          type: 'scrap_add', place: p.place || rec.place || ''
+        }));
+        rec.pieces.splice(match.pi, 1, ...newPieces);
+      }
+    } else {
+      // Уменьшаем qty обрезка
+      p.qty -= useQty;
+      // Добавляем остатки от резки как новые обрезки
+      if(match.remaining.length){
+        const newPieces = match.remaining.map(r=>({
+          mat: p.mat, w: r.w, l: r.l, qty: useQty,
+          type: 'scrap_add', place: p.place || rec.place || ''
+        }));
+        rec.pieces.splice(match.pi+1, 0, ...newPieces);
+      }
+    }
+
+    if(rec.pieces.length === 0){
+      db.remainders = db.remainders.filter(r=>r.id!==rec.id);
+    } else {
+      rec.totalM2 = +rec.pieces.filter(x=>x.type!=='scrap_sub').reduce((s,x)=>s+x.w*x.l*(x.qty||1)/1e6,0).toFixed(4);
+      rec.totalPcs = rec.pieces.reduce((s,x)=>s+(x.qty||1),0);
+    }
+  });
+
+  // Записываем источник в последнюю запись расхода
+  const lastExp = db.expense[db.expense.length-1];
+  if(lastExp && lastExp.etype==='partial'){
+    lastExp.sourceScrap = toProcess.map(t=>`${t.match.piece.w}×${t.match.piece.l}`).join(', ');
+  }
+
+  const takenTotal = plan.reduce((s,p)=>s+p.takeTotal,0);
+  toast(`✂️ Списано из ${plan.length} обрезков · ${takenTotal} шт.`,'ok');
+  save(); renderRemByMat(); renderOut(); closeScrapFindModal();
 }
 
 function selectScrapFind(i){
   if(!pendingScrapFind) return;
   const m = pendingScrapFind.matches[i];
-
-  // Обновляем обрезок в базе
   const rec = db.remainders.find(r=>r.id===m.recId);
   if(!rec) return;
 
-  // Сохраняем источник в последней записи расхода
   const lastExp = db.expense[db.expense.length-1];
   if(lastExp && lastExp.etype==='partial'){
     lastExp.sourceScrap = `${m.piece.w}×${m.piece.l}`;
   }
 
+  const p = rec.pieces[m.pi];
+  if(!p) return;
+
   if(m.remaining.length === 0){
-    rec.pieces.splice(m.pi, 1);
-    if(!rec.pieces.length) db.remainders = db.remainders.filter(r=>r.id!==m.recId);
+    // Обрезок полностью уходит
+    if(p.qty > 1) p.qty--;
     else {
-      rec.totalM2 = +rec.pieces.reduce((s,p)=>s+p.w*p.l/1e6,0).toFixed(4);
-      rec.totalPcs = rec.pieces.length;
+      rec.pieces.splice(m.pi, 1);
+      if(!rec.pieces.length) db.remainders = db.remainders.filter(r=>r.id!==m.recId);
     }
-    toast(`🗑️ Обрезок использован, удалён`,'ok');
+    toast(`🗑️ 1 шт. обрезка использована`,'ok');
   } else {
     const newPieces = m.remaining.map(r=>({
-      mat: m.piece.mat, w: r.w, l: r.l, qty: 1,
+      mat: p.mat, w: r.w, l: r.l, qty: 1,
       type: 'scrap_add',
-      place: m.piece.place || rec.place || ''
+      place: p.place || rec.place || ''
     }));
-    rec.pieces.splice(m.pi, 1, ...newPieces);
-    rec.totalM2 = +rec.pieces.reduce((s,p)=>s+p.w*p.l/1e6,0).toFixed(4);
-    rec.totalPcs = rec.pieces.length;
+    if(p.qty > 1){
+      p.qty--;
+      rec.pieces.splice(m.pi+1, 0, ...newPieces);
+    } else {
+      rec.pieces.splice(m.pi, 1, ...newPieces);
+    }
+    if(rec.pieces.length){
+      rec.totalM2 = +rec.pieces.filter(x=>x.type!=='scrap_sub').reduce((s,x)=>s+x.w*x.l*(x.qty||1)/1e6,0).toFixed(4);
+      rec.totalPcs = rec.pieces.reduce((s,x)=>s+(x.qty||1),0);
+    }
     toast(`✂️ Обрезок скорректирован`,'ok');
   }
 
@@ -1808,11 +2238,12 @@ function closeScrapFindModal(){
 
 // Предпросмотр обрезков без сохранения расхода
 function previewFindScraps(){
-  const mat = document.getElementById('out-mat').value;
+  const mat = (document.getElementById('out-mat').value||'').trim();
   const detStr = document.getElementById('out-det').value.trim();
   const det = parseSizeStr(detStr);
-  if(!mat || mat===CUSTOM_VAL || !det){ toast('Введите материал и размер изделия','err'); return; }
-  openScrapFindModal(mat, det.w, det.l);
+  const qty = parseInt(document.getElementById('out-qty').value)||1;
+  if(!mat || !det){ toast('Введите материал и размер изделия','err'); return; }
+  openScrapFindModal(mat, det.w, det.l, qty);
 }
 
 function toggleRemGroup(mat){
@@ -2019,6 +2450,15 @@ function removePlaceFromDB(val){
   db.income.forEach(r=>{ if(r.place===val) r.place=''; });
 }
 
+// Переименовать материал во всех записях БД
+function renameMatInDB(oldVal, newVal){
+  db.income.forEach(r=>{ if(r.mat===oldVal) r.mat=newVal; });
+  db.expense.forEach(r=>{ if(r.mat===oldVal) r.mat=newVal; });
+  db.remainders.forEach(rec=>{
+    rec.pieces.forEach(p=>{ if(p.mat===oldVal) p.mat=newVal; });
+  });
+}
+
 function saveListEdit(key,i){
   const inp=document.getElementById(`lei-${key}-${i}`);
   if(!inp) return;
@@ -2028,11 +2468,14 @@ function saveListEdit(key,i){
   const old=list[i];
   list[i]=val;
   if(key==='places'){
-    renamePlaceInDB(old, val);             // синхронизируем все записи в БД
-    if(remPlaceFilter===old) remPlaceFilter=val; // обновляем активный фильтр
+    renamePlaceInDB(old, val);
+    if(remPlaceFilter===old) remPlaceFilter=val;
+  }
+  if(key==='mats'){
+    renameMatInDB(old, val);
   }
   save(); fillAllSelects(); renderListEditor(key);
-  renderRemByMat(); renderIn();
+  renderRemByMat(); renderIn(); renderOut(); renderStock();
   toast('✅ Сохранено','ok');
 }
 function listAdd(key){
