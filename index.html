@@ -1345,7 +1345,31 @@ function saveExpense(){
   const rec={mat,size,w,l,qty,etype,det:detStr,note:document.getElementById('out-note').value.trim()};
   if(editMode.expense!==null){
     const idx=db.expense.findIndex(r=>r.id===editMode.expense);
-    if(idx>=0) db.expense[idx]={...db.expense[idx],...rec};
+    if(idx>=0){
+      const oldRec = db.expense[idx];
+      db.expense[idx]={...oldRec,...rec};
+      // Пересчитываем связанный обрезок (если есть)
+      const expId = oldRec.id;
+      const linkedScrap = db.remainders.find(r=>r.id===expId+1 || r.expenseId===expId);
+      if(linkedScrap){
+        const newDet = parseSizeStr(rec.det);
+        if(rec.etype==='full' && newDet){
+          // Пересчитываем обрезки из нового размера и нового qty
+          const rawPieces = calcScraps(rec.w, rec.l, newDet.w, newDet.l);
+          if(rawPieces.length){
+            linkedScrap.pieces = rawPieces.map(p=>({mat:rec.mat, w:p.w, l:p.l, qty:rec.qty, type:'scrap_add', place: linkedScrap.pieces[0]?.place||''}));
+            linkedScrap.totalM2 = +linkedScrap.pieces.reduce((s,p)=>s+p.w*p.l*p.qty/1e6,0).toFixed(4);
+            linkedScrap.totalPcs = linkedScrap.pieces.length * rec.qty;
+          } else {
+            // Обрезков нет (деталь слишком большая) — удаляем
+            db.remainders = db.remainders.filter(r=>r.id!==linkedScrap.id);
+          }
+        } else {
+          // Тип изменился на partial или нет изделия — удаляем автообрезок
+          db.remainders = db.remainders.filter(r=>r.id!==linkedScrap.id);
+        }
+      }
+    }
     cancelEdit('expense'); toast('✏️ Расход обновлён','ok');
     save(); renderAll(); return;
   }
@@ -1354,12 +1378,14 @@ function saveExpense(){
   if(etype==='full'&&det){
     const rawPieces = calcScraps(w, l, det.w, det.l);
     if(rawPieces.length){
-      const pieces = rawPieces.map(p=>({mat, w:p.w, l:p.l, qty:1, type:'scrap_add', place:''}));
-      newScrapRecId = Date.now()+1;
+      // qty обрезков = qty листов
+      const pieces = rawPieces.map(p=>({mat, w:p.w, l:p.l, qty, type:'scrap_add', place:''}));
+      newScrapRecId = rec.id+1;
       db.remainders.push({
         id: newScrapRecId, dt: now(), pieces,
-        totalM2: +pieces.reduce((s,p)=>s+p.w*p.l/1e6,0).toFixed(4),
-        totalPcs: pieces.length, place:''
+        expenseId: rec.id, // связь с записью расхода
+        totalM2: +pieces.reduce((s,p)=>s+p.w*p.l*qty/1e6,0).toFixed(4),
+        totalPcs: pieces.length * qty, place:''
       });
     }
   } else if(etype==='partial'&&det){
@@ -1916,8 +1942,8 @@ function openScrapModal(recId){
   // Заполняем pendingScrapPieces из кусков записи
   pendingScrapPieces = rec.pieces.map((p,i)=>({
     idx: i,
-    w: p.w, l: p.l,
-    m2: +(p.w*p.l/1e6).toFixed(4),
+    w: p.w, l: p.l, qty: p.qty||1,
+    m2: +(p.w*p.l*(p.qty||1)/1e6).toFixed(4),
     place: PLACES[0]||'',
     save: true
   }));
@@ -1929,7 +1955,7 @@ function openScrapModal(recId){
     return `
     <div class="scrap-piece-item" id="spi-${i}">
       <div class="scrap-piece-head">
-        <span class="scrap-piece-size">${p.w}×${p.l} мм</span>
+        <span class="scrap-piece-size">${p.w}×${p.l} мм${p.qty>1?` · <b>${p.qty} шт.</b>`:''}</span>
         <span class="scrap-piece-m2">${p.m2} м²</span>
         <label class="scrap-piece-toggle">
           <input type="checkbox" id="spi-chk-${i}" checked onchange="toggleScrapPiece(${i})">
@@ -1966,16 +1992,16 @@ function saveScrapPlaces(){
       // Удаляем всю запись
       db.remainders = db.remainders.filter(r=>r.id!==pendingScrapRecId);
     } else {
-      // Обновляем куски с местами
+      // Обновляем куски с местами — сохраняем qty
       rec.pieces = toSave.map(p=>({
         mat: rec.pieces[p.idx].mat,
-        w: p.w, l: p.l, qty: 1,
+        w: p.w, l: p.l, qty: p.qty||1,
         type: 'scrap_add',
         place: p.place
       }));
       rec.place = toSave[0].place;
-      rec.totalM2 = +rec.pieces.reduce((s,p)=>s+p.w*p.l/1e6,0).toFixed(4);
-      rec.totalPcs = rec.pieces.length;
+      rec.totalM2 = +rec.pieces.reduce((s,p)=>s+p.w*p.l*(p.qty||1)/1e6,0).toFixed(4);
+      rec.totalPcs = rec.pieces.reduce((s,p)=>s+(p.qty||1),0);
     }
   }
   save(); renderRemByMat(); closeScrapModal();
