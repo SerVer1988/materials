@@ -35,42 +35,12 @@
   --shl:0 6px 28px rgba(0,0,0,.6);
 }
 
-/* ── СВЕТЛАЯ ТЕМА ── */
-body.theme-light{
-  --bg:#F0F2F5;
-  --surface:#FFFFFF;
-  --card:#FFFFFF;
-  --card2:#F0F2F5;
-  --border:#D8DDE3;
-  --text:#1A2027;
-  --muted:#6B7A87;
-  --accent:#D4A800;
-  --aclt:rgba(212,168,0,.12);
-  --green:#1FA363;
-  --glt:rgba(31,163,99,.12);
-  --blue:#2B85C2;
-  --blt:rgba(43,133,194,.12);
-  --red:#D94F4F;
-  --rlt:rgba(217,79,79,.12);
-  --gold:#D4A800;
-  --goldlt:rgba(212,168,0,.11);
-  --fav:#FFF8DC;
-  --favborder:#E8D48A;
-  --edit:#8B46D4;
-  --editlt:rgba(139,70,212,.11);
-  --sh:0 2px 10px rgba(0,0,0,.10);
-  --shl:0 4px 20px rgba(0,0,0,.15);
-}
-
-/* ── THEME TOGGLE ── */
+/* ── THEME TOGGLE (оставлен в разделе Ещё, тема теперь только тёмная) ── */
 .theme-toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:14px 0 6px}
 .theme-toggle-label{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
 .theme-toggle-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px}
-.tgl-track{width:52px;height:28px;border-radius:14px;background:var(--card2);border:1.5px solid var(--border);position:relative;cursor:pointer;transition:background .22s,border-color .22s;flex-shrink:0}
-.tgl-track.on{background:var(--accent);border-color:var(--accent)}
-.tgl-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .22s,background .22s;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1}
-.tgl-track.on .tgl-thumb{transform:translateX(24px)}
-body.theme-light .tgl-thumb{background:#fff}
+.tgl-track{width:52px;height:28px;border-radius:14px;background:var(--card2);border:1.5px solid var(--border);position:relative;cursor:not-allowed;opacity:.4;flex-shrink:0}
+.tgl-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:clamp(13px,3.8vw,16px);overscroll-behavior:none}
 
@@ -102,7 +72,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .main{height:calc(100vh - 54px);overflow:hidden;display:flex;flex-direction:column}
 .sec{display:none;flex-direction:column;flex:1;overflow:hidden;animation:fu .18s ease both}
 .sec.active{display:flex}
+.sec.swipe-in-left {animation:swipeInLeft  .22s ease both}
+.sec.swipe-in-right{animation:swipeInRight .22s ease both}
 @keyframes fu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes swipeInLeft {from{opacity:0;transform:translateX( 40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes swipeInRight{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
 /* Sticky top = form block */
 .sec-top{flex-shrink:0;padding:var(--pad) var(--pad) 0;background:var(--bg);box-shadow:0 4px 12px rgba(0,0,0,.25);position:relative;z-index:10}
 /* Scrollable list */
@@ -187,27 +161,18 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .place-chip{padding:5px 12px;border-radius:30px;border:1px solid var(--border);background:var(--card2);font-size:12px;font-weight:800;cursor:pointer;color:var(--muted);transition:all .15s;-webkit-user-select:none}
 .place-chip.on{background:var(--accent);border-color:var(--accent);color:#111;box-shadow:0 2px 8px rgba(246,201,14,.3)}
 
-/* ── STOCK CARDS ── */
-.stkcard{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:8px;transition:background .2s,border-color .2s}
-.stkcard.fav{background:var(--fav);border-color:var(--favborder)}
-.stkcard-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
-.stkmat{font-size:14px;font-weight:800;color:var(--accent)}
-.star-btn{background:none;border:none;font-size:19px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;transition:transform .14s}
-.star-btn:active{transform:scale(.83)}
-.stkrow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)}
-.stkrow:last-child{border-bottom:none}
-.stksz{color:var(--muted);font-size:12px;font-weight:700}
-.stkmath{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:800}
-.stkmath .inc{color:var(--green)}
-.stkmath .sep{color:var(--muted)}
-.stkmath .dec{color:var(--red)}
-.stkmath .eq{color:var(--muted)}
-.stkmath .res{color:var(--text);font-size:24px;line-height:1;margin-left:2px}
-.stkmath .res.zero{color:var(--muted)}
-.stkmath .res.low{color:var(--gold)}
+/* ── STOCK CARDS — см. ниже в "СВЕТЛЫЕ КАРТОЧКИ ДАННЫХ" ── */
 
-/* ── AUTOCOMPLETE ── */
-.ac-wrap{position:relative}
+/* ── CLEAR BUTTON на полях ввода ── */
+.inp-clear-wrap{position:relative;display:flex;align-items:center}
+.inp-clear-wrap input{flex:1;padding-right:34px}
+.inp-clear-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:rgba(122,140,153,.25);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:12px;color:var(--muted);flex-shrink:0;line-height:1;padding:0}
+.inp-clear-btn:hover{background:var(--rlt);color:var(--red)}
+.inp-clear-wrap input:not(:placeholder-shown) ~ .inp-clear-btn{display:flex}
+
+/* Поиск в шапке склада */
+.swrap .inp-clear-btn{display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%)}
+
 .ac-dropdown{position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--card);border:1px solid var(--accent);border-top:none;border-radius:0 0 var(--rs) var(--rs);max-height:200px;overflow-y:auto;box-shadow:var(--shl);display:none}
 .ac-dropdown.show{display:block}
 .ac-item{padding:10px 12px;font-size:14px;font-weight:600;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);transition:background .12s}
@@ -215,47 +180,25 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .ac-item:hover,.ac-item.focused{background:var(--aclt);color:var(--accent)}
 .ac-item mark{background:none;color:var(--accent);font-weight:800}
 
-
 .swrap{position:relative}
 .swrap input{padding-left:38px}
 .swrap::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
 
-/* ══ REM CARDS — same style as stkcard ══ */
-.remcard{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:8px;transition:background .2s,border-color .2s}
-.remmat-name{font-size:14px;font-weight:800;color:var(--accent);margin-bottom:7px}
+/* ══ REM CARDS / PIECE-ROW — см. ниже в "СВЕТЛЫЕ КАРТОЧКИ ДАННЫХ" ══ */
 .remtotals{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
 .remarea-badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}
 .rem-pos{background:var(--blt);color:var(--blue)}
 .rem-neg{background:var(--rlt);color:var(--red)}
-.rem-net{background:var(--card2);color:var(--text);border:1px solid var(--border)}
-
-/* Individual piece row — click row to edit, ✕ to delete */
-.piece-row{
-  display:flex;
-  align-items:center;
-  gap:7px;
-  padding:7px 4px;
-  border-bottom:1px solid var(--border);
-  cursor:pointer;
-  transition:background .13s;
-  -webkit-user-select:none;user-select:none;
-}
-.piece-row:last-child{border-bottom:none}
-.piece-row:hover{background:rgba(246,201,14,.05);border-radius:var(--rs)}
-.piece-row.is-editing{background:var(--editlt);border-radius:var(--rs);border-bottom:none;border-left:2px solid var(--edit)}
 
 /* LEFT: size — left aligned */
 .piece-left{display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:74px;}
-.piece-sz{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;text-align:left;}
 
 /* RIGHT GROUP: all other data — right-aligned, no wrap */
 .piece-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:nowrap;justify-content:flex-end;flex-shrink:0;}
 
-.piece-place{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--card2);color:var(--muted);border:1px solid var(--border);white-space:nowrap}
 .piece-type{font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;white-space:nowrap}
 .pt-in{background:var(--blt);color:var(--blue)}
 .pt-out{background:var(--rlt);color:var(--red)}
-.piece-pcs{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap}
 .piece-m2{font-size:13px;font-weight:800;white-space:nowrap;min-width:64px;text-align:right;display:inline-block}
 .pm2-pos{color:var(--blue)}
 .pm2-neg{color:var(--red)}
@@ -276,19 +219,58 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .rbig{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--accent)}
 .rsub{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
 
-/* ── TABLE ── */
+/* ── СВЕТЛЫЕ КАРТОЧКИ ДАННЫХ (внутри тёмного интерфейса) ── */
+/* Таблицы приход/расход, карточки склада, обрезков */
+.data-light{background:#EEEEEE;border-color:#C8CDD2}
+.data-light td,.data-light th{color:#1A2027}
+.data-light .trow-edit:hover td{background:rgba(0,0,0,.04) !important}
+.data-light .trow-edit.is-editing td{background:rgba(192,132,252,.12) !important}
+
+/* Таблицы приход/расход */
 .twrap{overflow-x:auto;border-radius:var(--rs);border:1px solid var(--border)}
-table{width:100%;border-collapse:collapse;min-width:340px;font-size:13px}
-thead tr{background:var(--card2)}
-th{padding:9px 10px;text-align:left;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
+table{width:100%;border-collapse:collapse;min-width:340px;font-size:13px;background:#EEEEEE;border-radius:var(--rs)}
+thead tr{background:#D8DDE3}
+th{padding:9px 10px;text-align:left;font-size:10px;font-weight:800;letter-spacing:.08em;color:#4A5568;border-bottom:1px solid #C8CDD2;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid #D8DDE3;vertical-align:middle;color:#1A2027}
 tr:last-child td{border-bottom:none}
 .trow-edit{cursor:pointer}
-.trow-edit:hover td{background:rgba(246,201,14,.05) !important}
-.trow-edit.is-editing td{background:var(--editlt) !important;border-left:2px solid var(--edit)}
+.trow-edit:hover td{background:rgba(246,201,14,.12) !important}
+.trow-edit.is-editing td{background:rgba(192,132,252,.15) !important;border-left:2px solid var(--edit)}
 .dbtn{background:var(--rlt);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:12px;cursor:pointer;font-weight:800}
 
-/* ── HISTORY TABS ── */
+/* Карточки Листов (stkcard) */
+.stkcard{background:#EEEEEE;border:1px solid #C8CDD2;border-radius:var(--rs);padding:9px 12px;margin-bottom:6px;transition:background .2s,border-color .2s}
+.stkcard.fav{background:#FFF8DC;border-color:#E8D48A}
+.stkcard-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.stkmat{font-size:13px;font-weight:800;color:var(--accent)}
+.star-btn{background:none;border:none;font-size:19px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;transition:transform .14s}
+.star-btn:active{transform:scale(.83)}
+.stkrow{display:flex;justify-content:space-between;align-items:center;padding:3px 0}
+.stksz{color:#4A5568;font-size:11px;font-weight:700}
+.stkmath{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:800}
+.stkmath .inc{color:var(--green)}
+.stkmath .sep{color:#7A8C99}
+.stkmath .dec{color:var(--red)}
+.stkmath .eq{color:#7A8C99}
+.stkmath .res{color:#1A2027;font-size:18px;line-height:1;margin-left:2px}
+.stkmath .res.zero{color:#9AA5B1}
+.stkmath .res.low{color:var(--gold)}
+
+/* Карточки Обрезков (remcard + piece-row) */
+.remcard{background:#EEEEEE;border:1px solid #C8CDD2;border-radius:var(--rs);padding:12px;margin-bottom:8px;position:relative;transition:box-shadow .15s}
+.remcard.sel-mode{cursor:pointer}
+.remcard.sel-mode:active{opacity:.85}
+.remmat-name{font-size:14px;font-weight:800;color:var(--accent);margin-bottom:7px}
+.piece-row{display:flex;align-items:center;gap:7px;padding:7px 4px;border-bottom:1px solid #D8DDE3;cursor:pointer;transition:background .13s;-webkit-user-select:none;user-select:none}
+.piece-row:last-child{border-bottom:none}
+.piece-row:hover{background:rgba(246,201,14,.10);border-radius:var(--rs)}
+.piece-row.is-editing{background:rgba(192,132,252,.12);border-radius:var(--rs);border-bottom:none;border-left:2px solid var(--edit)}
+.piece-sz{font-size:13px;font-weight:700;color:#4A5568;white-space:nowrap;text-align:left}
+.piece-pcs{font-size:13px;font-weight:800;color:#1A2027;white-space:nowrap}
+.piece-place{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:#D8DDE3;color:#4A5568;border:1px solid #C8CDD2;white-space:nowrap}
+.rem-net{background:#D8DDE3;color:#1A2027;border:1px solid #C8CDD2}
+
+/* История */
 .tabrow{display:flex;gap:5px;margin-bottom:10px;overflow-x:auto}
 .tabrow::-webkit-scrollbar{display:none}
 .tab{flex-shrink:0;padding:6px 13px;border-radius:30px;border:1px solid var(--border);background:var(--card2);font-size:12px;font-weight:800;cursor:pointer;color:var(--muted);transition:all .15s}
@@ -421,8 +403,9 @@ tr:last-child td{border-bottom:none}
         </div>
         <div class="fg" style="margin-bottom:9px">
           <label>Материал</label>
-          <div class="ac-wrap">
+          <div class="ac-wrap inp-clear-wrap">
             <input type="text" id="in-mat" placeholder="Начните вводить..." autocomplete="off" oninput="acInput('in-mat')" onfocus="acInput('in-mat')" onblur="acBlur('in-mat')" onkeydown="acKey(event,'in-mat')">
+            <button class="inp-clear-btn" onclick="clearField('in-mat')" tabindex="-1">✕</button>
             <div class="ac-dropdown" id="ac-in-mat"></div>
           </div>
         </div>
@@ -473,8 +456,9 @@ tr:last-child td{border-bottom:none}
         </div>
         <div class="fg" style="margin-bottom:9px">
           <label>Материал</label>
-          <div class="ac-wrap">
+          <div class="ac-wrap inp-clear-wrap">
             <input type="text" id="out-mat" placeholder="Начните вводить..." autocomplete="off" oninput="acInput('out-mat')" onfocus="acInput('out-mat')" onblur="acBlur('out-mat')" onkeydown="acKey(event,'out-mat')">
+            <button class="inp-clear-btn" onclick="clearField('out-mat')" tabindex="-1">✕</button>
             <div class="ac-dropdown" id="ac-out-mat"></div>
           </div>
         </div>
@@ -518,7 +502,10 @@ tr:last-child td{border-bottom:none}
   <div class="sec-top">
     <div class="ptitle" style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
       <span>📦 Склад</span>
-      <div class="swrap" style="flex:1;margin:0"><input type="text" id="stk-s" placeholder="Поиск..." oninput="renderStock();renderRemByMat()"></div>
+      <div class="swrap" style="flex:1;margin:0;position:relative">
+        <input type="text" id="stk-s" placeholder="Поиск..." oninput="renderStock();renderRemByMat()">
+        <button class="inp-clear-btn" onclick="clearField('stk-s');renderStock();renderRemByMat()" tabindex="-1" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%)" id="stk-s-clear">✕</button>
+      </div>
     </div>
     <div class="itabrow">
       <button class="itab active" onclick="setStockTab(this,'balance')">📊 Листы</button>
@@ -541,8 +528,9 @@ tr:last-child td{border-bottom:none}
         <div class="ccard-body">
           <div class="fg" style="margin-bottom:9px">
             <label>Материал</label>
-            <div class="ac-wrap">
+            <div class="ac-wrap inp-clear-wrap">
               <input type="text" id="rem-mat" placeholder="Начните вводить..." autocomplete="off" oninput="acInput('rem-mat')" onfocus="acInput('rem-mat')" onblur="acBlur('rem-mat')" onkeydown="acKey(event,'rem-mat')">
+              <button class="inp-clear-btn" onclick="clearField('rem-mat')" tabindex="-1">✕</button>
               <div class="ac-dropdown" id="ac-rem-mat"></div>
             </div>
           </div>
@@ -684,16 +672,11 @@ tr:last-child td{border-bottom:none}
   <!-- Тема -->
   <div class="card">
     <div class="ctitle">Внешний вид</div>
-    <div class="theme-toggle-wrap">
-      <div class="theme-toggle-label">
-        <span id="theme-icon">🌙</span>
-        <div>
-          <div id="theme-name">Тёмная тема</div>
-          <div class="theme-toggle-sub" id="theme-sub">Текущая тема приложения</div>
-        </div>
-      </div>
-      <div class="tgl-track" id="theme-track" onclick="toggleTheme()">
-        <div class="tgl-thumb" id="theme-thumb">🌙</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
+      <span style="font-size:22px">🌙</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text)">Тёмная тема</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Данные отображаются на светлом фоне #EEEEEE</div>
       </div>
     </div>
   </div>
@@ -794,38 +777,73 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <script>
-// ══════════════════════════════════════ THEME
-(function(){
-  // Применяем тему до первого рендера — без мигания
-  function applyStoredTheme(){
-    if(localStorage.getItem('lm_theme')==='light') document.body.classList.add('theme-light');
+// ══════════════════════════════════════ THEME (только тёмная)
+function toggleTheme(){ toast('🌙 Только тёмная тема','info'); }
+function updateThemeBtns(){}
+function updateThemeUI(){}
+
+// ══════════════════════════════════════ CLEAR FIELD
+function clearField(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.value='';
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  el.focus();
+  // Скрыть крестик поиска склада отдельно
+  const clrBtn=document.getElementById('stk-s-clear');
+  if(clrBtn) clrBtn.style.display='none';
+}
+// Показываем крестик поиска склада при вводе
+document.addEventListener('DOMContentLoaded',()=>{
+  const stkS=document.getElementById('stk-s');
+  const clrBtn=document.getElementById('stk-s-clear');
+  if(stkS&&clrBtn){
+    stkS.addEventListener('input',()=>{
+      clrBtn.style.display=stkS.value?'flex':'none';
+    });
   }
-  if(document.body) applyStoredTheme();
-  else document.addEventListener('DOMContentLoaded', applyStoredTheme);
+});
+
+// ══════════════════════════════════════ SWIPE NAVIGATION
+(function(){
+  const TABS=['income','expense','stock','more'];
+  let touchStartX=0, touchStartY=0, touchStartTime=0;
+  let currentTab=0;
+
+  function getCurrentTabIdx(){
+    const active=document.querySelector('.sec.active');
+    if(!active) return 0;
+    const id=active.id.replace('sec-','');
+    const idx=TABS.indexOf(id);
+    return idx>=0?idx:0;
+  }
+
+  function goToTab(idx, dir){
+    if(idx<0||idx>=TABS.length) return;
+    go(TABS[idx], null, dir);
+  }
+
+  document.addEventListener('touchstart',e=>{
+    // Не свайпаем если касание в модалке, скроллируемом списке (по вертикали) или ac-dropdown
+    if(e.target.closest('.overlay,.ac-dropdown,.sec-body,.ccard-body,.modal')) return;
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+    touchStartTime=Date.now();
+  },{passive:true});
+
+  document.addEventListener('touchend',e=>{
+    if(!touchStartX) return;
+    const dx=e.changedTouches[0].clientX-touchStartX;
+    const dy=e.changedTouches[0].clientY-touchStartY;
+    const dt=Date.now()-touchStartTime;
+    touchStartX=0;
+    // Горизонтальный свайп: быстрый (< 350ms), длинный (> 60px), явно горизонтальный
+    if(dt>350||Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.7) return;
+    const cur=getCurrentTabIdx();
+    if(dx<0) goToTab(cur+1,'left');  // свайп влево → следующий
+    else      goToTab(cur-1,'right'); // свайп вправо → предыдущий
+  },{passive:true});
 })();
-
-function toggleTheme(){
-  const isLight = document.body.classList.toggle('theme-light');
-  localStorage.setItem('lm_theme', isLight ? 'light' : 'dark');
-  updateThemeUI();
-  toast(isLight ? '☀️ Светлая тема' : '🌙 Тёмная тема', 'info');
-}
-
-function updateThemeBtns(){
-  updateThemeUI();
-}
-
-function updateThemeUI(){
-  const isLight = document.body.classList.contains('theme-light');
-  const track  = document.getElementById('theme-track');
-  const thumb  = document.getElementById('theme-thumb');
-  const icon   = document.getElementById('theme-icon');
-  const name   = document.getElementById('theme-name');
-  if(track)  track.classList.toggle('on', isLight);
-  if(thumb)  thumb.textContent = isLight ? '☀️' : '🌙';
-  if(icon)   icon.textContent  = isLight ? '☀️' : '🌙';
-  if(name)   name.textContent  = isLight ? 'Светлая тема' : 'Тёмная тема';
-}
 
 // ══════════════════════════════════════ CONSTANTS
 let MATS=["ПВХ 1 мм","ПВХ 2 мм","ПВХ 3 мм","ПВХ 3 мм (чёр.)","ПВХ 5 мм","ПВХ 5 мм (чёр.)","ПВХ 8 мм","ПВХ 10 мм","Акрил 2 мм","Акрил 2 мм (про.)","Акрил 3 мм","Акрил 3 мм (про.)","Акрил 5 мм","Акрил 5 мм (про.)","Акрил 8 мм (про.)","Акрил 10 мм","Акрил 10 мм (про.)","Акрил 3 мм (гол.)","Акрил 3 мм (жёл.)","Акрил 3 мм (зел.)","Акрил 3 мм (кра.)","Акрил 3 мм (ора.)","Акрил 3 мм (роз.)","Акрил 3 мм (син.)","Акрил 3 мм (зер.)","Акрил 3 мм (чёр.)","Акрил 5 мм (чёр.)","АКП 3 мм","АКП 4 мм","АКП 3 мм (дер.)","АКП 3 мм (зол.)","АКП 3 мм (кор.)","АКП 3 мм (кра.)","АКП 3 мм (сер.)","АКП 3 мм (серы.)","АКП 3 мм (чёр.)","АКП 3 мм (иск.сер.)","АБС 1 мм","АБС 1 мм (зер.)","АБС 1 мм (зол.)","АБС 1 мм (брон.)","АБС 1 мм (сере.)","АБС 1 мм (ц.зол.)","АБС 1 мм (ц.сер.)","Аллюминий","Жесть","Полик-нат 3 мм","Полик-нат 4 мм","Полик-нат 5 мм","Полик-нат 6 мм","ПЭТ 0,3 мм","ПЭТ 0,7 мм","ПЭТ 1 мм","ПЭТ 2 мм","ПЭТ 3 мм","Фанера 3 мм","Фанера 4 мм","Фанера 6 мм","Фанера 10 мм","МДФ 8 мм","МДФ 10 мм","МДФ 16 мм","МДФ 25 мм","МДФ 50 мм","ДСП 16 мм"];
@@ -1125,11 +1143,19 @@ function addCustomOption(selId,wrapId,listKey){
 }
 
 // ══════════════════════════════════════ NAV
-function go(name,btn){
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+const TABS_ORDER=['income','expense','stock','more'];
+function go(name,btn,swipeDir){
+  const prev=document.querySelector('.sec.active');
+  const prevName=prev?prev.id.replace('sec-',''):'';
+  document.querySelectorAll('.sec').forEach(s=>{s.classList.remove('active','swipe-in-left','swipe-in-right');});
   document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(`sec-${name}`).classList.add('active'); btn.classList.add('active');
-  // scroll list area to top
+  const next=document.getElementById(`sec-${name}`);
+  next.classList.add('active');
+  // Анимация направления
+  if(swipeDir==='left')  next.classList.add('swipe-in-left');
+  else if(swipeDir==='right') next.classList.add('swipe-in-right');
+  if(btn) btn.classList.add('active');
+  else { const nb=document.querySelector(`.nbtn:nth-child(${TABS_ORDER.indexOf(name)+1})`); if(nb) nb.classList.add('active'); }
   const body=document.querySelector(`#sec-${name} .sec-body`);
   if(body) body.scrollTop=0;
   if(name==='stock'){renderStock();renderRemByMat();}
