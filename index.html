@@ -2,8 +2,54 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Листовой материал</title>
+
+<!-- PWA: основные мета-теги -->
+<meta name="application-name" content="Листовой материал">
+<meta name="description" content="Учёт листового материала: приход, расход, обрезки">
+<meta name="theme-color" content="#1A2027">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Листовой мат.">
+<meta name="msapplication-TileColor" content="#1A2027">
+<meta name="msapplication-tap-highlight" content="no">
+
+<!-- PWA: иконки (инлайн SVG через data URI) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23F6C90E'/><text y='.9em' font-size='72' x='12'>📦</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23F6C90E'/><text y='.9em' font-size='72' x='12'>📦</text></svg>">
+
+<!-- PWA: манифест через blob (встроен в страницу) -->
+<script>
+(function(){
+  const manifest = {
+    name: "Листовой материал",
+    short_name: "Листовой",
+    description: "Учёт листового материала: приход, расход, обрезки",
+    start_url: "./",
+    display: "standalone",
+    orientation: "portrait-primary",
+    background_color: "#1A2027",
+    theme_color: "#1A2027",
+    categories: ["productivity", "utilities"],
+    icons: [
+      {
+        src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%23F6C90E'/><text y='.85em' font-size='360' x='65'>📦</text></svg>",
+        sizes: "512x512",
+        type: "image/svg+xml",
+        purpose: "any maskable"
+      }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel   = 'manifest';
+  link.href  = url;
+  document.currentScript.parentNode.appendChild(link);
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -2742,6 +2788,112 @@ function listDel(key,i){
 }
 
 init();
+
+// ══════════════════════════════════════ PWA: SERVICE WORKER + INSTALL
+(function(){
+  // ── Регистрируем Service Worker из blob ──
+  const swCode = `
+const CACHE = 'lm-v1';
+// При установке кэшируем саму страницу
+self.addEventListener('install', e => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(clients.claim());
+});
+// Стратегия: сначала сеть, при ошибке — кэш
+self.addEventListener('fetch', e => {
+  if(e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
+  );
+});
+`;
+  if('serviceWorker' in navigator){
+    const swBlob = new Blob([swCode], {type:'application/javascript'});
+    const swUrl  = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl, {scope: './'})
+      .catch(()=>{}); // тихо игнорируем ошибки (например file://)
+  }
+
+  // ── Баннер "Установить приложение" ──
+  let deferredPrompt = null;
+
+  // Создаём баннер
+  const banner = document.createElement('div');
+  banner.id = 'pwa-banner';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;flex:1">
+      <div style="width:40px;height:40px;background:#F6C90E;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦</div>
+      <div>
+        <div style="font-weight:800;font-size:14px;color:#EEEEEE">Установить приложение</div>
+        <div style="font-size:11px;color:#7A8C99;margin-top:1px">Добавить на главный экран</div>
+      </div>
+    </div>
+    <button id="pwa-install-btn" style="background:#F6C90E;color:#111;border:none;border-radius:8px;padding:9px 16px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0">Установить</button>
+    <button id="pwa-dismiss-btn" style="background:none;border:none;color:#7A8C99;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button>
+  `;
+  Object.assign(banner.style, {
+    display: 'none',
+    position: 'fixed',
+    bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
+    left: '12px', right: '12px',
+    background: '#252C33',
+    border: '1px solid #3A4750',
+    borderRadius: '14px',
+    padding: '12px 14px',
+    boxShadow: '0 6px 28px rgba(0,0,0,.6)',
+    zIndex: '150',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    animation: 'pwa-slide-up .3s ease'
+  });
+
+  // Добавляем анимацию
+  const style = document.createElement('style');
+  style.textContent = `@keyframes pwa-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`;
+  document.head.appendChild(style);
+  document.body.appendChild(banner);
+
+  // Ловим событие beforeinstallprompt (Chrome/Android)
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Показываем баннер только если не отклоняли раньше
+    if(!localStorage.getItem('pwa_dismissed')){
+      banner.style.display = 'flex';
+    }
+  });
+
+  document.getElementById('pwa-install-btn').addEventListener('click', () => {
+    banner.style.display = 'none';
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(r => {
+        if(r.outcome === 'accepted') localStorage.setItem('pwa_installed','1');
+        deferredPrompt = null;
+      });
+    }
+  });
+
+  document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+    banner.style.display = 'none';
+    localStorage.setItem('pwa_dismissed','1');
+  });
+
+  // При успешной установке скрываем баннер
+  window.addEventListener('appinstalled', () => {
+    banner.style.display = 'none';
+    localStorage.setItem('pwa_installed','1');
+  });
+})();
 </script>
 </body>
 </html>
