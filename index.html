@@ -511,7 +511,7 @@ tr:last-child td{border-bottom:none}
           <div class="custom-input-wrap" id="out-pre-custom"><input type="text" placeholder="напр. 1300х2500"><button class="custom-add-btn" onclick="addCustomOption('out-pre','out-pre-custom','sizes')">+ Добавить</button></div>
         </div>
         <div class="frow" style="margin-bottom:9px">
-          <div class="fg"><label>Кол-во</label><input type="number" id="out-qty" value="1" inputmode="numeric" min="1"></div>
+          <div class="fg"><label>Кол-во</label><input type="number" id="out-qty" value="1" inputmode="numeric" min="1" oninput="parseDetSize()"></div>
           <div class="fg"><label>Размер изделия</label><input type="text" id="out-det" placeholder="500х300" oninput="parseDetSize()"></div>
           <div class="fg full"><label>Примечание</label><input type="text" id="out-note" placeholder="необязательно"></div>
         </div>
@@ -956,8 +956,29 @@ function load(){
 function upStats(){ document.getElementById('hdr-s').textContent=`${db.income.length+db.expense.length} записей`; }
 
 // ══════════════════════════════════════ INIT
+// Миграция: исправляет старые обрезки где qty=1 но должно быть qty=expenseQty
+function migrateScrapQty(){
+  let changed=false;
+  db.expense.forEach(exp=>{
+    if(exp.etype!=='full'||!exp.det||exp.qty<=1) return;
+    // Ищем связанный обрезок по expenseId или по id+1
+    const scrap=db.remainders.find(r=>r.expenseId===exp.id || r.id===exp.id+1);
+    if(!scrap) return;
+    // Если все pieces имеют qty=1 — исправляем
+    const needsFix=scrap.pieces.every(p=>(p.qty||1)===1);
+    if(!needsFix) return;
+    scrap.pieces.forEach(p=>{ p.qty=exp.qty; });
+    scrap.totalM2=+scrap.pieces.reduce((s,p)=>s+p.w*p.l*(p.qty||1)/1e6,0).toFixed(4);
+    scrap.totalPcs=scrap.pieces.reduce((s,p)=>s+(p.qty||1),0);
+    if(!scrap.expenseId) scrap.expenseId=exp.id; // добавляем связь если не было
+    changed=true;
+  });
+  if(changed){ save(); }
+}
+
 async function init(){
   load(); fillAllSelects();
+  migrateScrapQty(); // исправляем старые записи
   renderAll();
   updateThemeBtns();
 
@@ -973,6 +994,7 @@ async function init(){
     localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
     localStorage.setItem('lm7_places',JSON.stringify(PLACES));
     fillAllSelects();
+    migrateScrapQty();
     renderAll();
     setSyncStatus('ok');
   } else {
@@ -1275,20 +1297,25 @@ function parseDetSize(){
   document.getElementById('scrap-preview').style.display='none';
   document.getElementById('scrap-neg-preview').style.display='none';
   if(!det) return;
+  const qty=parseInt(document.getElementById('out-qty').value)||1;
   if(isSheetSelected()){
     const sh=getSizeWL('out-pre');
     const pieces=calcScraps(sh.w, sh.l, det.w, det.l);
     if(pieces.length){
-      const totalM2=pieces.reduce((s,p)=>s+p.w*p.l/1e6,0);
+      const totalM2PerSheet=pieces.reduce((s,p)=>s+p.w*p.l/1e6,0);
+      const totalM2=totalM2PerSheet*qty;
+      const piecesText=pieces.map(p=>`${p.w}×${p.l}`).join(' + ');
       document.getElementById('scrap-preview-text').textContent=
-        pieces.map(p=>`${p.w}х${p.l}`).join(' + ')+` (${totalM2.toFixed(4)} м²)`;
+        qty>1
+          ? `${piecesText} × ${qty} л. = ${totalM2.toFixed(4)} м²`
+          : `${piecesText} (${totalM2.toFixed(4)} м²)`;
       document.getElementById('scrap-preview').style.display='block';
     } else {
       document.getElementById('scrap-preview-text').textContent='все остатки < 300 мм — отход, не записываются';
       document.getElementById('scrap-preview').style.display='block';
     }
   } else {
-    document.getElementById('scrap-neg-text').textContent=`${detStr} → −${(det.w*det.l/1e6).toFixed(4)} м²`;
+    document.getElementById('scrap-neg-text').textContent=`${normSizeStr(detStr)} → −${(det.w*det.l*qty/1e6).toFixed(4)} м²`;
     document.getElementById('scrap-neg-preview').style.display='block';
   }
 }
