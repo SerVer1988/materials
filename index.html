@@ -253,25 +253,24 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .place-chip{padding:5px 12px;border-radius:30px;border:1px solid var(--border);background:var(--card2);font-size:12px;font-weight:800;cursor:pointer;color:var(--muted);transition:all .15s;-webkit-user-select:none}
 .place-chip.on{background:var(--accent);border-color:var(--accent);color:#111;box-shadow:0 2px 8px rgba(246,201,14,.3)}
 
-/* ── STOCK CARDS — компактный однострочный вид ── */
-.stkcard{background:#232D38;border:1px solid #364550;border-radius:var(--rs);padding:0;margin-bottom:5px;overflow:hidden}
-.stkcard.fav{background:#2a3428;border-color:#4a6040}
-.stkcard-head{display:none} /* скрываем старый заголовок */
+/* ── STOCK CARDS — компактные ── */
+.stkcard{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:5px 11px;margin-bottom:5px;transition:border-color .2s}
+.stkcard.fav{border-left:3px solid var(--gold);background:var(--card)}
+.stkcard-head{display:none}
 .stkmat{font-size:12px;font-weight:800;color:var(--accent)}
-.star-btn{background:none;border:none;font-size:14px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;opacity:.7;transition:transform .14s,opacity .15s}
+.star-btn{background:none;border:none;font-size:13px;cursor:pointer;padding:0 0 0 3px;line-height:1;flex-shrink:0;transition:transform .14s;opacity:.45}
 .star-btn:active{transform:scale(.83)}
-.star-btn.fav-on{opacity:1}
-/* Каждый размер — одна строка вместе с названием материала */
-.stkrow{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid #2E3C48}
+.stkcard.fav .star-btn{opacity:1}
+.stkrow{display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border)}
 .stkrow:last-child{border-bottom:none}
-.stksz{color:#7AAFC5;font-size:11px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stk-matname{font-size:12px;font-weight:800;color:var(--accent);white-space:nowrap;flex-shrink:0;max-width:45%;overflow:hidden;text-overflow:ellipsis}
-.stkmath{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;flex-shrink:0}
+.stksz{color:var(--muted);font-size:11px;font-weight:700;width:88px;flex-shrink:0}
+.stkmat-inline{font-size:12px;font-weight:800;color:var(--accent);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stkmath{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;margin-left:auto;flex-shrink:0}
 .stkmath .inc{color:var(--green)}
 .stkmath .sep{color:var(--muted)}
 .stkmath .dec{color:var(--red)}
 .stkmath .eq{color:var(--muted)}
-.stkmath .res{color:var(--text);font-size:14px;font-weight:800;margin-left:1px}
+.stkmath .res{color:var(--text);font-size:13px;line-height:1;margin-left:1px;font-weight:900}
 .stkmath .res.low{color:var(--gold)}
 
 /* ── AUTOCOMPLETE ── */
@@ -289,7 +288,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .swrap::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
 
 /* ══ REM CARDS — same style as stkcard ══ */
-.remcard{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:8px;transition:background .2s,border-color .2s}
+.remcard{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:5px 11px;margin-bottom:5px;transition:background .2s,border-color .2s}
 .remmat-name{font-size:14px;font-weight:800;color:var(--accent);margin-bottom:7px}
 .remtotals{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
 .remarea-badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}
@@ -575,8 +574,8 @@ tr:last-child td{border-bottom:none}
     <div class="ptitle" style="font-size:14px;margin-bottom:4px;margin-top:10px">Последние расходы</div>
     <p style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700">Нажмите строку для редактирования</p>
     <div class="fchips" style="margin-bottom:8px">
-      <div class="fchip on" id="out-fchip-full"    onclick="setOutFilter('full')">📋 Листы</div>
-      <div class="fchip"   id="out-fchip-partial"  onclick="setOutFilter('partial')">✂️ Обрезки</div>
+      <div class="fchip" id="out-fchip-full"    onclick="setOutFilter('full')">📋 Листы</div>
+      <div class="fchip" id="out-fchip-partial" onclick="setOutFilter('partial')">✂️ Обрезки</div>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="twrap" style="border:none;border-radius:0">
@@ -592,15 +591,10 @@ tr:last-child td{border-bottom:none}
   <div class="sec-top">
     <div class="ptitle" style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
       <span>📦 Склад</span>
-      <div class="ac-wrap" style="flex:1;margin:0">
-        <input type="text" id="stk-s" placeholder="Поиск материала..." autocomplete="off"
-          style="padding-left:14px"
-          oninput="renderStock();renderRemByMat();acInputStk(this);acUpdateClear('stk-s')"
-          onfocus="acInputStk(this)"
-          onblur="acBlur('stk-s')"
-          onkeydown="acKey(event,'stk-s')">
+      <div class="swrap" style="flex:1;margin:0;position:relative">
+        <input type="text" id="stk-s" placeholder="Поиск..." autocomplete="off" oninput="renderStock();renderRemByMat();stkClearBtn();stkAcInput()" onfocus="stkAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-stk-s');if(d)d.classList.remove('show');},150)" onkeydown="stkAcKey(event)">
         <div class="ac-dropdown" id="ac-stk-s"></div>
-        <button class="ac-clear" id="ac-clear-stk-s" onclick="acClear('stk-s');renderStock();renderRemByMat()" tabindex="-1">✕</button>
+        <button class="swrap-clear" id="stk-s-clear" onclick="document.getElementById('stk-s').value='';renderStock();renderRemByMat();stkClearBtn();document.getElementById('ac-stk-s').classList.remove('show')" tabindex="-1">✕</button>
       </div>
     </div>
     <div class="itabrow">
@@ -1142,9 +1136,6 @@ function acSelect(id,val){
   const drop=document.getElementById('ac-'+id);
   if(drop) drop.classList.remove('show');
   acFocusIdx[id]=-1;
-  acUpdateClear(id);
-  // Для поиска склада — запускаем фильтрацию
-  if(id==='stk-s'){ renderStock(); renderRemByMat(); }
 }
 function acBlur(id){
   setTimeout(()=>{
@@ -1203,27 +1194,40 @@ function acClear(id){
   const wrap=inp?inp.closest('.ac-wrap'):null;
   if(wrap) wrap.classList.remove('has-value');
 }
+function stkAcInput(){
+  const inp=document.getElementById('stk-s');
+  const drop=document.getElementById('ac-stk-s');
+  if(!inp||!drop) return;
+  const q=inp.value.trim().toLowerCase();
+  const matches=q ? MATS.filter(m=>m.toLowerCase().includes(q)) : MATS;
+  if(!matches.length){drop.classList.remove('show');return;}
+  drop.innerHTML=matches.map(m=>`<div class="ac-item" data-val="${m}" onmousedown="document.getElementById('stk-s').value='${m.replace(/'/,"\\'")}';renderStock();renderRemByMat();stkClearBtn();document.getElementById('ac-stk-s').classList.remove('show')">${acHighlight(m,q)}</div>`).join('');
+  drop.classList.add('show');
+}
+function stkAcKey(e){
+  const drop=document.getElementById('ac-stk-s');
+  if(!drop||!drop.classList.contains('show')) return;
+  const items=drop.querySelectorAll('.ac-item');
+  if(!items.length) return;
+  let idx=acFocusIdx['stk-s']??-1;
+  if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(idx+1,items.length-1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(idx-1,-1);}
+  else if(e.key==='Enter'&&idx>=0){
+    e.preventDefault();
+    document.getElementById('stk-s').value=items[idx].dataset.val;
+    renderStock();renderRemByMat();stkClearBtn();
+    drop.classList.remove('show');return;
+  } else if(e.key==='Escape'){drop.classList.remove('show');return;}
+  else return;
+  acFocusIdx['stk-s']=idx;
+  items.forEach((it,i)=>it.classList.toggle('focused',i===idx));
+  if(idx>=0) items[idx].scrollIntoView({block:'nearest'});
+}
+
 function stkClearBtn(){
   const inp=document.getElementById('stk-s');
   const btn=document.getElementById('stk-s-clear');
   if(btn) btn.classList.toggle('show', !!(inp&&inp.value.length>0));
-}
-// Автодополнение для поиска склада — показывает реальные материалы из БД
-function acInputStk(elem){
-  const id='stk-s';
-  const drop=document.getElementById('ac-'+id);
-  if(!elem||!drop) return;
-  const q=elem.value.trim().toLowerCase();
-  // Берём материалы из реальных данных (приход+обрезки)
-  const matSet=new Set();
-  db.income.forEach(r=>{ if(r.mat) matSet.add(r.mat); });
-  db.remainders.forEach(rec=>rec.pieces.forEach(p=>{ if(p.mat) matSet.add(p.mat); }));
-  const allMats=[...matSet].sort();
-  const matches=q ? allMats.filter(m=>m.toLowerCase().includes(q)) : allMats;
-  acFocusIdx[id]=-1;
-  if(!matches.length){drop.classList.remove('show');return;}
-  drop.innerHTML=matches.map(m=>`<div class="ac-item" data-val="${m}" onmousedown="acSelect('${id}','${m.replace(/'/g,"\\'")}')">${acHighlight(m,q)}</div>`).join('');
-  drop.classList.add('show');
 }
 
 // ══════════════════════════════════════ SWIPE NAVIGATION
@@ -1316,23 +1320,29 @@ function squareness(w, l){
   return Math.min(w, l) / Math.max(w, l);
 }
 
+const KERF=10; // мм — ширина пропила (вычитается из остатка)
+
 function calcScraps(shW, shL, detW, detL){
-  const rW = shW - detW;  // остаток справа (по ширине)
-  const rL = shL - detL;  // остаток снизу (по высоте)
+  // Уменьшаем лист на пропил перед расчётом обрезков
+  const effW = detW + KERF; // эффективно занятая ширина (деталь + пропил)
+  const effL = detL + KERF; // эффективно занятая высота (деталь + пропил)
+
+  const rW = shW - effW;  // остаток справа
+  const rL = shL - effL;  // остаток снизу
 
   if(rW <= 0 && rL <= 0) return [];
 
-  // ── Вариант A: горизонтальный рез (по высоте detL от края) ──
-  // Кусок 1: деталь уже вырезана, рядом с ней справа: rW × detL
+  // ── Вариант A: горизонтальный рез (рез по высоте effL) ──
+  // Кусок 1: справа от детали (за вычетом пропила): rW × detL
   // Кусок 2: полоса снизу через весь лист: shW × rL
-  const A1 = { w: rW, l: detL };   // справа от детали
-  const A2 = { w: shW, l: rL };    // снизу — вся ширина листа
+  const A1 = { w: rW, l: detL };
+  const A2 = { w: shW, l: rL };
 
-  // ── Вариант B: вертикальный рез (по ширине detW от края) ──
+  // ── Вариант B: вертикальный рез (рез по ширине effW) ──
   // Кусок 1: снизу от детали: detW × rL
   // Кусок 2: полоса справа через весь лист: rW × shL
-  const B1 = { w: detW, l: rL };   // снизу от детали
-  const B2 = { w: rW,   l: shL };  // справа — вся высота листа
+  const B1 = { w: detW, l: rL };
+  const B2 = { w: rW,   l: shL };
 
   // Считаем «квадратность» каждого варианта — среднее по живым кускам (с учётом только тех что ≥300мм)
   function validPieces(p1, p2){
@@ -1580,8 +1590,7 @@ function editExpense(id){
   parseDetSize(); renderOut(); window.scrollTo(0,0);
 }
 function setOutFilter(f){
-  // Клик по активному фильтру — снять его (показать все)
-  outFilter = (outFilter===f) ? '' : f;
+  outFilter = (outFilter===f) ? '' : f; // повторное нажатие снимает фильтр
   ['full','partial'].forEach(k=>{
     const el=document.getElementById(`out-fchip-${k}`);
     if(el) el.classList.toggle('on', outFilter===k);
@@ -1648,14 +1657,18 @@ function renderStock(){
     let sizes=by[mat].filter(s=>s.qty>0);
     if(filterLow) sizes=sizes.filter(s=>s.qty<=2);
     if(!sizes.length) return '';
-    const matEsc=mat.replace(/'/g,"\\'");
-    // Каждый размер — отдельная строка с именем материала слева
-    const rows=sizes.map((s,si)=>`<div class="stkrow">
-      ${si===0?`<span class="stk-matname">${mat}</span>`:'<span class="stk-matname" style="color:transparent;pointer-events:none">·</span>'}
-      <span class="stksz">${s.size}</span>
-      <span class="stkmath"><span class="inc">${s.inc}</span><span class="sep">−</span><span class="dec">${s.dec}</span><span class="eq">=</span><span class="res ${s.qty<=2?'low':''}">${s.qty} шт.</span></span>
-      ${si===0?`<button class="star-btn ${isFav?'fav-on':''}" onclick="toggleFav('${matEsc}')">${isFav?'⭐':'☆'}</button>`:'<span style="width:20px;flex-shrink:0"></span>'}
-    </div>`).join('');
+    const rows=sizes.map((s,i)=>`
+      <div class="stkrow">
+        ${i===0
+          ? `<span class="stkmat-inline">${mat}</span>`
+          : `<span class="stkmat-inline" style="color:var(--muted);font-weight:600;font-size:11px;opacity:.5">${mat}</span>`}
+        <span class="stksz">${s.size}</span>
+        <span class="stkmath">
+          <span class="inc">${s.inc}</span><span class="sep">−</span><span class="dec">${s.dec}</span><span class="eq">=</span>
+          <span class="res ${s.qty<=2?'low':''}">${s.qty}шт</span>
+        </span>
+        ${i===0?`<button class="star-btn" onclick="event.stopPropagation();toggleFav('${mat.replace(/'/g,"\\'")}')">${isFav?'⭐':'☆'}</button>`:'<span style="width:20px;flex-shrink:0"></span>'}
+      </div>`).join('');
     return `<div class="stkcard ${isFav?'fav':''}">${rows}</div>`;
   }).filter(Boolean).join('');
   if(!grid.innerHTML) grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';
@@ -1901,8 +1914,7 @@ function renderRemByMat(){
       const row=document.getElementById(`pr-${p.recId}-${p.pi}`);
       if(!row) return;
 
-      let lpTimer=null;
-      let lpStartX=0, lpStartY=0;
+      let lpTimer=null, lpStartX=0, lpStartY=0;
       row.addEventListener('pointerdown', e=>{
         if(e.target.closest('button')||e.target.closest('.piece-edit-form')) return;
         lpStartX=e.clientX; lpStartY=e.clientY;
@@ -1911,15 +1923,15 @@ function renderRemByMat(){
           if(!selMode) enterSelMode();
           selSet.add(`${p.recId}-${p.pi}`);
           updateSelCount(); renderRemByMat();
-          if(navigator.vibrate) navigator.vibrate([30,20,30]);
-        }, 1500);
+          if(navigator.vibrate) navigator.vibrate(40);
+        }, 500);
       });
       const cancelLP=(e)=>{
         if(!lpTimer) return;
-        // Отменяем только если палец сдвинулся больше чем на 10px
+        // Отменяем только при движении > 8px
         if(e.type==='pointermove'){
-          const dx=Math.abs(e.clientX-lpStartX), dy=Math.abs(e.clientY-lpStartY);
-          if(dx<10&&dy<10) return;
+          const dx=e.clientX-lpStartX, dy=e.clientY-lpStartY;
+          if(Math.sqrt(dx*dx+dy*dy)<8) return;
         }
         clearTimeout(lpTimer); lpTimer=null;
       };
