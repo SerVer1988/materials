@@ -801,12 +801,12 @@ tr:last-child td{border-bottom:none}
 <div class="overlay" id="scrap-place-modal">
   <div class="modal" style="max-height:85vh;overflow-y:auto">
     <div class="mhandle"></div>
-    <div class="mtitle">✂️ Куда поместить остатки?</div>
+    <div class="mtitle">✂️ Остатки после реза</div>
     <p style="color:var(--muted);font-size:12px;margin-bottom:14px;line-height:1.5">
-      Укажите место для каждого обрезка или снимите галочку чтобы не сохранять
+      Проверьте и при необходимости скорректируйте размеры, укажите место хранения
     </p>
     <div id="scrap-pieces-list"></div>
-    <button class="btn bprim bfull" onclick="saveScrapPlaces()" style="margin-top:10px;margin-bottom:9px">✅ Сохранить</button>
+    <button class="btn bprim bfull" onclick="saveScrapPlaces()" style="margin-top:10px;margin-bottom:9px">✅ Сохранить обрезки</button>
     <button class="btn bghost bfull" onclick="closeScrapModal()">Пропустить всё</button>
   </div>
 </div>
@@ -954,10 +954,19 @@ async function manualSync(){
 function setSyncStatus(state){
   const el=document.getElementById('sync-status');
   if(!el) return;
-  if(state==='ok')   { el.textContent='☁️ Синхронизировано'; el.style.color='var(--green)'; }
+  if(state==='ok'){
+    const t=now();
+    el.innerHTML=`☁️ ${t}`;
+    el.style.color='var(--green)';
+    localStorage.setItem('lm7_last_sync',t);
+  }
   if(state==='err')  { el.textContent='⚠️ Нет связи'; el.style.color='var(--red)'; }
   if(state==='sync') { el.textContent='🔄 Сохранение...'; el.style.color='var(--muted)'; }
-  if(state==='load') { el.textContent='🔄 Загрузка...'; el.style.color='var(--muted)'; }
+  if(state==='load') {
+    const last=localStorage.getItem('lm7_last_sync');
+    el.textContent=last?`☁️ ${last}`:'🔄 Загрузка...';
+    el.style.color='var(--muted)';
+  }
 }
 
 // ══════════════════════════════════════ STORAGE
@@ -1299,8 +1308,9 @@ function toggleFilter(type){
   else{filterFav=!filterFav;document.getElementById('fchip-fav').classList.toggle('fav-on',filterFav);}
   renderStock();
 }
-function toggleFav(mat){
-  if(favorites.has(mat)) favorites.delete(mat); else favorites.add(mat);
+function toggleFav(mat,size){
+  const key=size?`${mat}||${size}`:mat;
+  if(favorites.has(key)) favorites.delete(key); else favorites.add(key);
   save(); renderStock();
 }
 
@@ -1646,30 +1656,34 @@ function renderStock(){
   const q=(document.getElementById('stk-s')?.value||'').toLowerCase();
   const by=calcStockDetailed(); const grid=document.getElementById('stk-grid');
   let keys=Object.keys(by).filter(m=>!q||m.toLowerCase().includes(q));
-  if(filterFav) keys=keys.filter(m=>favorites.has(m));
+  if(filterFav) keys=keys.filter(m=>by[m].some(s=>favorites.has(`${m}||${s.size}`)));
   if(filterLow) keys=keys.filter(m=>by[m].some(s=>s.qty>0&&s.qty<=2));
-  // Убираем нулевые и отрицательные размеры
   keys=keys.filter(m=>by[m].some(s=>s.qty>0));
   keys.sort();
   if(!keys.length){grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';return;}
   grid.innerHTML=keys.map(mat=>{
-    const isFav=favorites.has(mat);
     let sizes=by[mat].filter(s=>s.qty>0);
     if(filterLow) sizes=sizes.filter(s=>s.qty<=2);
+    if(filterFav) sizes=sizes.filter(s=>favorites.has(`${mat}||${s.size}`));
     if(!sizes.length) return '';
-    const rows=sizes.map((s,i)=>`
+    const anyFav=sizes.some(s=>favorites.has(`${mat}||${s.size}`));
+    const rows=sizes.map((s,i)=>{
+      const favKey=`${mat}||${s.size}`;
+      const isFavRow=favorites.has(favKey);
+      return `
       <div class="stkrow">
         ${i===0
           ? `<span class="stkmat-inline">${mat}</span>`
-          : `<span class="stkmat-inline" style="color:var(--muted);font-weight:600;font-size:11px;opacity:.5">${mat}</span>`}
+          : `<span class="stkmat-inline" style="color:var(--muted);font-weight:600;font-size:11px;opacity:.45">${mat}</span>`}
         <span class="stksz">${s.size}</span>
         <span class="stkmath">
           <span class="inc">${s.inc}</span><span class="sep">−</span><span class="dec">${s.dec}</span><span class="eq">=</span>
           <span class="res ${s.qty<=2?'low':''}">${s.qty}шт</span>
         </span>
-        ${i===0?`<button class="star-btn" onclick="event.stopPropagation();toggleFav('${mat.replace(/'/g,"\\'")}')">${isFav?'⭐':'☆'}</button>`:'<span style="width:20px;flex-shrink:0"></span>'}
-      </div>`).join('');
-    return `<div class="stkcard ${isFav?'fav':''}">${rows}</div>`;
+        <button class="star-btn" onclick="event.stopPropagation();toggleFav('${mat.replace(/'/g,"\\'")}','${s.size.replace(/'/g,"\\'")}')">${isFavRow?'⭐':'☆'}</button>
+      </div>`;
+    }).join('');
+    return `<div class="stkcard ${anyFav?'fav':''}">${rows}</div>`;
   }).filter(Boolean).join('');
   if(!grid.innerHTML) grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';
 }
@@ -1971,9 +1985,31 @@ function renderAll(){
 function del(tbl,id){
   confirm2('Удалить эту запись?',()=>{
     if(tbl==='expense'){
-      // Удаляем связанные авто-обрезки (созданные этим расходом)
-      // Они идут сразу после записи расхода по id (id+1, id+2)
-      db.remainders=db.remainders.filter(r=>r.id!==id+1&&r.id!==id+2);
+      const exp=db.expense.find(r=>r.id===id);
+      // Восстанавливаем обрезки использованные через applyScrapPlan
+      if(exp && exp.consumedScraps && exp.consumedScraps.length){
+        exp.consumedScraps.forEach(cs=>{
+          // Ищем запись куда вернуть
+          let rec=db.remainders.find(r=>r.id===cs.recId);
+          if(rec){
+            // Возвращаем qty к обрезку если он ещё есть
+            const existing=rec.pieces.find(p=>p.w===cs.w&&p.l===cs.l&&p.mat===cs.mat);
+            if(existing) existing.qty=(existing.qty||1)+cs.qty;
+            else rec.pieces.push({mat:cs.mat,w:cs.w,l:cs.l,qty:cs.qty,type:'scrap_add',place:cs.place});
+            rec.totalM2=+rec.pieces.reduce((s,p)=>s+p.w*p.l*(p.qty||1)/1e6,0).toFixed(4);
+            rec.totalPcs=rec.pieces.reduce((s,p)=>s+(p.qty||1),0);
+          } else {
+            // Запись обрезка была удалена — создаём новую
+            db.remainders.push({
+              id:Date.now()+Math.random()*100|0, dt:now(),
+              pieces:[{mat:cs.mat,w:cs.w,l:cs.l,qty:cs.qty,type:'scrap_add',place:cs.place}],
+              totalM2:+(cs.w*cs.l*cs.qty/1e6).toFixed(4), totalPcs:cs.qty, place:cs.place
+            });
+          }
+        });
+      }
+      // Удаляем автообрезки связанные с этим расходом
+      db.remainders=db.remainders.filter(r=>r.id!==id+1&&r.id!==id+2&&r.expenseId!==id);
     }
     db[tbl]=db[tbl].filter(r=>r.id!==id);
     save(); renderAll();
@@ -2131,15 +2167,28 @@ function openScrapModal(recId){
   const list = document.getElementById('scrap-pieces-list');
   list.innerHTML = pendingScrapPieces.map((p,i)=>{
     const placeOpts = PLACES.map(pl=>`<option value="${pl}">${pl}</option>`).join('');
+    const m2 = +(p.w*p.l*(p.qty||1)/1e6).toFixed(4);
     return `
-    <div class="scrap-piece-item" id="spi-${i}">
-      <div class="scrap-piece-head">
-        <span class="scrap-piece-size">${p.w}×${p.l} мм${p.qty>1?` · <b>${p.qty} шт.</b>`:''}</span>
-        <span class="scrap-piece-m2">${p.m2} м²</span>
-        <label class="scrap-piece-toggle">
-          <input type="checkbox" id="spi-chk-${i}" checked onchange="toggleScrapPiece(${i})">
+    <div class="scrap-piece-item" id="spi-${i}" style="margin-bottom:12px;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs)">
+      <div class="scrap-piece-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span class="scrap-piece-size" style="font-weight:800;font-size:13px;color:var(--accent)">Обрезок ${i+1}${p.qty>1?` · ${p.qty} шт.`:''}</span>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer">
+          <input type="checkbox" id="spi-chk-${i}" ${p.save?'checked':''} onchange="toggleScrapPiece(${i})">
           сохранить
         </label>
+      </div>
+      <div class="frow c3" style="margin-bottom:8px" id="spi-fields-${i}">
+        <div class="fg"><label>Ширина (мм)</label>
+          <input type="number" id="spi-w-${i}" value="${p.w}" inputmode="numeric" min="1"
+            oninput="pendingScrapPieces[${i}].w=parseInt(this.value)||p.w;document.getElementById('spi-m2-${i}').textContent=+(pendingScrapPieces[${i}].w*pendingScrapPieces[${i}].l*(pendingScrapPieces[${i}].qty||1)/1e6).toFixed(4)+' м²'">
+        </div>
+        <div class="fg"><label>Длина (мм)</label>
+          <input type="number" id="spi-l-${i}" value="${p.l}" inputmode="numeric" min="1"
+            oninput="pendingScrapPieces[${i}].l=parseInt(this.value)||p.l;document.getElementById('spi-m2-${i}').textContent=+(pendingScrapPieces[${i}].w*pendingScrapPieces[${i}].l*(pendingScrapPieces[${i}].qty||1)/1e6).toFixed(4)+' м²'">
+        </div>
+        <div class="fg"><label>Площадь</label>
+          <div id="spi-m2-${i}" style="padding:9px 10px;font-size:13px;font-weight:800;color:var(--blue)">${m2} м²</div>
+        </div>
       </div>
       <div class="fg" id="spi-place-wrap-${i}">
         <label>Место хранения</label>
@@ -2171,13 +2220,19 @@ function saveScrapPlaces(){
       // Удаляем всю запись
       db.remainders = db.remainders.filter(r=>r.id!==pendingScrapRecId);
     } else {
-      // Обновляем куски с местами — сохраняем qty
-      rec.pieces = toSave.map(p=>({
-        mat: rec.pieces[p.idx].mat,
-        w: p.w, l: p.l, qty: p.qty||1,
-        type: 'scrap_add',
-        place: p.place
-      }));
+      rec.pieces = toSave.map(p=>{
+        // Читаем актуальные значения из полей ввода
+        const wEl=document.getElementById(`spi-w-${p.idx}`);
+        const lEl=document.getElementById(`spi-l-${p.idx}`);
+        const w = wEl ? (parseInt(wEl.value)||p.w) : p.w;
+        const l = lEl ? (parseInt(lEl.value)||p.l) : p.l;
+        return {
+          mat: rec.pieces[p.idx]?.mat||p.mat||'',
+          w, l, qty: p.qty||1,
+          type: 'scrap_add',
+          place: p.place
+        };
+      });
       rec.place = toSave[0].place;
       rec.totalM2 = +rec.pieces.reduce((s,p)=>s+p.w*p.l*(p.qty||1)/1e6,0).toFixed(4);
       rec.totalPcs = rec.pieces.reduce((s,p)=>s+(p.qty||1),0);
@@ -2340,45 +2395,38 @@ function openScrapFindModal(mat, detW, detL, needQty){
   document.getElementById('scrap-find-modal').classList.add('show');
 }
 
-// Применить план — списывает все обрезки из плана автоматически
 function applyScrapPlan(){
   if(!pendingScrapFind) return;
-  const {matches, plan, needQty, mat} = pendingScrapFind;
+  const {matches, plan, needQty, mat, detW, detL} = pendingScrapFind;
   if(!plan.length){ toast('Нет обрезков для применения','err'); return; }
 
-  // Собираем реальные объекты для обновления (важно: работаем snapshot чтобы не сломать индексы)
+  const consumed=[]; // {recId, pi, w, l, qty, place, mat} — что списали
+
   const toProcess = plan.map(p=>({
     match: matches[p.matchIdx],
     useQty: p.useQty,
-    fitsPerPiece: p.fitsPerPiece
+    fitsPerPiece: p.fitsPerPiece,
+    takeTotal: p.takeTotal
   }));
 
-  toProcess.forEach(({match, useQty})=>{
+  toProcess.forEach(({match, useQty, fitsPerPiece})=>{
     const rec = db.remainders.find(r=>r.id===match.recId);
     if(!rec) return;
     const p = rec.pieces[match.pi];
     if(!p) return;
 
+    // Записываем что потратили
+    consumed.push({recId:match.recId, pi:match.pi, w:p.w, l:p.l, qty:useQty, place:p.place||rec.place||'', mat:p.mat});
+
     if(useQty >= p.qty){
-      // Израсходовать весь обрезок (все штуки)
-      if(match.remaining.length === 0 || useQty >= p.qty){
-        rec.pieces.splice(match.pi, 1);
-      } else {
-        // Заменяем на остатки
-        const newPieces = match.remaining.map(r=>({
-          mat: p.mat, w: r.w, l: r.l, qty: 1,
-          type: 'scrap_add', place: p.place || rec.place || ''
-        }));
-        rec.pieces.splice(match.pi, 1, ...newPieces);
-      }
+      rec.pieces.splice(match.pi, 1);
     } else {
-      // Уменьшаем qty обрезка
       p.qty -= useQty;
-      // Добавляем остатки от резки как новые обрезки
+      // Добавляем остатки от реза
       if(match.remaining.length){
         const newPieces = match.remaining.map(r=>({
-          mat: p.mat, w: r.w, l: r.l, qty: useQty,
-          type: 'scrap_add', place: p.place || rec.place || ''
+          mat:p.mat, w:r.w, l:r.l, qty:useQty,
+          type:'scrap_add', place:p.place||rec.place||''
         }));
         rec.pieces.splice(match.pi+1, 0, ...newPieces);
       }
@@ -2392,10 +2440,11 @@ function applyScrapPlan(){
     }
   });
 
-  // Записываем источник в последнюю запись расхода
+  // Сохраняем в последней записи расхода что потратили (для восстановления при удалении)
   const lastExp = db.expense[db.expense.length-1];
   if(lastExp && lastExp.etype==='partial'){
     lastExp.sourceScrap = toProcess.map(t=>`${t.match.piece.w}×${t.match.piece.l}`).join(', ');
+    lastExp.consumedScraps = consumed; // для восстановления
   }
 
   const takenTotal = plan.reduce((s,p)=>s+p.takeTotal,0);
@@ -2912,7 +2961,7 @@ self.addEventListener('fetch', e => {
     animation: 'pwa-slide-up .3s ease'
   });
 
-  // Добавляем анимацию 
+  // Добавляем анимацию
   const style = document.createElement('style');
   style.textContent = `@keyframes pwa-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`;
   document.head.appendChild(style);
