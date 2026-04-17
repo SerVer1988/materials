@@ -493,14 +493,7 @@ tr:last-child td{border-bottom:none}
     <div id="access-error" style="color:var(--red);font-size:12px;font-weight:700;text-align:center;margin-top:10px;display:none">
       Введите код (минимум 3 символа)
     </div>
-
-    <!-- Недавние коды -->
-    <div id="recent-codes-wrap" style="margin-top:20px;display:none">
-      <div style="font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin-bottom:8px;text-align:center">НЕДАВНИЕ</div>
-      <div id="recent-codes-list" style="display:flex;flex-direction:column;gap:6px"></div>
-    </div>
-
-    <div style="margin-top:20px;padding:12px;background:var(--card2);border-radius:var(--rs);font-size:11px;color:var(--muted);line-height:1.6">
+    <div style="margin-top:24px;padding:12px;background:var(--card2);border-radius:var(--rs);font-size:11px;color:var(--muted);line-height:1.6">
       💡 Придумайте любой уникальный код для вашей организации.<br>
       Кто знает ваш код — видит ваши данные.<br>
       Храните код в надёжном месте.
@@ -717,22 +710,6 @@ tr:last-child td{border-bottom:none}
     <div class="ptitle">⚙️ Ещё</div>
   </div>
   <div class="sec-body">
-
-  <!-- Код доступа -->
-  <div class="card" style="margin-bottom:12px">
-    <div class="ctitle">🔑 Код доступа</div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div id="more-code-display" style="flex:1;font-size:16px;font-weight:900;letter-spacing:.1em;color:var(--accent);filter:blur(5px);transition:filter .25s;user-select:none;cursor:pointer" onclick="toggleCodeVisibility()">••••••••••</div>
-      <button class="btn bghost" onclick="toggleCodeVisibility()" id="more-code-toggle-btn" style="padding:7px 12px;font-size:12px;flex-shrink:0">👁 Показать</button>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn bghost bfull" onclick="copyAccessCode()" style="font-size:12px;padding:8px">📋 Копировать</button>
-      <button class="btn" onclick="showChangeCode()" style="font-size:12px;padding:8px;background:var(--rlt);color:var(--red);border:1px solid var(--red);border-radius:var(--rs);font-family:'Nunito',sans-serif;font-weight:800;flex:1">🔄 Сменить код</button>
-    </div>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.5">
-      Кто знает этот код — видит ваши данные. Не передавайте посторонним.
-    </div>
-  </div>
 
   <!-- История — сворачиваемая -->
   <div class="ccard" id="cc-hist">
@@ -957,104 +934,26 @@ let   syncing   = false;
 
 // ── КОД ДОСТУПА ──
 let ACCESS_CODE = '';
-let codeVisible = false;
 
 function getAccessCode(){ return localStorage.getItem('lm7_access_code')||''; }
-
-// Сохраняем код в список недавних (макс 5)
-function saveRecentCode(code){
-  let recent = JSON.parse(localStorage.getItem('lm7_recent_codes')||'[]');
-  recent = recent.filter(c=>c!==code); // убираем если уже есть
-  recent.unshift(code);
-  if(recent.length>5) recent=recent.slice(0,5);
-  localStorage.setItem('lm7_recent_codes', JSON.stringify(recent));
-}
-
-function getRecentCodes(){
-  return JSON.parse(localStorage.getItem('lm7_recent_codes')||'[]');
-}
-
-function renderRecentCodes(){
-  const wrap=document.getElementById('recent-codes-wrap');
-  const list=document.getElementById('recent-codes-list');
-  if(!wrap||!list) return;
-  const codes=getRecentCodes();
-  if(!codes.length){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  list.innerHTML=codes.map(c=>`
-    <button onclick="quickLogin('${c}')" style="
-      display:flex;align-items:center;justify-content:space-between;
-      width:100%;padding:10px 14px;
-      background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);
-      font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
-      color:var(--text);cursor:pointer;text-align:left;
-      transition:border-color .15s,background .15s
-    " onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-      <span style="letter-spacing:.06em;color:var(--accent)">🔑 ${c}</span>
-      <span style="color:var(--muted);font-size:11px">войти →</span>
-    </button>`).join('');
-}
-
-function quickLogin(code){
-  document.getElementById('access-code-input').value=code;
-  applyAccessCode();
-}
 
 function applyAccessCode(){
   const inp = document.getElementById('access-code-input');
   const val = (inp.value||'').trim().toUpperCase();
-  const errEl = document.getElementById('access-error');
   if(val.length < 3){
-    errEl.style.display='block';
+    document.getElementById('access-error').style.display='block';
     return;
   }
-  errEl.style.display='none';
-  saveRecentCode(val);
   localStorage.setItem('lm7_access_code', val);
   ACCESS_CODE = val;
   document.getElementById('access-screen').style.display='none';
   updateCodeBadge();
-  updateMoreCodeDisplay();
   init();
 }
 
 function updateCodeBadge(){
   const badge=document.getElementById('access-code-badge');
   if(badge&&ACCESS_CODE) badge.textContent=`🔑 ${ACCESS_CODE}`;
-}
-
-function updateMoreCodeDisplay(){
-  const el=document.getElementById('more-code-display');
-  if(!el) return;
-  if(codeVisible){
-    el.textContent=ACCESS_CODE||'—';
-    el.style.filter='none';
-  } else {
-    el.textContent='•'.repeat(Math.max(6,ACCESS_CODE.length));
-    el.style.filter='blur(5px)';
-  }
-}
-
-function toggleCodeVisibility(){
-  codeVisible=!codeVisible;
-  updateMoreCodeDisplay();
-  const btn=document.getElementById('more-code-toggle-btn');
-  if(btn) btn.textContent=codeVisible?'🙈 Скрыть':'👁 Показать';
-}
-
-function copyAccessCode(){
-  if(!ACCESS_CODE) return;
-  navigator.clipboard.writeText(ACCESS_CODE).then(()=>{
-    toast('📋 Код скопирован','ok');
-  }).catch(()=>{
-    // fallback
-    const el=document.createElement('textarea');
-    el.value=ACCESS_CODE; el.style.position='fixed'; el.style.opacity='0';
-    document.body.appendChild(el); el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    toast('📋 Код скопирован','ok');
-  });
 }
 
 function showChangeCode(){
@@ -1065,13 +964,11 @@ function showChangeCode(){
     localStorage.removeItem('lm7_mats');
     localStorage.removeItem('lm7_sizes');
     localStorage.removeItem('lm7_places');
-    ACCESS_CODE=''; codeVisible=false;
-    // Показываем экран входа с недавними кодами
+    ACCESS_CODE='';
     document.getElementById('access-screen').style.display='flex';
     document.getElementById('access-code-input').value='';
     document.getElementById('access-error').style.display='none';
     document.getElementById('access-code-badge').textContent='';
-    renderRecentCodes();
   });
 }
 
@@ -3077,12 +2974,10 @@ function listDel(key,i){
 ACCESS_CODE = getAccessCode();
 if(!ACCESS_CODE){
   document.getElementById('access-screen').style.display='flex';
-  renderRecentCodes();
   setTimeout(()=>document.getElementById('access-code-input')?.focus(), 200);
 } else {
   document.getElementById('access-screen').style.display='none';
   updateCodeBadge();
-  updateMoreCodeDisplay();
   init();
 }
 
@@ -3163,7 +3058,7 @@ self.addEventListener('fetch', e => {
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    // Показываем баннер только если не отклоняли раньше 
+    // Показываем баннер только если не отклоняли раньше
     if(!localStorage.getItem('pwa_dismissed')){
       banner.style.display = 'flex';
     }
