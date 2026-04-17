@@ -3163,7 +3163,7 @@ self.addEventListener('fetch', e => {
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    // Показываем баннер только если не отклоняли раньше
+    // Показываем баннер только если не отклоняли раньше 
     if(!localStorage.getItem('pwa_dismissed')){
       banner.style.display = 'flex';
     }
