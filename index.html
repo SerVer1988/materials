@@ -283,6 +283,20 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .ac-item mark{background:none;color:var(--accent);font-weight:800}
 
 
+/* ── FAB ── */
+.fab{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,.4);transition:transform .15s,box-shadow .15s;line-height:1;font-family:'Nunito',sans-serif}
+.fab:active{transform:scale(.9)}
+.fab-green{background:#22c55e;color:#fff}
+.fab-red{background:#ef4444;color:#fff}
+.fab-yellow{background:#F6C90E;color:#1A2027}
+/* ── Section header row ── */
+.sec-hdr{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.sec-hdr-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--accent);white-space:nowrap}
+.sec-hdr .swrap{flex:1;margin:0;position:relative}
+/* ── Add panel (slide-down) ── */
+.add-panel{overflow:hidden;max-height:0;transition:max-height .32s cubic-bezier(.4,0,.2,1);background:var(--card);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:10px}
+.add-panel.open{max-height:1200px}
+.add-panel-body{padding:13px}
 .swrap{position:relative}
 .swrap input{padding-left:38px}
 .swrap::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
@@ -525,13 +539,18 @@ tr:last-child td{border-bottom:none}
 <!-- ══ ПРИХОД ══ -->
 <div class="sec active" id="sec-income">
   <div class="sec-top">
-    <div class="ptitle">📥 Приход <span class="pill" id="in-pill">новая запись</span></div>
-    <div class="ccard" id="cc-income">
-      <div class="ccard-head" onclick="toggleCard('cc-income')">
-        <div class="ccard-title">✏️ <span id="cc-income-label">Добавить приход</span></div>
-        <span class="ccard-arrow">▼</span>
+    <div class="sec-hdr">
+      <span class="sec-hdr-title">📥 Приход</span>
+      <div class="swrap">
+        <input type="text" id="in-s" placeholder="Поиск..." autocomplete="off" oninput="renderIn();inClearBtn();inAcInput()" onfocus="inAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-in-s');if(d)d.classList.remove('show');},150)" onkeydown="inAcKey(event)">
+        <div class="ac-dropdown" id="ac-in-s"></div>
+        <button class="swrap-clear" id="in-s-clear" onclick="document.getElementById('in-s').value='';renderIn();inClearBtn();document.getElementById('ac-in-s').classList.remove('show')" tabindex="-1">✕</button>
       </div>
-      <div class="ccard-body">
+      <button class="fab fab-green" onclick="toggleAddPanel('add-income')" title="Добавить приход">＋</button>
+    </div>
+    <!-- Добавить приход — скрытая панель -->
+    <div class="add-panel" id="add-income">
+      <div class="add-panel-body">
         <div class="edit-banner" id="in-edit-banner" style="display:none">
           ✏️ Режим редактирования
           <button class="edit-cancel" onclick="cancelEdit('income')">✕ Отмена</button>
@@ -555,17 +574,15 @@ tr:last-child td{border-bottom:none}
           <div class="custom-input-wrap" id="in-place-custom"><input type="text" placeholder="Склад А, стеллаж 2..."><button class="custom-add-btn" onclick="addCustomOption('in-place','in-place-custom','places')">+ Добавить</button></div>
         </div>
         <div class="frow" style="margin-bottom:9px">
-          <div class="fg"><label>Кол-во</label><input type="number" id="in-qty" value="1" inputmode="numeric" min="1"></div>
-          <div class="fg full"><label>Примечание</label><input type="text" id="in-note" placeholder="необязательно"></div>
+          <div class="fg"><label>Кол-во</label><input type="number" id="in-qty" value="1" inputmode="numeric" min="1" onkeydown="if(event.key==='Enter'){event.preventDefault();saveIncome();}"></div>
+          <div class="fg full"><label>Примечание</label><input type="text" id="in-note" placeholder="необязательно" onkeydown="if(event.key==='Enter'){event.preventDefault();saveIncome();}"></div>
         </div>
         <button class="btn bprim bbig" id="in-save-btn" onclick="saveIncome()">✅ Записать приход</button>
       </div>
     </div>
+    <div id="in-place-filter" class="place-filter-row" style="margin-bottom:6px;flex-wrap:wrap;gap:5px;display:flex"></div>
   </div>
   <div class="sec-body">
-    <div class="ptitle" style="font-size:14px;margin-bottom:4px;margin-top:10px">Последние поступления</div>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:700">Нажмите строку для редактирования</p>
-    <div id="in-place-filter" class="place-filter-row" style="margin-bottom:8px;flex-wrap:wrap;gap:5px;display:flex"></div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="twrap" style="border:none;border-radius:0">
         <table><thead><tr><th>#</th><th>Дата</th><th>Материал</th><th>Размер</th><th>Кол-во</th><th>Место</th><th></th></tr></thead>
@@ -578,13 +595,18 @@ tr:last-child td{border-bottom:none}
 <!-- ══ РАСХОД ══ -->
 <div class="sec" id="sec-expense">
   <div class="sec-top">
-    <div class="ptitle">📤 Расход <span class="pill" id="out-pill">списание</span></div>
-    <div class="ccard" id="cc-expense">
-      <div class="ccard-head" onclick="toggleCard('cc-expense')">
-        <div class="ccard-title">✏️ <span id="cc-expense-label">Добавить расход</span></div>
-        <span class="ccard-arrow">▼</span>
+    <div class="sec-hdr">
+      <span class="sec-hdr-title">📤 Расход</span>
+      <div class="swrap">
+        <input type="text" id="out-s" placeholder="Поиск..." autocomplete="off" oninput="renderOut();outClearBtn();outAcInput()" onfocus="outAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-out-s');if(d)d.classList.remove('show');},150)" onkeydown="outAcKey(event)">
+        <div class="ac-dropdown" id="ac-out-s"></div>
+        <button class="swrap-clear" id="out-s-clear" onclick="document.getElementById('out-s').value='';renderOut();outClearBtn();document.getElementById('ac-out-s').classList.remove('show')" tabindex="-1">✕</button>
       </div>
-      <div class="ccard-body">
+      <button class="fab fab-red" onclick="toggleAddPanel('add-expense')" title="Добавить расход">＋</button>
+    </div>
+    <!-- Добавить расход — скрытая панель -->
+    <div class="add-panel" id="add-expense">
+      <div class="add-panel-body">
         <div class="edit-banner" id="out-edit-banner" style="display:none">
           ✏️ Режим редактирования
           <button class="edit-cancel" onclick="cancelEdit('expense')">✕ Отмена</button>
@@ -604,7 +626,14 @@ tr:last-child td{border-bottom:none}
         </div>
         <div class="frow" style="margin-bottom:9px">
           <div class="fg"><label>Кол-во</label><input type="number" id="out-qty" value="1" inputmode="numeric" min="1" oninput="parseDetSize()"></div>
-          <div class="fg"><label>Размер изделия</label><input type="text" id="out-det" placeholder="500х300" oninput="parseDetSize()"></div>
+          <div class="fg"><label>Размер изделия</label>
+            <div style="position:relative">
+              <input type="text" id="out-det" placeholder="500х300" oninput="parseDetSize()" style="padding-right:34px"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveExpense();}">
+              <button tabindex="-1" onclick="document.getElementById('out-det').value='';parseDetSize();document.getElementById('out-det').focus()"
+                style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--red);font-size:15px;cursor:pointer;padding:2px;line-height:1;opacity:.7">✕</button>
+            </div>
+          </div>
           <div class="fg full"><label>Примечание</label><input type="text" id="out-note" placeholder="необязательно"></div>
         </div>
         <div id="scrap-preview" style="display:none">✂️ Обрезки будут добавлены: <span id="scrap-preview-text"></span></div>
@@ -614,14 +643,12 @@ tr:last-child td{border-bottom:none}
         <button class="btn bdng bbig" id="out-save-btn" onclick="saveExpense()">📤 Записать расход</button>
       </div>
     </div>
-  </div>
-  <div class="sec-body">
-    <div class="ptitle" style="font-size:14px;margin-bottom:4px;margin-top:10px">Последние расходы</div>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700">Нажмите строку для редактирования</p>
-    <div class="fchips" style="margin-bottom:8px">
+    <div class="fchips" style="margin-bottom:6px">
       <div class="fchip" id="out-fchip-full"    onclick="setOutFilter('full')">📋 Листы</div>
       <div class="fchip" id="out-fchip-partial" onclick="setOutFilter('partial')">✂️ Обрезки</div>
     </div>
+  </div>
+  <div class="sec-body">
     <div class="card" style="padding:0;overflow:hidden">
       <div class="twrap" style="border:none;border-radius:0">
         <table><thead><tr><th>#</th><th>Дата</th><th>Материал</th><th>Размер</th><th>Кол-во</th><th>Изделие</th><th></th></tr></thead>
@@ -634,54 +661,63 @@ tr:last-child td{border-bottom:none}
 <!-- ══ СКЛАД ══ -->
 <div class="sec" id="sec-stock">
   <div class="sec-top">
-    <div class="ptitle" style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
-      <span>📦 Склад</span>
+    <div class="sec-hdr" style="margin-bottom:9px">
+      <span class="sec-hdr-title">📦 Склад</span>
       <div class="swrap" style="flex:1;margin:0;position:relative">
         <input type="text" id="stk-s" placeholder="Поиск..." autocomplete="off" oninput="renderStock();renderRemByMat();stkClearBtn();stkAcInput()" onfocus="stkAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-stk-s');if(d)d.classList.remove('show');},150)" onkeydown="stkAcKey(event)">
         <div class="ac-dropdown" id="ac-stk-s"></div>
         <button class="swrap-clear" id="stk-s-clear" onclick="document.getElementById('stk-s').value='';renderStock();renderRemByMat();stkClearBtn();document.getElementById('ac-stk-s').classList.remove('show')" tabindex="-1">✕</button>
+      </div>
+      <button class="fab fab-yellow" id="fab-rem" onclick="toggleAddPanel('add-rem')" title="Добавить обрезок" style="display:none">＋</button>
+    </div>
+    <!-- Добавить обрезок — панель (видна только когда открыта вкладка Обрезки) -->
+    <div class="add-panel" id="add-rem">
+      <div class="add-panel-body">
+        <div class="fg" style="margin-bottom:9px">
+          <label>Материал</label>
+          <div class="ac-wrap">
+            <input type="text" id="rem-mat" placeholder="Начните вводить..." autocomplete="off" oninput="acInput('rem-mat');acUpdateClear('rem-mat')" onfocus="acInput('rem-mat')" onblur="acBlur('rem-mat')" onkeydown="acKey(event,'rem-mat')">
+            <button class="ac-clear" id="ac-clear-rem-mat" onclick="acClear('rem-mat')" tabindex="-1">✕</button>
+            <div class="ac-dropdown" id="ac-rem-mat"></div>
+          </div>
+        </div>
+        <div class="fg" style="margin-bottom:9px">
+          <label>Место хранения</label>
+          <select id="rem-place" onchange="onSelectChange('rem-place','rem-place-custom')"></select>
+          <div class="custom-input-wrap" id="rem-place-custom"><input type="text" placeholder="Стеллаж А, ящик 3..."><button class="custom-add-btn" onclick="addCustomOption('rem-place','rem-place-custom','places')">+ Добавить</button></div>
+        </div>
+        <div class="frow" style="margin-bottom:9px">
+          <div class="fg">
+            <label>Кол-во шт.</label>
+            <input type="number" id="rem-qty" value="1" inputmode="numeric" min="1">
+          </div>
+          <div class="fg" style="flex:2">
+            <label>Размер (мм)</label>
+            <div style="position:relative">
+              <input type="text" id="rem-size" placeholder="234×2132" autocomplete="off" inputmode="text"
+                style="padding-right:34px"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addPiece();}">
+              <button tabindex="-1" onclick="document.getElementById('rem-size').value='';document.getElementById('rem-size').focus()"
+                style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--red);font-size:15px;cursor:pointer;padding:2px;line-height:1;opacity:.7">✕</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn bprim bfull" onclick="addPiece()">➕ Добавить обрезок</button>
       </div>
     </div>
     <div class="itabrow">
       <button class="itab active" onclick="setStockTab(this,'balance')">📊 Листы</button>
       <button class="itab" onclick="setStockTab(this,'rem')">✂️ Обрезки</button>
     </div>
-    <!-- Top controls for Листы -->
+    <!-- Листы -->
     <div id="panel-top-balance">
       <div class="fchips">
         <div class="fchip" id="fchip-low" onclick="toggleFilter('low')">⚠️ Мало (≤2)</div>
         <div class="fchip" id="fchip-fav" onclick="toggleFilter('fav')">⭐ Избранные</div>
       </div>
     </div>
-    <!-- Top controls for Обрезки: add form + place filter -->
+    <!-- Обрезки — только фильтры -->
     <div id="panel-top-rem" style="display:none">
-      <div class="ccard" id="cc-rem">
-        <div class="ccard-head" onclick="toggleCard('cc-rem')">
-          <div class="ccard-title">✏️ Добавить обрезок</div>
-          <span class="ccard-arrow">▼</span>
-        </div>
-        <div class="ccard-body">
-          <div class="fg" style="margin-bottom:9px">
-            <label>Материал</label>
-            <div class="ac-wrap">
-              <input type="text" id="rem-mat" placeholder="Начните вводить..." autocomplete="off" oninput="acInput('rem-mat');acUpdateClear('rem-mat')" onfocus="acInput('rem-mat')" onblur="acBlur('rem-mat')" onkeydown="acKey(event,'rem-mat')">
-              <button class="ac-clear" id="ac-clear-rem-mat" onclick="acClear('rem-mat')" tabindex="-1">✕</button>
-              <div class="ac-dropdown" id="ac-rem-mat"></div>
-            </div>
-          </div>
-          <div class="fg" style="margin-bottom:9px">
-            <label>Место хранения</label>
-            <select id="rem-place" onchange="onSelectChange('rem-place','rem-place-custom')"></select>
-            <div class="custom-input-wrap" id="rem-place-custom"><input type="text" placeholder="Стеллаж А, ящик 3..."><button class="custom-add-btn" onclick="addCustomOption('rem-place','rem-place-custom','places')">+ Добавить</button></div>
-          </div>
-          <div class="frow" style="margin-bottom:9px">
-            <div class="fg"><label>Размер (мм)</label><input type="text" id="rem-size" placeholder="234×2132" autocomplete="off" inputmode="text"></div>
-            <div class="fg"><label>Кол-во шт.</label><input type="number" id="rem-qty" value="1" inputmode="numeric" min="1"></div>
-          </div>
-          <button class="btn bprim bfull" onclick="addPiece()">➕ Добавить обрезок</button>
-        </div>
-      </div>
-      <!-- Place filter + area filter — sticky under add-form -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
         <div id="rem-place-filter" class="place-filter-row" style="margin-bottom:0;flex-wrap:wrap;gap:5px;display:flex"></div>
       </div>
@@ -1475,6 +1511,80 @@ function go(name,btn){
   if(name==='more'){renderHist();['mats','sizes','places'].forEach(k=>renderListEditor(k));}
 }
 function toggleCard(id){ document.getElementById(id).classList.toggle('open'); }
+// ── Add panel toggle ──
+function toggleAddPanel(id){
+  const panel=document.getElementById(id);
+  if(!panel) return;
+  const isOpen=panel.classList.toggle('open');
+  // Автофокус на первое поле
+  if(isOpen){
+    const first=panel.querySelector('input[type=text],input[type=number]');
+    if(first) setTimeout(()=>first.focus(),350);
+  }
+}
+
+// ── Income search ──
+function inClearBtn(){
+  const inp=document.getElementById('in-s');
+  const btn=document.getElementById('in-s-clear');
+  if(btn) btn.classList.toggle('show',!!(inp&&inp.value.length>0));
+}
+function inAcInput(){
+  const inp=document.getElementById('in-s');
+  const drop=document.getElementById('ac-in-s');
+  if(!inp||!drop) return;
+  const q=inp.value.trim().toLowerCase();
+  const matches=q?MATS.filter(m=>m.toLowerCase().includes(q)):MATS;
+  if(!matches.length){drop.classList.remove('show');return;}
+  drop.innerHTML=matches.map(m=>`<div class="ac-item" data-val="${m}" onmousedown="document.getElementById('in-s').value='${m.replace(/'/g,"\\'")}';inClearBtn();renderIn();document.getElementById('ac-in-s').classList.remove('show')">${acHighlight(m,q)}</div>`).join('');
+  drop.classList.add('show');
+}
+function inAcKey(e){
+  const drop=document.getElementById('ac-in-s');
+  if(!drop||!drop.classList.contains('show')) return;
+  const items=drop.querySelectorAll('.ac-item');
+  let idx=acFocusIdx['in-s']??-1;
+  if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(idx+1,items.length-1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(idx-1,-1);}
+  else if(e.key==='Enter'&&idx>=0){e.preventDefault();document.getElementById('in-s').value=items[idx].dataset.val;inClearBtn();renderIn();drop.classList.remove('show');return;}
+  else if(e.key==='Escape'){drop.classList.remove('show');return;}
+  else return;
+  acFocusIdx['in-s']=idx;
+  items.forEach((it,i)=>it.classList.toggle('focused',i===idx));
+  if(idx>=0) items[idx].scrollIntoView({block:'nearest'});
+}
+
+// ── Expense search ──
+function outClearBtn(){
+  const inp=document.getElementById('out-s');
+  const btn=document.getElementById('out-s-clear');
+  if(btn) btn.classList.toggle('show',!!(inp&&inp.value.length>0));
+}
+function outAcInput(){
+  const inp=document.getElementById('out-s');
+  const drop=document.getElementById('ac-out-s');
+  if(!inp||!drop) return;
+  const q=inp.value.trim().toLowerCase();
+  const matches=q?MATS.filter(m=>m.toLowerCase().includes(q)):MATS;
+  if(!matches.length){drop.classList.remove('show');return;}
+  drop.innerHTML=matches.map(m=>`<div class="ac-item" data-val="${m}" onmousedown="document.getElementById('out-s').value='${m.replace(/'/g,"\\'")}';outClearBtn();renderOut();document.getElementById('ac-out-s').classList.remove('show')">${acHighlight(m,q)}</div>`).join('');
+  drop.classList.add('show');
+}
+function outAcKey(e){
+  const drop=document.getElementById('ac-out-s');
+  if(!drop||!drop.classList.contains('show')) return;
+  const items=drop.querySelectorAll('.ac-item');
+  let idx=acFocusIdx['out-s']??-1;
+  if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(idx+1,items.length-1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(idx-1,-1);}
+  else if(e.key==='Enter'&&idx>=0){e.preventDefault();document.getElementById('out-s').value=items[idx].dataset.val;outClearBtn();renderOut();drop.classList.remove('show');return;}
+  else if(e.key==='Escape'){drop.classList.remove('show');return;}
+  else return;
+  acFocusIdx['out-s']=idx;
+  items.forEach((it,i)=>it.classList.toggle('focused',i===idx));
+  if(idx>=0) items[idx].scrollIntoView({block:'nearest'});
+}
+
 function setStockTab(btn,tab){
   document.querySelectorAll('.itab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active'); stockTab=tab;
@@ -1482,6 +1592,13 @@ function setStockTab(btn,tab){
   document.getElementById('panel-rem').style.display=tab==='rem'?'':'none';
   document.getElementById('panel-top-balance').style.display=tab==='balance'?'':'none';
   document.getElementById('panel-top-rem').style.display=tab==='rem'?'':'none';
+  // FAB и панель обрезков
+  const fab=document.getElementById('fab-rem');
+  if(fab) fab.style.display=tab==='rem'?'flex':'none';
+  if(tab!=='rem'){
+    const addRem=document.getElementById('add-rem');
+    if(addRem) addRem.classList.remove('open');
+  }
   if(tab==='balance'){ if(selMode) exitSelMode(); renderStock(); } else renderRemByMat();
 }
 function toggleFilter(type){
@@ -1594,7 +1711,49 @@ function parseDetSize(){
   }
 }
 
-// ══════════════════════════════════════ INCOME
+// Подсветить последнюю добавленную строку в таблице/списке
+function highlightLastRow(tbodyId){
+  requestAnimationFrame(()=>{
+    const tb=document.getElementById(tbodyId);
+    if(!tb) return;
+    const row=tb.querySelector('tr:first-child');
+    if(!row) return;
+    row.style.transition='none';
+    row.style.background='rgba(246,201,14,.28)';
+    requestAnimationFrame(()=>{
+      row.style.transition='background 1.4s ease';
+      row.style.background='';
+    });
+    row.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+}
+
+function highlightLastPiece(mat){
+  requestAnimationFrame(()=>{
+    // Найдём карточку по data-mat
+    const card=document.querySelector(`.remcard[data-mat="${mat.replace(/"/g,'&quot;')}"]`);
+    if(!card) return;
+    // Раскроем группу
+    const idx=card.getAttribute('data-mat-idx');
+    if(idx) remOpenGroups.add(mat);
+    renderRemByMat();
+    // После рендера подсветим последнюю строку
+    requestAnimationFrame(()=>{
+      const freshCard=document.querySelector(`.remcard[data-mat="${mat.replace(/"/g,'&quot;')}"]`);
+      if(!freshCard) return;
+      const rows=freshCard.querySelectorAll('.piece-row');
+      const last=rows[rows.length-1];
+      if(!last) return;
+      last.style.transition='none';
+      last.style.background='rgba(246,201,14,.28)';
+      requestAnimationFrame(()=>{
+        last.style.transition='background 1.4s ease';
+        last.style.background='';
+      });
+      last.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  });
+}
 function saveIncome(){
   const mat=(document.getElementById('in-mat').value||'').trim();
   const size=document.getElementById('in-pre').value;
@@ -1613,7 +1772,10 @@ function saveIncome(){
     document.getElementById('in-mat').value='';
     document.getElementById('in-qty').value='1';
     document.getElementById('in-note').value='';
-    document.getElementById('cc-income').classList.remove('open'); toast('✅ Приход записан','ok');
+    document.getElementById('add-income')?.classList.remove('open');
+    toast('✅ Приход записан','ok');
+    save(); renderAll();
+    highlightLastRow('in-tbody'); return;
   }
   save(); renderAll();
 }
@@ -1625,7 +1787,7 @@ function editIncome(id){
   document.getElementById('cc-income-label').textContent='Редактировать приход';
   document.getElementById('in-save-btn').textContent='💾 Сохранить изменения';
   document.getElementById('in-save-btn').className='btn bedit bbig';
-  document.getElementById('in-pill').textContent='редактирование'; document.getElementById('in-pill').className='pill edit';
+   
   document.getElementById('in-mat').value=r.mat; document.getElementById('in-pre').value=r.size;  document.getElementById('in-qty').value=r.qty; document.getElementById('in-note').value=r.note||'';
   const sel=document.getElementById('in-place');
   if(r.place&&[...sel.options].some(o=>o.value===r.place)) sel.value=r.place;
@@ -1641,7 +1803,7 @@ function cancelEdit(type){
     document.getElementById('cc-income-label').textContent='Добавить приход';
     document.getElementById('in-save-btn').textContent='✅ Записать приход';
     document.getElementById('in-save-btn').className='btn bprim bbig';
-    document.getElementById('in-pill').textContent='новая запись'; document.getElementById('in-pill').className='pill';
+     
     renderIn();
   } else {
     editMode.expense=null;
@@ -1650,7 +1812,7 @@ function cancelEdit(type){
     document.getElementById('cc-expense-label').textContent='Добавить расход';
     document.getElementById('out-save-btn').textContent='📤 Записать расход';
     document.getElementById('out-save-btn').className='btn bdng bbig';
-    document.getElementById('out-pill').textContent='списание'; document.getElementById('out-pill').className='pill';
+     
     document.getElementById('out-mat').value='';
     document.getElementById('scrap-preview').style.display='none';
     document.getElementById('scrap-neg-preview').style.display='none';
@@ -1669,7 +1831,9 @@ function renderIn(){
   }
   const tb=document.getElementById('in-tbody');
   let rows=[...db.income].reverse();
+  const sq=(document.getElementById('in-s')?.value||'').toLowerCase();
   if(inPlaceFilter) rows=rows.filter(r=>(r.place||'')=== inPlaceFilter);
+  if(sq) rows=rows.filter(r=>r.mat&&r.mat.toLowerCase().includes(sq));
   rows=rows.slice(0,60);
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>';return;}
   const total=db.income.filter(r=>!inPlaceFilter||(r.place||'')=== inPlaceFilter).length;
@@ -1760,8 +1924,9 @@ function saveExpense(){
   document.getElementById('out-pre').value='';
   document.getElementById('scrap-preview').style.display='none';
   document.getElementById('scrap-neg-preview').style.display='none';
-  document.getElementById('cc-expense').classList.remove('open');
+  document.getElementById('add-expense')?.classList.remove('open');
   toast('📤 Расход записан','ok'); renderStock();
+  highlightLastRow('out-tbody');
   if(newScrapRecId) setTimeout(()=>openScrapModal(newScrapRecId),400);
 }
 function editExpense(id){
@@ -1772,7 +1937,7 @@ function editExpense(id){
   document.getElementById('cc-expense-label').textContent='Редактировать расход';
   document.getElementById('out-save-btn').textContent='💾 Сохранить изменения';
   document.getElementById('out-save-btn').className='btn bedit bbig';
-  document.getElementById('out-pill').textContent='редактирование'; document.getElementById('out-pill').className='pill edit';
+   
   document.getElementById('out-mat').value=r.mat;
   document.getElementById('out-pre').value=r.size==='—'?'':r.size;
   document.getElementById('out-qty').value=r.qty;
@@ -1795,8 +1960,10 @@ function renderOut(){
   });
   const tb=document.getElementById('out-tbody');
   let rows=[...db.expense].reverse();
+  const sq=(document.getElementById('out-s')?.value||'').toLowerCase();
   if(outFilter==='full')    rows=rows.filter(r=>r.etype==='full');
   if(outFilter==='partial') rows=rows.filter(r=>r.etype==='partial');
+  if(sq) rows=rows.filter(r=>r.mat&&r.mat.toLowerCase().includes(sq));
   const total=rows.length;
   rows=rows.slice(0,60);
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>';return;}
@@ -1895,7 +2062,10 @@ function addPiece(){
   // Сброс полей размеров
   document.getElementById('rem-size').value='';
   document.getElementById('rem-qty').value='1';
+  document.getElementById('add-rem')?.classList.remove('open');
   toast(`✅ ${mat} ${w}×${l} добавлен`,'ok');
+  save(); renderRemByMat();
+  highlightLastPiece(mat);
 }
 function renderPending(){
   const card=document.getElementById('pcard'); if(!pending.length){card.style.display='none';return;}
@@ -1922,7 +2092,7 @@ function saveRem(){
   db.remainders.push({id:Date.now(),dt:now(),pieces:[...pending],totalM2,totalPcs,place:place===CUSTOM_VAL?'':place});
   save(); pending=[]; renderPending(); renderRemByMat();
   toast('💾 Обрезки сохранены','ok');
-  document.getElementById('cc-rem').classList.remove('open');
+  document.getElementById('cc-rem')?.classList.remove('open');
 }
 
 // ══════════════════════════════════════ PIECE EDIT (inline rendered)
@@ -2082,7 +2252,7 @@ function renderRemByMat(){
     }).join('');
 
     const matEsc=mat.replace(/'/g,"\\'");
-    return `<div class="remcard${selMode?' sel-mode':''}" data-mat-idx="${mi}" id="remcard-${mi}">
+    return `<div class="remcard${selMode?' sel-mode':''}" data-mat="${mat.replace(/"/g,'&quot;')}" data-mat-idx="${mi}" id="remcard-${mi}">
       <div class="remmat-name" style="display:flex;align-items:center;gap:8px;cursor:pointer" id="remmat-hd-${mi}"
            onclick="toggleRemGroup('${matEsc}')">
         <span class="remmat-sel ${groupSelCls}" id="remmat-chk-${mi}">${groupSelIcon}</span>
