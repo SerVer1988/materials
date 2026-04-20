@@ -981,7 +981,7 @@ const DEFAULT_SIZE="1220х2440", CUSTOM_VAL="__custom__";
 let db={income:[],expense:[],remainders:[]};
 let pending=[];
 let htab='', stockTab='balance', filterLow=false, filterFav=false;
-let lastRemMat='';
+let lastRemMat='', lastInMat='', lastOutMat='';
 let favorites=new Set();
 let remPlaceFilter='';
 let inPlaceFilter='';
@@ -1560,10 +1560,28 @@ function toggleAddPanel(id){
   if(!panel) return;
   const isOpen=panel.classList.toggle('open');
   if(isOpen){
-    if(id==='add-rem'){
+    if(id==='add-income'){
+      // Подставить последний материал если поле пустое
+      const matInp=document.getElementById('in-mat');
+      if(matInp && !matInp.value && lastInMat){
+        matInp.value=lastInMat;
+        acUpdateClear('in-mat');
+      }
+      // Фокус на поле размера (select)
+      setTimeout(()=>document.getElementById('in-pre')?.focus(),350);
+    } else if(id==='add-expense'){
+      // Подставить последний материал если поле пустое
+      const matInp=document.getElementById('out-mat');
+      if(matInp && !matInp.value && lastOutMat){
+        matInp.value=lastOutMat;
+        acUpdateClear('out-mat');
+      }
+      // Фокус на поле размера изделия
+      setTimeout(()=>document.getElementById('out-det')?.focus(),350);
+    } else if(id==='add-rem'){
       // Подставить последний материал если поле пустое
       const matInp=document.getElementById('rem-mat');
-      if(matInp && !matInp.value && typeof lastRemMat!=='undefined' && lastRemMat){
+      if(matInp && !matInp.value && lastRemMat){
         matInp.value=lastRemMat;
         acUpdateClear('rem-mat');
       }
@@ -1822,6 +1840,7 @@ function saveIncome(){
     cancelEdit('income'); toast('✏️ Приход обновлён','ok');
   } else {
     rec.id=Date.now(); rec.dt=now(); db.income.push(rec);
+    lastInMat=mat;
     document.getElementById('in-mat').value='';
     document.getElementById('in-qty').value='1';
     document.getElementById('in-note').value='';
@@ -1955,6 +1974,7 @@ function saveExpense(){
     }
   } else if(etype==='partial'&&det){
     // Показываем модалку поиска подходящих обрезков
+    lastOutMat=mat;
     save(); renderOut();
     document.getElementById('out-mat').value='';
     ['out-det','out-note'].forEach(id=>document.getElementById(id).value='');
@@ -1967,6 +1987,7 @@ function saveExpense(){
     setTimeout(()=>openScrapFindModal(mat, det.w, det.l, qty), 400);
     return;
   }
+  lastOutMat=mat;
   save(); renderAll();
   document.getElementById('out-mat').value='';
   ['out-det','out-note'].forEach(id=>document.getElementById(id).value='');
