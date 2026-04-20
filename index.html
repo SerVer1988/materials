@@ -981,6 +981,7 @@ const DEFAULT_SIZE="1220х2440", CUSTOM_VAL="__custom__";
 let db={income:[],expense:[],remainders:[]};
 let pending=[];
 let htab='', stockTab='balance', filterLow=false, filterFav=false;
+let lastRemMat='';
 let favorites=new Set();
 let remPlaceFilter='';
 let inPlaceFilter='';
@@ -1545,8 +1546,11 @@ function go(name,btn){
   });
   if(name==='income') document.getElementById('fab-income')?.classList.add('visible');
   if(name==='expense') document.getElementById('fab-expense')?.classList.add('visible');
-  // fab-rem показывается через setStockTab
-  if(name==='stock'){renderStock();renderRemByMat();}
+  // fab-rem: показываем сразу если уже на вкладке обрезков
+  if(name==='stock'){
+    if(stockTab==='rem') document.getElementById('fab-rem')?.classList.add('visible');
+    renderStock();renderRemByMat();
+  }
   if(name==='more'){renderHist();['mats','sizes','places'].forEach(k=>renderListEditor(k));}
 }
 function toggleCard(id){ document.getElementById(id).classList.toggle('open'); }
@@ -1555,10 +1559,20 @@ function toggleAddPanel(id){
   const panel=document.getElementById(id);
   if(!panel) return;
   const isOpen=panel.classList.toggle('open');
-  // Автофокус на первое поле
   if(isOpen){
-    const first=panel.querySelector('input[type=text],input[type=number]');
-    if(first) setTimeout(()=>first.focus(),350);
+    if(id==='add-rem'){
+      // Подставить последний материал если поле пустое
+      const matInp=document.getElementById('rem-mat');
+      if(matInp && !matInp.value && typeof lastRemMat!=='undefined' && lastRemMat){
+        matInp.value=lastRemMat;
+        acUpdateClear('rem-mat');
+      }
+      // Фокус на поле размера
+      setTimeout(()=>document.getElementById('rem-size')?.focus(),350);
+    } else {
+      const first=panel.querySelector('input[type=text],input[type=number]');
+      if(first) setTimeout(()=>first.focus(),350);
+    }
   }
 }
 
@@ -2093,7 +2107,8 @@ function addPiece(){
   });
   save(); renderRemByMat();
 
-  // Сброс полей размеров
+  // Сброс полей — материал оставляем, запоминаем для следующего раза
+  lastRemMat=mat;
   document.getElementById('rem-size').value='';
   document.getElementById('rem-qty').value='1';
   document.getElementById('add-rem')?.classList.remove('open');
