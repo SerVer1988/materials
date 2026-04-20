@@ -283,9 +283,23 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .ac-item mark{background:none;color:var(--accent);font-weight:800}
 
 
-/* ── FAB ── */
-.fab{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,.4);transition:transform .15s,box-shadow .15s;line-height:1;font-family:'Nunito',sans-serif}
-.fab:active{transform:scale(.9)}
+/* ── FAB — плавающая кнопка, правый нижний угол ── */
+.fab{
+  position:fixed;
+  right:18px;
+  bottom:calc(72px + env(safe-area-inset-bottom,0px));
+  width:52px;height:52px;
+  border-radius:50%;border:none;cursor:pointer;
+  font-size:28px;font-weight:900;
+  display:none; /* скрыта по умолчанию, показывается только в активном разделе */
+  align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);
+  transition:transform .15s,box-shadow .15s,opacity .2s;
+  line-height:1;font-family:'Nunito',sans-serif;
+  z-index:50;
+}
+.fab.visible{display:flex}
+.fab:active{transform:scale(.9);box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .fab-green{background:#22c55e;color:#fff}
 .fab-red{background:#ef4444;color:#fff}
 .fab-yellow{background:#F6C90E;color:#1A2027}
@@ -546,7 +560,7 @@ tr:last-child td{border-bottom:none}
         <div class="ac-dropdown" id="ac-in-s"></div>
         <button class="swrap-clear" id="in-s-clear" onclick="document.getElementById('in-s').value='';renderIn();inClearBtn();document.getElementById('ac-in-s').classList.remove('show')" tabindex="-1">✕</button>
       </div>
-      <button class="fab fab-green" onclick="toggleAddPanel('add-income')" title="Добавить приход">＋</button>
+      <button class="fab fab-green" id="fab-income" onclick="toggleAddPanel('add-income')" title="Добавить приход">＋</button>
     </div>
     <!-- Добавить приход — скрытая панель -->
     <div class="add-panel" id="add-income">
@@ -602,7 +616,7 @@ tr:last-child td{border-bottom:none}
         <div class="ac-dropdown" id="ac-out-s"></div>
         <button class="swrap-clear" id="out-s-clear" onclick="document.getElementById('out-s').value='';renderOut();outClearBtn();document.getElementById('ac-out-s').classList.remove('show')" tabindex="-1">✕</button>
       </div>
-      <button class="fab fab-red" onclick="toggleAddPanel('add-expense')" title="Добавить расход">＋</button>
+      <button class="fab fab-red" id="fab-expense" onclick="toggleAddPanel('add-expense')" title="Добавить расход">＋</button>
     </div>
     <!-- Добавить расход — скрытая панель -->
     <div class="add-panel" id="add-expense">
@@ -668,7 +682,7 @@ tr:last-child td{border-bottom:none}
         <div class="ac-dropdown" id="ac-stk-s"></div>
         <button class="swrap-clear" id="stk-s-clear" onclick="document.getElementById('stk-s').value='';renderStock();renderRemByMat();stkClearBtn();document.getElementById('ac-stk-s').classList.remove('show')" tabindex="-1">✕</button>
       </div>
-      <button class="fab fab-yellow" id="fab-rem" onclick="toggleAddPanel('add-rem')" title="Добавить обрезок" style="display:none">＋</button>
+      <button class="fab fab-yellow" id="fab-rem" onclick="toggleAddPanel('add-rem')" title="Добавить обрезок">＋</button>
     </div>
     <!-- Добавить обрезок — панель (видна только когда открыта вкладка Обрезки) -->
     <div class="add-panel" id="add-rem">
@@ -1507,6 +1521,14 @@ function go(name,btn){
   // scroll list area to top
   const body=document.querySelector(`#sec-${name} .sec-body`);
   if(body) body.scrollTop=0;
+  // Показываем нужную FAB
+  ['income','expense','rem'].forEach(id=>{
+    const fab=document.getElementById(`fab-${id}`);
+    if(fab) fab.classList.remove('visible');
+  });
+  if(name==='income') document.getElementById('fab-income')?.classList.add('visible');
+  if(name==='expense') document.getElementById('fab-expense')?.classList.add('visible');
+  // fab-rem показывается через setStockTab
   if(name==='stock'){renderStock();renderRemByMat();}
   if(name==='more'){renderHist();['mats','sizes','places'].forEach(k=>renderListEditor(k));}
 }
@@ -1594,7 +1616,7 @@ function setStockTab(btn,tab){
   document.getElementById('panel-top-rem').style.display=tab==='rem'?'':'none';
   // FAB и панель обрезков
   const fab=document.getElementById('fab-rem');
-  if(fab) fab.style.display=tab==='rem'?'flex':'none';
+  if(fab){ fab.classList.toggle('visible', tab==='rem'); }
   if(tab!=='rem'){
     const addRem=document.getElementById('add-rem');
     if(addRem) addRem.classList.remove('open');
@@ -1782,13 +1804,14 @@ function saveIncome(){
 function editIncome(id){
   const r=db.income.find(x=>x.id===id); if(!r) return;
   editMode.income=id;
-  document.getElementById('cc-income').classList.add('open','editing');
+  document.getElementById('add-income').classList.add('open');
   document.getElementById('in-edit-banner').style.display='flex';
-  document.getElementById('cc-income-label').textContent='Редактировать приход';
   document.getElementById('in-save-btn').textContent='💾 Сохранить изменения';
   document.getElementById('in-save-btn').className='btn bedit bbig';
-   
-  document.getElementById('in-mat').value=r.mat; document.getElementById('in-pre').value=r.size;  document.getElementById('in-qty').value=r.qty; document.getElementById('in-note').value=r.note||'';
+  document.getElementById('in-mat').value=r.mat; acUpdateClear('in-mat');
+  document.getElementById('in-pre').value=r.size;
+  document.getElementById('in-qty').value=r.qty;
+  document.getElementById('in-note').value=r.note||'';
   const sel=document.getElementById('in-place');
   if(r.place&&[...sel.options].some(o=>o.value===r.place)) sel.value=r.place;
   else if(!r.place&&sel.options.length>0) sel.selectedIndex=0;
@@ -1798,21 +1821,17 @@ function editIncome(id){
 function cancelEdit(type){
   if(type==='income'){
     editMode.income=null;
-    document.getElementById('cc-income').classList.remove('editing');
+    document.getElementById('add-income').classList.remove('open');
     document.getElementById('in-edit-banner').style.display='none';
-    document.getElementById('cc-income-label').textContent='Добавить приход';
     document.getElementById('in-save-btn').textContent='✅ Записать приход';
     document.getElementById('in-save-btn').className='btn bprim bbig';
-     
     renderIn();
   } else {
     editMode.expense=null;
-    document.getElementById('cc-expense').classList.remove('editing');
+    document.getElementById('add-expense').classList.remove('open');
     document.getElementById('out-edit-banner').style.display='none';
-    document.getElementById('cc-expense-label').textContent='Добавить расход';
     document.getElementById('out-save-btn').textContent='📤 Записать расход';
     document.getElementById('out-save-btn').className='btn bdng bbig';
-     
     document.getElementById('out-mat').value='';
     document.getElementById('scrap-preview').style.display='none';
     document.getElementById('scrap-neg-preview').style.display='none';
@@ -1932,13 +1951,11 @@ function saveExpense(){
 function editExpense(id){
   const r=db.expense.find(x=>x.id===id); if(!r) return;
   editMode.expense=id;
-  document.getElementById('cc-expense').classList.add('open','editing');
+  document.getElementById('add-expense').classList.add('open');
   document.getElementById('out-edit-banner').style.display='flex';
-  document.getElementById('cc-expense-label').textContent='Редактировать расход';
   document.getElementById('out-save-btn').textContent='💾 Сохранить изменения';
   document.getElementById('out-save-btn').className='btn bedit bbig';
-   
-  document.getElementById('out-mat').value=r.mat;
+  document.getElementById('out-mat').value=r.mat; acUpdateClear('out-mat');
   document.getElementById('out-pre').value=r.size==='—'?'':r.size;
   document.getElementById('out-qty').value=r.qty;
   document.getElementById('out-det').value=r.det||'';
