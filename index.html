@@ -272,6 +272,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 .stkmath .eq{color:var(--muted)}
 .stkmath .res{color:var(--text);font-size:13px;line-height:1;margin-left:1px;font-weight:900}
 .stkmath .res.low{color:var(--gold)}
+.stkmath .res.zero{color:var(--red);font-weight:800}
 
 /* ── AUTOCOMPLETE ── */
 .ac-wrap{position:relative}
@@ -2074,12 +2075,11 @@ function renderStock(){
   const by=calcStockDetailed(); const grid=document.getElementById('stk-grid');
   let keys=Object.keys(by).filter(m=>!q||m.toLowerCase().includes(q));
   if(filterFav) keys=keys.filter(m=>by[m].some(s=>favorites.has(`${m}||${s.size}`)));
-  if(filterLow) keys=keys.filter(m=>by[m].some(s=>s.qty>0&&s.qty<=2));
-  keys=keys.filter(m=>by[m].some(s=>s.qty>0));
+  if(filterLow) keys=keys.filter(m=>by[m].some(s=>s.qty<=2));
   keys.sort();
   if(!keys.length){grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';return;}
   grid.innerHTML=keys.map(mat=>{
-    let sizes=by[mat].filter(s=>s.qty>0);
+    let sizes=by[mat];
     if(filterLow) sizes=sizes.filter(s=>s.qty<=2);
     if(filterFav) sizes=sizes.filter(s=>favorites.has(`${mat}||${s.size}`));
     if(!sizes.length) return '';
@@ -2095,7 +2095,7 @@ function renderStock(){
         <span class="stksz">${s.size}</span>
         <span class="stkmath">
           <span class="inc">${s.inc}</span><span class="sep">−</span><span class="dec">${s.dec}</span><span class="eq">=</span>
-          <span class="res ${s.qty<=2?'low':''}">${s.qty}шт</span>
+          <span class="res ${s.qty===0?'zero':s.qty<=2?'low':''}">${s.qty}шт</span>
         </span>
         <button class="star-btn" onclick="event.stopPropagation();toggleFav('${mat.replace(/'/g,"\\'")}','${s.size.replace(/'/g,"\\'")}')">${isFavRow?'⭐':'☆'}</button>
       </div>`;
