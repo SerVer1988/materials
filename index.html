@@ -529,9 +529,8 @@ tr:last-child td{border-bottom:none}
     </div>
 
     <div style="margin-top:20px;padding:12px;background:var(--card2);border-radius:var(--rs);font-size:11px;color:var(--muted);line-height:1.6">
-      💡 Придумайте любой уникальный код для вашей организации.<br>
-      Кто знает ваш код — видит ваши данные.<br>
-      Храните код в надёжном месте.
+      🔒 Введите код доступа, выданный вашей организации.<br>
+      Без действующего кода вход невозможен.
     </div>
   </div>
 </div>
@@ -1046,16 +1045,34 @@ function renderRecentCodes(){
 }
 
 function quickLogin(code){
+  if(!ALLOWED_CODES.includes(code)){
+    let recent = JSON.parse(localStorage.getItem('lm7_recent_codes')||'[]');
+    recent = recent.filter(c=>c!==code);
+    localStorage.setItem('lm7_recent_codes', JSON.stringify(recent));
+    renderRecentCodes();
+    return;
+  }
   document.getElementById('access-code-input').value=code;
   applyAccessCode();
 }
+
+// ── СПИСОК РАЗРЕШЁННЫХ КОДОВ ДОСТУПА ──
+const ALLOWED_CODES = ['BOTSAD27', 'BOTSAD1'];
 
 function applyAccessCode(){
   const inp = document.getElementById('access-code-input');
   const val = (inp.value||'').trim().toUpperCase();
   const errEl = document.getElementById('access-error');
   if(val.length < 3){
+    errEl.textContent = 'Введите код (минимум 3 символа)';
     errEl.style.display='block';
+    return;
+  }
+  if(!ALLOWED_CODES.includes(val)){
+    errEl.textContent = 'Неверный код доступа. Обратитесь к администратору.';
+    errEl.style.display='block';
+    inp.value='';
+    inp.focus();
     return;
   }
   errEl.style.display='none';
