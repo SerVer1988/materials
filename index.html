@@ -2192,8 +2192,15 @@ function saveRem(){
   const place=document.getElementById('rem-place').value;
   const totalM2=+pending.reduce((s,p)=>s+p.w*p.l*p.qty/1e6,0).toFixed(4);
   const totalPcs=pending.reduce((s,p)=>s+p.qty,0);
-  db.remainders.push({id:Date.now(),dt:now(),pieces:[...pending],totalM2,totalPcs,place:place===CUSTOM_VAL?'':place});
-  save(); pending=[]; renderPending(); renderRemByMat();
+  const savedPlace = place===CUSTOM_VAL?'':place;
+  db.remainders.push({id:Date.now(),dt:now(),pieces:[...pending],totalM2,totalPcs,place:savedPlace});
+  save(); pending=[]; renderPending();
+  // Активируем фильтр места если место указано
+  if(savedPlace){
+    remPlaceFilter = savedPlace;
+    syncRemGroupsToFilter();
+  }
+  renderRemByMat();
   toast('💾 Обрезки сохранены','ok');
   document.getElementById('cc-rem')?.classList.remove('open');
 }
