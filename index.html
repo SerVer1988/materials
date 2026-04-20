@@ -1150,15 +1150,59 @@ function sbPayload(){
   return { db, MATS, SIZES, PLACES, fav:[...favorites] };
 }
 
+// ── MERGE: объединяет два массива по id, без потерь ──
+// Локальная запись приоритетнее облачной (если id совпал)
+function mergeById(local=[], cloud=[]){
+  const map = new Map();
+  cloud.forEach(r => map.set(r.id, r));   // сначала кладём облачные
+  local.forEach(r => map.set(r.id, r));   // локальные перекрывают по id
+  return [...map.values()].sort((a,b)=>(a.id||0)-(b.id||0));
+}
+
+// ── MERGE: объединяет строковые справочники (MATS, SIZES, PLACES) ──
+function mergeList(local=[], cloud=[]){
+  const s = new Set([...cloud, ...local]);
+  return [...s];
+}
+
+// ── Применяет облачный payload с объединением (не заменой) ──
+function mergePayload(p){
+  if(!p) return;
+  if(p.db){
+    db.income    = mergeById(db.income,    p.db.income    || []);
+    db.expense   = mergeById(db.expense,   p.db.expense   || []);
+    db.remainders= mergeById(db.remainders,p.db.remainders|| []);
+  }
+  if(p.MATS  && p.MATS.length)   MATS   = mergeList(MATS,   p.MATS);
+  if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES);
+  if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES);
+  if(p.fav)  p.fav.forEach(f=>favorites.add(f));
+}
+
+// ── Сохраняет объединённые данные локально ──
+function saveLocal(){
+  localStorage.setItem('lm7',      JSON.stringify(db));
+  localStorage.setItem('lm7_fav',  JSON.stringify([...favorites]));
+  localStorage.setItem('lm7_mats', JSON.stringify(MATS));
+  localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
+  localStorage.setItem('lm7_places',JSON.stringify(PLACES));
+}
+
 async function sbPush(){
   if(!ACCESS_CODE) return;
   try{
+    // 1. Сначала забираем актуальное из облака
+    const fresh = await sbPull();
+    // 2. Объединяем облачное с локальным (данные только прибавляются)
+    if(fresh) mergePayload(fresh);
+    // 3. Пушим уже объединённый payload
     const r=await fetch(`${SB_URL}/rest/v1/material_data`,{
       method:'POST',
       headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
       body:JSON.stringify({id:sbRowId(), payload:sbPayload(), updated_at:new Date().toISOString()})
     });
     if(!r.ok){ const txt=await r.text(); throw new Error(`${r.status}: ${txt}`); }
+    saveLocal();
     setSyncStatus('ok');
   }catch(e){
     setSyncStatus('err');
@@ -1185,12 +1229,9 @@ async function manualSync(){
   toast('🔄 Синхронизация...','info');
   const fresh=await sbPull();
   if(fresh){
-    applyPayload(fresh);
-    localStorage.setItem('lm7',JSON.stringify(db));
-    localStorage.setItem('lm7_fav',JSON.stringify([...favorites]));
-    localStorage.setItem('lm7_mats',JSON.stringify(MATS));
-    localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
-    localStorage.setItem('lm7_places',JSON.stringify(PLACES));
+    // Объединяем — не заменяем
+    mergePayload(fresh);
+    saveLocal();
     fillAllSelects();
     renderAll();
     setSyncStatus('ok');
@@ -1292,13 +1333,8 @@ async function init(){
   setSyncStatus('load');
   const cloud=await sbPull();
   if(cloud){
-    applyPayload(cloud);
-    // Кэшируем в localStorage
-    localStorage.setItem('lm7',JSON.stringify(db));
-    localStorage.setItem('lm7_fav',JSON.stringify([...favorites]));
-    localStorage.setItem('lm7_mats',JSON.stringify(MATS));
-    localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
-    localStorage.setItem('lm7_places',JSON.stringify(PLACES));
+    mergePayload(cloud);   // объединяем, не заменяем
+    saveLocal();
     fillAllSelects();
     migrateScrapQty();
     renderAll();
@@ -1313,7 +1349,8 @@ async function init(){
       setSyncStatus('load');
       const fresh=await sbPull();
       if(fresh){
-        applyPayload(fresh);
+        mergePayload(fresh);
+        saveLocal();
         fillAllSelects();
         renderAll();
         setSyncStatus('ok');
@@ -1326,12 +1363,8 @@ async function init(){
     if(document.visibilityState!=='visible') return;
     const fresh=await sbPull();
     if(fresh){
-      applyPayload(fresh);
-      localStorage.setItem('lm7',JSON.stringify(db));
-      localStorage.setItem('lm7_fav',JSON.stringify([...favorites]));
-      localStorage.setItem('lm7_mats',JSON.stringify(MATS));
-      localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
-      localStorage.setItem('lm7_places',JSON.stringify(PLACES));
+      mergePayload(fresh);
+      saveLocal();
       fillAllSelects();
       renderAll();
       setSyncStatus('ok');
