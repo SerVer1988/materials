@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Листовой материал</title>
 
-<!-- PWA: основные мета-теги --> 
+<!-- PWA: основные мета-теги -->
 <meta name="application-name" content="Листовой материал">
 <meta name="description" content="Учёт листового материала: приход, расход, обрезки">
 <meta name="theme-color" content="#1A2027">
@@ -2258,7 +2258,7 @@ function getAllRemPlaces(){
   // Порядок — как в PLACES
   return PLACES.filter(p => usedInDB.has(p));
 }
-function setRemPlace(p){remPlaceFilter=(remPlaceFilter===p?'':p);renderRemByMat();}
+function setRemPlace(p){remPlaceFilter=(remPlaceFilter===p?'':p);syncRemGroupsToFilter();renderRemByMat();}
 
 function renderRemByMat(){
   // ── Place filter buttons (in sec-top) ──
@@ -2600,21 +2600,26 @@ function toggleRemSmall(){
   syncRemGroupsToFilter();
   renderRemByMat();
 }
-// Открывает все группы при активном фильтре, закрывает все если фильтров нет
+// Открывает все группы при любом активном фильтре, закрывает все если фильтров нет
 function syncRemGroupsToFilter(){
-  if(remBigFilter||remSmallFilter){
-    // Собираем все материалы из видимых обрезков и открываем их
+  const anyFilter = remBigFilter || remSmallFilter || !!remPlaceFilter;
+  if(anyFilter){
     const stkQ=(document.getElementById('stk-s')?.value||'').toLowerCase();
     db.remainders.forEach(rec=>{
       rec.pieces.forEach(p=>{
+        const piecePlace=p.place||rec.place||'';
         if(stkQ&&!p.mat.toLowerCase().includes(stkQ)) return;
+        if(remPlaceFilter&&piecePlace!==remPlaceFilter) return;
         const m2=p.w*p.l*(p.qty||1)/1e6;
-        if(remBigFilter&&m2>=0.5) remOpenGroups.add(p.mat);
-        if(remSmallFilter&&m2<=0.5) remOpenGroups.add(p.mat);
+        // Для фильтров размера — открываем только подходящие материалы
+        if(remBigFilter&&m2>=0.5){ remOpenGroups.add(p.mat); return; }
+        if(remSmallFilter&&m2<=0.5){ remOpenGroups.add(p.mat); return; }
+        // Для фильтра места — открываем все материалы с совпадающим местом
+        if(remPlaceFilter&&!remBigFilter&&!remSmallFilter) remOpenGroups.add(p.mat);
       });
     });
   } else {
-    // Фильтров нет — свернуть все группы
+    // Все фильтры выключены — свернуть все группы
     remOpenGroups.clear();
   }
 }
