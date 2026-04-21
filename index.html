@@ -2482,9 +2482,15 @@ function del(tbl,id){
         });
       }
       // Удаляем автообрезки связанные с этим расходом
-      db.remainders=db.remainders.filter(r=>r.id!==id+1&&r.id!==id+2&&r.expenseId!==id).map(r=>r); [id+1,id+2].forEach(did=>deletedIds.add(did)); db.remainders.filter(r=>r.expenseId===id).forEach(r=>deletedIds.add(r.id)); db.remainders=db.remainders.filter(r=>r.expenseId!==id);
+      // Удаляем автообрезки через softDelete
+      db.remainders.filter(r=>r.expenseId===id || r.id===id+1 || r.id===id+2)
+        .forEach(r=>{ deletedIds.add(r.id); });
+      db.remainders=db.remainders.filter(r=>r.expenseId!==id && r.id!==id+1 && r.id!==id+2);
     }
-    db[tbl]=db[tbl].filter(r=>r.id!==id);
+    // softDelete чтобы запись не вернулась при синхронизации
+    if(tbl==='income') db.income = softDelete(db.income, id);
+    else if(tbl==='expense') db.expense = softDelete(db.expense, id);
+    else db[tbl] = db[tbl].filter(r=>r.id!==id);
     save(); renderAll();
     toast('Запись удалена');
   });
@@ -2725,10 +2731,10 @@ function toggleScrapPiece(i){
 }
 
 function saveScrapPlaces(){
+  // toSave объявляем снаружи чтобы использовать после блока if
+  const toSave = pendingScrapPieces.filter(p=>p.save);
   const rec = db.remainders.find(r=>r.id===pendingScrapRecId);
   if(rec){
-    // Убираем несохраняемые куски
-    const toSave = pendingScrapPieces.filter(p=>p.save);
     if(toSave.length === 0){
       // Удаляем всю запись
       db.remainders = softDelete(db.remainders, pendingScrapRecId);
