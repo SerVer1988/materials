@@ -2170,7 +2170,8 @@ function addPiece(){
     pieces:[piece],
     totalM2:m2, totalPcs:qty, place
   });
-  save(); renderRemByMat();
+  save();
+  goToRemWithPlace(savedPlace);
 
   // Сброс полей — материал оставляем, запоминаем для следующего раза
   lastRemMat=mat;
@@ -2619,6 +2620,21 @@ function toggleRemSmall(){
   renderRemByMat();
 }
 // Открывает все группы при любом активном фильтре, закрывает все если фильтров нет
+// Переключает на вкладку Обрезки и активирует фильтр места
+function goToRemWithPlace(place){
+  // Переключаем на раздел Склад если не там
+  if(htab!=='stock') showTab('stock');
+  // Переключаем на вкладку Обрезки внутри Склада
+  const remBtn = document.querySelector('.itab[onclick*="rem"]');
+  if(remBtn && stockTab!=='rem') setStockTab(remBtn,'rem');
+  // Ставим фильтр места если указано
+  if(place){
+    remPlaceFilter = place;
+    syncRemGroupsToFilter();
+  }
+  renderRemByMat();
+}
+
 function syncRemGroupsToFilter(){
   const anyFilter = remBigFilter || remSmallFilter || !!remPlaceFilter;
   if(anyFilter){
@@ -2735,7 +2751,9 @@ function saveScrapPlaces(){
       rec.totalPcs = rec.pieces.reduce((s,p)=>s+(p.qty||1),0);
     }
   }
-  save(); renderRemByMat(); closeScrapModal();
+  const savedScrapPlace = toSave.length ? toSave[0].place : '';
+  save(); closeScrapModal();
+  goToRemWithPlace(savedScrapPlace);
   toast(`✂️ Обрезки сохранены`,'ok');
 }
 
@@ -2946,7 +2964,11 @@ function applyScrapPlan(){
 
   const takenTotal = plan.reduce((s,p)=>s+p.takeTotal,0);
   toast(`✂️ Списано из ${plan.length} обрезков · ${takenTotal} шт.`,'ok');
-  save(); renderRemByMat(); renderOut(); closeScrapFindModal();
+  // Определяем место последнего добавленного обрезка
+  const _newRec = db.remainders[db.remainders.length-1];
+  const _newPlace = _newRec?.place || _newRec?.pieces?.[0]?.place || '';
+  save(); renderOut(); closeScrapFindModal();
+  goToRemWithPlace(_newPlace);
 }
 
 // ── Pending cut state ──
@@ -3084,7 +3106,10 @@ function _doSelectScrapFind(i){
     toast(`✂️ Обрезок скорректирован`,'ok');
   }
 
-  save(); renderRemByMat(); renderOut(); closeScrapFindModal();
+  const _lastRec2 = db.remainders[db.remainders.length-1];
+  const _lastPlace2 = _lastRec2?.place || _lastRec2?.pieces?.[0]?.place || '';
+  save(); renderOut(); closeScrapFindModal();
+  goToRemWithPlace(_lastPlace2);
 }
 
 function closeScrapFindModal(){
