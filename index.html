@@ -1279,6 +1279,7 @@ function save(){
   localStorage.setItem('lm7_mats',JSON.stringify(MATS));
   localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
   localStorage.setItem('lm7_places',JSON.stringify(PLACES));
+  localStorage.setItem('lm7_deleted',JSON.stringify([...deletedIds]));
   upStats();
   // 2. В Supabase — с задержкой 1.5с чтобы не спамить при быстрых изменениях
   setSyncStatus('sync');
@@ -2629,10 +2630,15 @@ function toggleRemSmall(){
 // Переключает на вкладку Обрезки и активирует фильтр места
 function goToRemWithPlace(place){
   // Переключаем на раздел Склад если не там
-  if(htab!=='stock') showTab('stock');
+  const stockNavBtn = document.querySelector('.nbtn[onclick*=\'stock\']');
+  if(stockNavBtn && !stockNavBtn.classList.contains('active')){
+    go('stock', stockNavBtn);
+  }
   // Переключаем на вкладку Обрезки внутри Склада
-  const remBtn = document.querySelector('.itab[onclick*="rem"]');
-  if(remBtn && stockTab!=='rem') setStockTab(remBtn,'rem');
+  if(stockTab !== 'rem'){
+    const remBtn = document.querySelector('.itab[onclick*=\'rem\']');
+    if(remBtn) setStockTab(remBtn, 'rem');
+  }
   // Ставим фильтр места если указано
   if(place){
     remPlaceFilter = place;
