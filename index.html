@@ -2171,16 +2171,14 @@ function addPiece(){
     pieces:[piece],
     totalM2:m2, totalPcs:qty, place
   });
-  save();
-  goToRemWithPlace(savedPlace);
-
   // Сброс полей — материал оставляем, запоминаем для следующего раза
   lastRemMat=mat;
   document.getElementById('rem-size').value='';
   document.getElementById('rem-qty').value='1';
   document.getElementById('add-rem')?.classList.remove('open');
+  save();
+  goToRemWithPlace(place);
   toast(`✅ ${mat} ${w}×${l} добавлен`,'ok');
-  save(); renderRemByMat();
   highlightLastPiece(mat);
 }
 function renderPending(){
