@@ -2276,13 +2276,13 @@ function cancelPieceEdit(){
   renderRemByMat();
 }
 function deletePiece(recId,pi){
+  // pi — реальный индекс в rec.pieces (не видимый)
   confirm2('Удалить этот обрезок?',()=>{
     const rec=db.remainders.find(r=>r.id===recId); if(!rec) return;
-    const realIdx=realPieceIdx(rec,pi);
-    if(realIdx<0){ toast('Обрезок не найден','err'); return; }
-    const piece=rec.pieces[realIdx];
+    if(pi<0||pi>=rec.pieces.length){ toast('Обрезок не найден','err'); return; }
+    const piece=rec.pieces[pi];
     if(piece) deletedPieces.add(makePieceKey(recId, piece));
-    rec.pieces.splice(realIdx,1);
+    rec.pieces.splice(pi,1);
     if(!rec.pieces.length) db.remainders=softDelete(db.remainders, recId);
     if(pieceEditState&&pieceEditState.recId===recId&&pieceEditState.pi===pi) pieceEditState=null;
     save(); renderRemByMat(); toast('Обрезок удалён');
