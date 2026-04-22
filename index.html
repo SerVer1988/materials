@@ -210,6 +210,23 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--a
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%237A8C99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:32px}
 select option{background:var(--card);color:var(--text)}
 input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+/* Стилизованный чекбокс с галочкой */
+input[type=checkbox]{
+  appearance:none;-webkit-appearance:none;
+  width:20px;height:20px;min-width:20px;
+  border:2px solid var(--border);border-radius:4px;
+  background:var(--card2);cursor:pointer;
+  position:relative;transition:all .15s;
+}
+input[type=checkbox]:checked{
+  background:var(--accent);border-color:var(--accent);
+}
+input[type=checkbox]:checked::after{
+  content:'';position:absolute;
+  left:5px;top:2px;width:6px;height:10px;
+  border:2.5px solid #111;border-top:none;border-left:none;
+  transform:rotate(45deg);
+}
 
 .custom-input-wrap{display:none;margin-top:7px}
 .custom-input-wrap.show{display:flex;gap:7px}
@@ -2266,14 +2283,22 @@ function deletePiece(recId,pi){
 
 // ══════════════════════════════════════ REM BY MATERIAL
 function getAllRemPlaces(){
-  // Собираем все места которые реально прописаны в обрезках
+  // Собираем места с учётом активных фильтров размера
   const usedInDB = new Set();
   db.remainders.forEach(rec=>{
-    if(rec.place) usedInDB.add(rec.place);
-    rec.pieces.forEach(p=>{ if(p.place) usedInDB.add(p.place); });
+    rec.pieces.forEach(p=>{
+      if(!p.place && !rec.place) return;
+      const place = p.place || rec.place;
+      // Если активен фильтр размера — показываем место только если в нём есть подходящие обрезки
+      if(remBigFilter || remSmallFilter){
+        const m2 = p.w*p.l*(p.qty||1)/1e6;
+        if(remBigFilter && m2 >= 0.5) usedInDB.add(place);
+        if(remSmallFilter && m2 <= 0.5) usedInDB.add(place);
+      } else {
+        usedInDB.add(place);
+      }
+    });
   });
-  // Показываем только те что есть в списке PLACES И реально используются
-  // Порядок — как в PLACES
   return PLACES.filter(p => usedInDB.has(p));
 }
 function setRemPlace(p){remPlaceFilter=(remPlaceFilter===p?'':p);syncRemGroupsToFilter();renderRemByMat();}
@@ -2342,6 +2367,8 @@ function renderRemByMat(){
       const m2Html=`<span class="piece-m2 pm2-pos">${p.m2.toFixed(3)} м²</span>`;
       const placeTag=p.place?`<span class="piece-place">📍 ${p.place}</span>`:'';
       const dateTag=p.dt?`<span style="font-size:10px;color:var(--muted);flex-shrink:0">${p.dt}</span>`:'';
+      const typeTag=p.type==='scrap_add'?`<span style="font-size:11px;color:var(--muted);flex-shrink:0" title="Добавлен вручную">✍</span>`:''
+
       const placeOpts=PLACES.map(pl=>`<option value="${pl}"${p.place===pl?' selected':''}>${pl}</option>`).join('')+`<option value="${CUSTOM_VAL}">✏️ Свой вариант...</option>`;
       const matOptsAc=`<div class="ac-wrap"><input type="text" id="pef-mat-${p.recId}-${p.pi}" value="${p.mat.replace(/"/g,'&quot;')}" autocomplete="off" oninput="acInputEl(this,'pef-mat-${p.recId}-${p.pi}')" onfocus="acInputEl(this,'pef-mat-${p.recId}-${p.pi}')" onblur="acBlur('pef-mat-${p.recId}-${p.pi}')" onkeydown="acKey(event,'pef-mat-${p.recId}-${p.pi}')"><div class="ac-dropdown" id="ac-pef-mat-${p.recId}-${p.pi}"></div></div>`;
       const editForm=isEd?`
@@ -2365,6 +2392,7 @@ function renderRemByMat(){
         <span class="piece-right">
           ${placeTag}
           ${dateTag}
+          ${typeTag}
           <span class="piece-pcs">${p.qty} шт.</span>
           ${m2Html}
           <button class="piece-del-btn" onclick="event.stopPropagation();deletePiece(${p.recId},${p.pi})">✕</button>
