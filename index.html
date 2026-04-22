@@ -2177,7 +2177,7 @@ function addPiece(){
   document.getElementById('rem-qty').value='1';
   document.getElementById('add-rem')?.classList.remove('open');
   save();
-  goToRemWithPlace(place);
+  goToRemWithPlace(mat, place);
   toast(`✅ ${mat} ${w}×${l} добавлен`,'ok');
   highlightLastPiece(mat);
 }
@@ -2625,14 +2625,14 @@ function toggleRemSmall(){
   renderRemByMat();
 }
 // Открывает все группы при любом активном фильтре, закрывает все если фильтров нет
-// Переключает на вкладку Обрезки и активирует фильтр места
-function goToRemWithPlace(place){
-  // 1. Сначала ставим фильтр и открываем группы — ДО переключения раздела
-  if(place){
-    remPlaceFilter = place;
-    syncRemGroupsToFilter();
-  }
-  // 2. Переключаем вкладку на Обрезки (до go, чтобы go увидел stockTab=rem)
+// Переключает на вкладку Обрезки, открывает нужный материал, ставит фильтр места
+function goToRemWithPlace(mat, place){
+  // 1. Сворачиваем все группы, открываем только нужный материал
+  remOpenGroups.clear();
+  if(mat) remOpenGroups.add(mat);
+  // 2. Ставим фильтр места если есть
+  if(place) remPlaceFilter = place;
+  // 3. Переключаем вкладку на Обрезки
   stockTab = 'rem';
   document.querySelectorAll('.itab').forEach(b=>b.classList.remove('active'));
   const remTabBtn = document.querySelector('.itab[onclick*=\'rem\']');
@@ -2642,12 +2642,11 @@ function goToRemWithPlace(place){
   document.getElementById('panel-top-balance').style.display='none';
   document.getElementById('panel-top-rem').style.display='';
   document.getElementById('fab-rem')?.classList.add('visible');
-  // 3. Переключаем раздел Склад если не там — renderRemByMat вызовется внутри go()
+  // 4. Переключаем раздел Склад если не там
   const stockNavBtn = document.querySelector('.nbtn[onclick*=\'stock\']');
   if(stockNavBtn && !stockNavBtn.classList.contains('active')){
     go('stock', stockNavBtn);
   } else {
-    // Уже на складе — просто рендерим
     renderRemByMat();
   }
 }
@@ -2687,6 +2686,7 @@ function openScrapModal(recId){
   // Заполняем pendingScrapPieces из кусков записи
   pendingScrapPieces = rec.pieces.map((p,i)=>({
     idx: i,
+    mat: p.mat||'',
     w: p.w, l: p.l, qty: p.qty||1,
     m2: +(p.w*p.l*(p.qty||1)/1e6).toFixed(4),
     place: PLACES[0]||'',
@@ -2769,8 +2769,9 @@ function saveScrapPlaces(){
     }
   }
   const savedScrapPlace = toSave.length ? toSave[0].place : '';
+  const savedScrapMat = toSave.length ? toSave[0].mat : '';
   save(); closeScrapModal();
-  goToRemWithPlace(savedScrapPlace);
+  goToRemWithPlace(savedScrapMat, savedScrapPlace);
   toast(`✂️ Обрезки сохранены`,'ok');
 }
 
@@ -2981,11 +2982,11 @@ function applyScrapPlan(){
 
   const takenTotal = plan.reduce((s,p)=>s+p.takeTotal,0);
   toast(`✂️ Списано из ${plan.length} обрезков · ${takenTotal} шт.`,'ok');
-  // Определяем место последнего добавленного обрезка
-  const _newRec = db.remainders[db.remainders.length-1];
-  const _newPlace = _newRec?.place || _newRec?.pieces?.[0]?.place || '';
+  // Определяем материал и место из обработанных обрезков
+  const _newMat = toProcess.length ? toProcess[0].match.piece.mat : '';
+  const _newPlace = toProcess.length ? (toProcess[0].match.piece.place || toProcess[0].rec?.place || '') : '';
   save(); renderOut(); closeScrapFindModal();
-  goToRemWithPlace(_newPlace);
+  goToRemWithPlace(_newMat, _newPlace);
 }
 
 // ── Pending cut state ──
@@ -3123,10 +3124,10 @@ function _doSelectScrapFind(i){
     toast(`✂️ Обрезок скорректирован`,'ok');
   }
 
-  const _lastRec2 = db.remainders[db.remainders.length-1];
-  const _lastPlace2 = _lastRec2?.place || _lastRec2?.pieces?.[0]?.place || '';
+  const _lastMat2 = matches.length ? matches[0].piece.mat : '';
+  const _lastPlace2 = matches.length ? (matches[0].piece.place || matches[0].rec?.place || '') : '';
   save(); renderOut(); closeScrapFindModal();
-  goToRemWithPlace(_lastPlace2);
+  goToRemWithPlace(_lastMat2, _lastPlace2);
 }
 
 function closeScrapFindModal(){
