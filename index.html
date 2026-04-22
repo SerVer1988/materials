@@ -2772,6 +2772,7 @@ function saveScrapPlaces(){
   const savedScrapMat = toSave.length ? toSave[0].mat : '';
   save(); closeScrapModal();
   goToRemWithPlace(savedScrapMat, savedScrapPlace);
+  if(savedScrapMat) setTimeout(()=>highlightLastPiece(savedScrapMat), 400);
   toast(`✂️ Обрезки сохранены`,'ok');
 }
 
@@ -2987,6 +2988,7 @@ function applyScrapPlan(){
   const _newPlace = toProcess.length ? (toProcess[0].match.piece.place || toProcess[0].rec?.place || '') : '';
   save(); renderOut(); closeScrapFindModal();
   goToRemWithPlace(_newMat, _newPlace);
+  if(_newMat) setTimeout(()=>highlightLastPiece(_newMat), 400);
 }
 
 // ── Pending cut state ──
@@ -3128,6 +3130,7 @@ function _doSelectScrapFind(i){
   const _lastPlace2 = matches.length ? (matches[0].piece.place || matches[0].rec?.place || '') : '';
   save(); renderOut(); closeScrapFindModal();
   goToRemWithPlace(_lastMat2, _lastPlace2);
+  if(_lastMat2) setTimeout(()=>highlightLastPiece(_lastMat2), 400);
 }
 
 function closeScrapFindModal(){
