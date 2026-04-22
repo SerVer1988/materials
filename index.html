@@ -2627,22 +2627,29 @@ function toggleRemSmall(){
 // Открывает все группы при любом активном фильтре, закрывает все если фильтров нет
 // Переключает на вкладку Обрезки и активирует фильтр места
 function goToRemWithPlace(place){
-  // Переключаем на раздел Склад если не там
-  const stockNavBtn = document.querySelector('.nbtn[onclick*=\'stock\']');
-  if(stockNavBtn && !stockNavBtn.classList.contains('active')){
-    go('stock', stockNavBtn);
-  }
-  // Переключаем на вкладку Обрезки внутри Склада
-  if(stockTab !== 'rem'){
-    const remBtn = document.querySelector('.itab[onclick*=\'rem\']');
-    if(remBtn) setStockTab(remBtn, 'rem');
-  }
-  // Ставим фильтр места если указано
+  // 1. Сначала ставим фильтр и открываем группы — ДО переключения раздела
   if(place){
     remPlaceFilter = place;
     syncRemGroupsToFilter();
   }
-  renderRemByMat();
+  // 2. Переключаем вкладку на Обрезки (до go, чтобы go увидел stockTab=rem)
+  stockTab = 'rem';
+  document.querySelectorAll('.itab').forEach(b=>b.classList.remove('active'));
+  const remTabBtn = document.querySelector('.itab[onclick*=\'rem\']');
+  if(remTabBtn) remTabBtn.classList.add('active');
+  document.getElementById('panel-balance').style.display='none';
+  document.getElementById('panel-rem').style.display='';
+  document.getElementById('panel-top-balance').style.display='none';
+  document.getElementById('panel-top-rem').style.display='';
+  document.getElementById('fab-rem')?.classList.add('visible');
+  // 3. Переключаем раздел Склад если не там — renderRemByMat вызовется внутри go()
+  const stockNavBtn = document.querySelector('.nbtn[onclick*=\'stock\']');
+  if(stockNavBtn && !stockNavBtn.classList.contains('active')){
+    go('stock', stockNavBtn);
+  } else {
+    // Уже на складе — просто рендерим
+    renderRemByMat();
+  }
 }
 
 function syncRemGroupsToFilter(){
