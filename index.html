@@ -988,6 +988,8 @@ const DEFAULT_SIZE="1220х2440", CUSTOM_VAL="__custom__";
 // ══════════════════════════════════════ STATE
 let db={income:[],expense:[],remainders:[]};
 let deletedIds=new Set(JSON.parse(localStorage.getItem('lm7_deleted')||'[]'));
+// Удалённые куски: "recId|mat|w|l" — уникальный ключ куска чтобы не вернулся из облака
+let deletedPieces=new Set(JSON.parse(localStorage.getItem('lm7_deleted_pieces')||'[]'));
 let pending=[];
 let htab='', stockTab='balance', filterLow=false, filterFav=false;
 let lastRemMat='', lastInMat='', lastOutMat='';
@@ -1155,7 +1157,7 @@ function showChangeCode(){
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds] };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces] };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -1179,16 +1181,26 @@ function mergePayload(p){
   if(!p) return;
   // Сначала принимаем удалённые id из облака
   if(p.deletedIds) p.deletedIds.forEach(id=>deletedIds.add(id));
+  if(p.deletedPieces) p.deletedPieces.forEach(k=>deletedPieces.add(k));
   if(p.db){
     db.income    = mergeById(db.income,    p.db.income    || []);
     db.expense   = mergeById(db.expense,   p.db.expense   || []);
     db.remainders= mergeById(db.remainders,p.db.remainders|| []);
+    // Убираем удалённые pieces из записей обрезков
+    db.remainders.forEach(rec=>{
+      rec.pieces = rec.pieces.filter(piece=>!deletedPieces.has(makePieceKey(rec.id, piece)));
+      if(!rec.pieces.length) deletedIds.add(rec.id);
+    });
+    db.remainders = db.remainders.filter(r=>!deletedIds.has(r.id));
   }
   if(p.MATS  && p.MATS.length)   MATS   = mergeList(MATS,   p.MATS);
   if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES);
   if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES);
   if(p.fav)  p.fav.forEach(f=>favorites.add(f));
 }
+
+// ── Ключ куска для отслеживания удалений внутри записи ──
+function makePieceKey(recId, piece){ return `${recId}|${piece.mat}|${piece.w}|${piece.l}`; }
 
 // ── Мягкое удаление: запоминает id чтобы merge не вернул запись ──
 function softDelete(arr, id){
@@ -1204,6 +1216,7 @@ function saveLocal(){
   localStorage.setItem('lm7_sizes',  JSON.stringify(SIZES));
   localStorage.setItem('lm7_places', JSON.stringify(PLACES));
   localStorage.setItem('lm7_deleted',JSON.stringify([...deletedIds]));
+  localStorage.setItem('lm7_deleted_pieces',JSON.stringify([...deletedPieces]));
 }
 
 async function sbPush(){
@@ -1287,6 +1300,7 @@ function save(){
   localStorage.setItem('lm7_sizes',JSON.stringify(SIZES));
   localStorage.setItem('lm7_places',JSON.stringify(PLACES));
   localStorage.setItem('lm7_deleted',JSON.stringify([...deletedIds]));
+  localStorage.setItem('lm7_deleted_pieces',JSON.stringify([...deletedPieces]));
   upStats();
   // 2. В Supabase — с задержкой 1.5с чтобы не спамить при быстрых изменениях
   setSyncStatus('sync');
@@ -2257,6 +2271,8 @@ function cancelPieceEdit(){
 function deletePiece(recId,pi){
   confirm2('Удалить этот обрезок?',()=>{
     const rec=db.remainders.find(r=>r.id===recId); if(!rec) return;
+    const piece=rec.pieces[pi];
+    if(piece) deletedPieces.add(makePieceKey(recId, piece));
     rec.pieces.splice(pi,1);
     if(!rec.pieces.length) db.remainders=softDelete(db.remainders, recId);
     if(pieceEditState&&pieceEditState.recId===recId&&pieceEditState.pi===pi) pieceEditState=null;
@@ -3110,7 +3126,11 @@ function deleteSelected(){
       const rec=db.remainders.find(r=>r.id===Number(recId));
       if(!rec) return;
       // Удаляем в обратном порядке индексов чтобы не сдвигались
-      pis.sort((a,b)=>b-a).forEach(pi=>rec.pieces.splice(pi,1));
+      pis.sort((a,b)=>b-a).forEach(pi=>{
+        const piece=rec.pieces[pi];
+        if(piece) deletedPieces.add(makePieceKey(Number(recId), piece));
+        rec.pieces.splice(pi,1);
+      });
       if(!rec.pieces.length){
         db.remainders=softDelete(db.remainders, rec.id);
       } else {
