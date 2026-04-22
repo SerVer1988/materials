@@ -1201,6 +1201,12 @@ function mergePayload(p){
 
 // ── Ключ куска для отслеживания удалений внутри записи ──
 function makePieceKey(recId, piece){ return `${recId}|${piece.mat}|${piece.w}|${piece.l}`; }
+// Преобразует видимый индекс (pi в отфильтрованном списке) в реальный индекс в rec.pieces
+function realPieceIdx(rec, visiblePi){
+  const visible = rec.pieces.map((p,ri)=>({p,ri}))
+    .filter(({p})=>!deletedPieces.has(makePieceKey(rec.id,p)));
+  return visible[visiblePi]?.ri ?? -1;
+}
 
 // ── Мягкое удаление: запоминает id чтобы merge не вернул запись ──
 function softDelete(arr, id){
@@ -2247,7 +2253,8 @@ function savePieceEdit(){
   if(!pieceEditState) return;
   const{recId,pi}=pieceEditState;
   const rec=db.remainders.find(r=>r.id===recId); if(!rec) return;
-  const p=rec.pieces[pi]; if(!p) return;
+  const ri=realPieceIdx(rec,pi);
+  const p=rec.pieces[ri]; if(!p) return;
   const matEl=document.getElementById(`pef-mat-${recId}-${pi}`);
   const mat=(matEl?matEl.value.trim():p.mat)||p.mat;
   const w=parseInt(document.getElementById(`pef-w-${recId}-${pi}`).value);
@@ -2271,9 +2278,11 @@ function cancelPieceEdit(){
 function deletePiece(recId,pi){
   confirm2('Удалить этот обрезок?',()=>{
     const rec=db.remainders.find(r=>r.id===recId); if(!rec) return;
-    const piece=rec.pieces[pi];
+    const realIdx=realPieceIdx(rec,pi);
+    if(realIdx<0){ toast('Обрезок не найден','err'); return; }
+    const piece=rec.pieces[realIdx];
     if(piece) deletedPieces.add(makePieceKey(recId, piece));
-    rec.pieces.splice(pi,1);
+    rec.pieces.splice(realIdx,1);
     if(!rec.pieces.length) db.remainders=softDelete(db.remainders, recId);
     if(pieceEditState&&pieceEditState.recId===recId&&pieceEditState.pi===pi) pieceEditState=null;
     save(); renderRemByMat(); toast('Обрезок удалён');
