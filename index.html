@@ -463,8 +463,8 @@ tr:last-child td{border-bottom:none}
 .sel-del-btn{background:var(--red);color:#fff;border:none;border-radius:var(--rs);padding:7px 12px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
 .sel-del-btn:active{opacity:.8}
 .sel-cancel-btn{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:var(--rs);padding:7px 10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
-/* Крестик удаления скрыт всегда — удаление через режим выделения */
-.piece-del-btn{display:none !important}
+/* Крестик удаления виден — свайп влево или нажать ✕ */
+.piece-del-btn{display:flex}
 
 .remcard{position:relative;transition:box-shadow .15s}
 .remcard.sel-mode{cursor:pointer}
@@ -2276,16 +2276,22 @@ function cancelPieceEdit(){
   renderRemByMat();
 }
 function deletePiece(recId,pi){
-  // pi — реальный индекс в rec.pieces (не видимый)
+  // recId и pi — реальные значения из рендера
   confirm2('Удалить этот обрезок?',()=>{
-    const rec=db.remainders.find(r=>r.id===recId); if(!rec) return;
-    if(pi<0||pi>=rec.pieces.length){ toast('Обрезок не найден','err'); return; }
-    const piece=rec.pieces[pi];
+    const rec=db.remainders.find(r=>r.id===recId);
+    if(!rec){ toast('Запись не найдена','err'); return; }
+    // Ищем кусок: сначала по прямому индексу, потом по реальному через realPieceIdx
+    let realPi = (pi>=0 && pi<rec.pieces.length) ? pi : realPieceIdx(rec, pi);
+    if(realPi<0||realPi>=rec.pieces.length){ toast('Обрезок не найден','err'); return; }
+    const piece=rec.pieces[realPi];
     if(piece) deletedPieces.add(makePieceKey(recId, piece));
-    rec.pieces.splice(pi,1);
+    rec.pieces.splice(realPi,1);
     if(!rec.pieces.length) db.remainders=softDelete(db.remainders, recId);
     if(pieceEditState&&pieceEditState.recId===recId&&pieceEditState.pi===pi) pieceEditState=null;
-    save(); renderRemByMat(); toast('Обрезок удалён');
+    save();
+    localStorage.setItem('lm7_deleted_pieces',JSON.stringify([...deletedPieces]));
+    renderRemByMat();
+    toast('✅ Обрезок удалён','ok');
   });
 }
 
