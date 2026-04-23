@@ -463,8 +463,8 @@ tr:last-child td{border-bottom:none}
 .sel-del-btn{background:var(--red);color:#fff;border:none;border-radius:var(--rs);padding:7px 12px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
 .sel-del-btn:active{opacity:.8}
 .sel-cancel-btn{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:var(--rs);padding:7px 10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
-/* Крестик удаления виден — свайп влево или нажать ✕ */
-.piece-del-btn{display:flex}
+/* Крестик удаления скрыт — удаление через режим выделения */
+.piece-del-btn{display:none !important}
 
 .remcard{position:relative;transition:box-shadow .15s}
 .remcard.sel-mode{cursor:pointer}
@@ -3153,6 +3153,7 @@ function deleteSelected(){
         rec.totalPcs=rec.pieces.reduce((s,x)=>s+(x.qty||1),0);
       }
     });
+    localStorage.setItem('lm7_deleted_pieces',JSON.stringify([...deletedPieces]));
     save(); exitSelMode();
     toast(`🗑️ Удалено ${count} обрезков`,'ok');
   });
