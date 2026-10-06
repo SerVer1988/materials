@@ -1,2 +1,1 @@
-bash
 git reset --hard HEAD~2
