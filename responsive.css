@@ -1,0 +1,11 @@
+@media(min-width:600px){
+  .sec-top,.sec-body{width:100%;margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px}
+  .frow{gap:14px}
+  .bnav{justify-content:center;gap:40px}
+  .nbtn .ni-wrap{width:52px;height:52px}
+}
+@media(min-width:900px){
+  .sec-top,.sec-body{width:100%;padding-left:28px;padding-right:28px}
+  .frow{gap:16px}
+  .frow.c3{grid-template-columns:1fr 1fr 1fr 1fr}
+}
