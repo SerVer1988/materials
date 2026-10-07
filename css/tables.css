@@ -1,0 +1,29 @@
+/* ── TABLE ── */
+.twrap{overflow-x:auto;border-radius:var(--rs);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:340px;font-size:13px}
+thead tr{background:var(--card2)}
+th{padding:9px 10px;text-align:left;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
+tr:last-child td{border-bottom:none}
+.trow-edit{cursor:pointer}
+.trow-edit:hover td{background:rgba(246,201,14,.05) !important}
+.trow-edit.is-editing td{background:var(--editlt) !important;border-left:2px solid var(--edit)}
+.dbtn{background:var(--rlt);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:12px;cursor:pointer;font-weight:800}
+
+/* ── HISTORY TABS ── */
+.tabrow{display:flex;gap:5px;margin-bottom:10px;overflow-x:auto}
+.tabrow::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:6px 13px;border-radius:30px;border:1px solid var(--border);background:var(--card2);font-size:12px;font-weight:800;cursor:pointer;color:var(--muted);transition:all .15s}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#111}
+
+/* ── SCRAP PREVIEW BANNERS ── */
+#scrap-preview,#scrap-neg-preview{border-radius:var(--rs);padding:10px;margin-bottom:10px;font-size:13px;font-weight:700}
+#scrap-preview{background:var(--blt);color:var(--blue);border:1px solid rgba(78,168,222,.35)}
+#scrap-neg-preview{background:var(--rlt);color:var(--red);border:1px solid rgba(255,107,107,.35)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--card);color:var(--text);font-weight:800;font-size:13px;padding:11px 20px;border-radius:30px;border:1px solid var(--border);box-shadow:var(--shl);opacity:0;transition:all .25s;z-index:200;white-space:nowrap;pointer-events:none;max-width:calc(100vw - 36px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--green);color:#111;border-color:var(--green)}
+.toast.err{background:var(--red);color:#fff;border-color:var(--red)}
+.toast.info{background:var(--blue);color:#fff;border-color:var(--blue)}
