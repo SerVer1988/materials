@@ -6,7 +6,7 @@ th{padding:9px 10px;text-align:left;font-size:10px;font-weight:800;letter-spacin
 td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
 tr:last-child td{border-bottom:none}
 .trow-edit{cursor:pointer}
-.trow-edit:hover td{background:rgba(246,201,14,.05) !important}
+.trow-edit:hover td{background:var(--row-hover) !important}
 .trow-edit.is-editing td{background:var(--editlt) !important;border-left:2px solid var(--edit)}
 .dbtn{background:var(--rlt);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:12px;cursor:pointer;font-weight:800}
 

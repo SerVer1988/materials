@@ -71,12 +71,12 @@ function goMore(btn){
     // Возвращаемся на предыдущую вкладку
     const prevBtn = document.querySelector('.nbtn.active') || document.getElementById('nbtn-uchet');
     go(lastUchetTab, document.getElementById('nbtn-uchet'));
-    document.getElementById('hdr-more-btn').classList.remove('active');
+    document.getElementById('hdr-more-btn')?.classList.remove('active');
   } else {
     document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
     document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('active'));
     document.getElementById('sec-more').classList.add('active');
-    document.getElementById('hdr-more-btn').classList.add('active');
+    document.getElementById('hdr-more-btn')?.classList.add('active');
     setHdrTabName('more');
     renderHist();['mats','sizes','places'].forEach(k=>renderListEditor(k));
   }

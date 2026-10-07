@@ -5,8 +5,8 @@
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#1A2027",
-  "theme_color": "#1A2027",
+  "background_color": "#F2F4F7",
+  "theme_color": "#FFFFFF",
   "categories": ["productivity", "utilities"],
   "icons": [
     { "src": "assets/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }

@@ -1,0 +1,103 @@
+/* Палитры тем. Светлая — по умолчанию (data-theme="light" ставит js/theme-init.js).
+   Все цвета интерфейса берутся отсюда; в остальных css-файлах — только var(--...). */
+
+:root,
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#F2F4F7;
+  --surface:#FFFFFF;
+  --card:#FFFFFF;
+  --card2:#EEF1F5;
+  --border:#D5DCE3;
+  --text:#1E2A33;
+  --muted:#66788A;
+  --accent:#F6C90E;
+  --accent-ink:#9A6F00;          /* жёлтый для ТЕКСТА на светлом фоне */
+  --aclt:rgba(246,201,14,.22);
+  --green:#17995F;
+  --glt:rgba(23,153,95,.12);
+  --blue:#1F7FBF;
+  --blt:rgba(31,127,191,.12);
+  --red:#D93636;
+  --rlt:rgba(217,54,54,.11);
+  --gold:#C99700;
+  --goldlt:rgba(246,201,14,.2);
+  --fav:#F4F6F8;
+  --favborder:#C6CFD8;
+  --edit:#8E44D6;
+  --editlt:rgba(142,68,214,.11);
+  --sh:0 2px 10px rgba(30,42,51,.10);
+  --shl:0 6px 24px rgba(30,42,51,.20);
+  --overlay:rgba(20,28,36,.45);
+
+  /* строки/таблицы с данными */
+  --infoborder:#D5DCE3;
+  --infotext:#1E2A33;
+  --inforow:#FFFFFF;
+  --inforow-line:#E6EBF0;
+  --info-size:#4A6A82;
+  --info-strong:#2B3F50;
+  --chip-bg:#EEF3F7;
+  --thead-bg:#E8EDF2;
+  --th-color:#4A6A82;
+  --stripe:rgba(30,42,51,.035);
+  --row-hover:rgba(246,201,14,.16);
+
+  /* шапка, нижняя навигация, плашки */
+  --pill-base:#EEF1F5;
+  --pill-shade:#D5DCE3;
+  --pill-disc:#2E3740;
+  --nav-bg:#FFFFFF;
+  --nav-shadow:0 4px 18px rgba(30,42,51,.18);
+  --nav-ico:#8A97A3;
+  --nav-active:#E0A800;
+}
+
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#1A2027;
+  --surface:#252C33;
+  --card:#252C33;
+  --card2:#2E3740;
+  --border:#3A4750;
+  --text:#EEEEEE;
+  --muted:#7A8C99;
+  --accent:#F6C90E;
+  --accent-ink:#F6C90E;
+  --aclt:rgba(246,201,14,.13);
+  --green:#3DD68C;
+  --glt:rgba(61,214,140,.13);
+  --blue:#4EA8DE;
+  --blt:rgba(78,168,222,.13);
+  --red:#FF6B6B;
+  --rlt:rgba(255,107,107,.13);
+  --gold:#F6C90E;
+  --goldlt:rgba(246,201,14,.12);
+  --fav:#2C3540;
+  --favborder:#4A5560;
+  --edit:#C084FC;
+  --editlt:rgba(192,132,252,.13);
+  --sh:0 3px 14px rgba(0,0,0,.4);
+  --shl:0 6px 28px rgba(0,0,0,.6);
+  --overlay:rgba(0,0,0,.7);
+
+  --infoborder:#364550;
+  --infotext:#E8EEF3;
+  --inforow:#232D38;
+  --inforow-line:#2E3C48;
+  --info-size:#7AAFC5;
+  --info-strong:#C8DCE8;
+  --chip-bg:#1E2D3A;
+  --thead-bg:#1A2630;
+  --th-color:#6FA8C0;
+  --stripe:rgba(0,0,0,.12);
+  --row-hover:rgba(246,201,14,.07);
+
+  --pill-base:#252C33;
+  --pill-shade:#3D4550;
+  --pill-disc:#252C33;
+  --nav-bg:#3D4550;
+  --nav-shadow:none;
+  --nav-ico:#B5B5B2;
+  --nav-active:#EFCA46;
+}

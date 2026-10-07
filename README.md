@@ -8,7 +8,7 @@ index.html            разметка (без inline CSS/JS)
 manifest.webmanifest  PWA-манифест
 sw.js                 service worker (network-first)
 assets/               logo.jpg, icon.svg, icon-512.svg
-css/                  стили; порядок подключения = порядок каскада
+css/                  стили; themes.css (палитры) подключается первым, порядок = каскад
 js/                   логика; классические скрипты, порядок в index.html важен
 ```
 
@@ -16,6 +16,8 @@ js/                   логика; классические скрипты, п�
 | Файл | Назначение |
 |---|---|
 | config.js | константы, глобальное состояние |
+| theme-init.js | ставит тему до отрисовки (в `<head>`), по умолчанию светлая |
+| theme.js | переключатель темы в настройках, хранится в localStorage `lm7_theme` |
 | ui.js | toast, confirm, подсветка строк |
 | sync.js | Supabase: merge, push/pull |
 | access.js | код доступа |
@@ -38,3 +40,7 @@ js/                   логика; классические скрипты, п�
 | main.js | точка входа, **всегда последним** |
 
 Модули ES не используются: в разметке inline `onclick`, функции должны быть глобальными.
+
+## Темы
+Все цвета интерфейса — переменные в `css/themes.css` (`light` / `dark`). В остальных css, html и js используйте только `var(--...)`, не hex.
+Для жёлтого **текста** — `var(--accent-ink)`, для фонов — `var(--accent)`.

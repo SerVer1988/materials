@@ -34,7 +34,7 @@ function renderRecentCodes(){
       color:var(--text);cursor:pointer;text-align:left;
       transition:border-color .15s,background .15s
     " onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-      <span style="letter-spacing:.06em;color:var(--accent)">🔑 ${c}</span>
+      <span style="letter-spacing:.06em;color:var(--accent-ink)">🔑 ${c}</span>
       <span style="color:var(--muted);font-size:11px">войти →</span>
     </button>`).join('');
 }

@@ -83,7 +83,7 @@ function renderIn(){
   tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.income===r.id?'is-editing':''}" onclick="editIncome(${r.id})">
     <td style="color:var(--muted);font-size:11px">${total-i}</td>
     <td style="font-size:11px;color:var(--muted)">${r.dt}</td>
-    <td style="font-weight:800;font-size:12px;color:var(--accent)">${r.mat}</td>
+    <td style="font-weight:800;font-size:12px;color:var(--accent-ink)">${r.mat}</td>
     <td style="font-size:12px">${r.size}</td>
     <td><span class="badge bin">${r.qty} л.</span></td>
     <td><span class="place-badge">${r.place||'—'}</span></td>

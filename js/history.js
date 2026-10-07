@@ -42,6 +42,6 @@ function renderHist(){
     const qty=r.type!=='remainder'?`${r.qty} л.`:`${r.totalPcs} шт.`;
     const sz=r.type!=='remainder'?(r.size||'—'):'—';
     const det=r.type==='income'?(r.note||'—'):r.type==='expense'?r.det||'—':`${r.totalM2>0?'+':''}${r.totalM2} м²`;
-    return `<tr><td>${badge}</td><td style="font-size:11px;color:var(--muted)">${r.dt}</td><td style="font-size:12px;font-weight:800;color:var(--accent)">${r.mat||'—'}</td><td style="font-size:12px">${sz}</td><td style="font-size:12px">${qty}</td><td><span class="place-badge">${r.place||'—'}</span></td><td style="font-size:11px;color:var(--muted)">${det}</td></tr>`;
+    return `<tr><td>${badge}</td><td style="font-size:11px;color:var(--muted)">${r.dt}</td><td style="font-size:12px;font-weight:800;color:var(--accent-ink)">${r.mat||'—'}</td><td style="font-size:12px">${sz}</td><td style="font-size:12px">${qty}</td><td><span class="place-badge">${r.place||'—'}</span></td><td style="font-size:11px;color:var(--muted)">${det}</td></tr>`;
   }).join('');
 }

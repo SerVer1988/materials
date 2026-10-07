@@ -1,6 +1,6 @@
 /* ── PAGE TITLE ── */
-.ptitle{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--accent)}
-.pill{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--aclt);color:var(--accent);border:1px solid rgba(246,201,14,.25)}
+.ptitle{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--accent-ink)}
+.pill{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--aclt);color:var(--accent-ink);border:1px solid rgba(246,201,14,.25)}
 .pill.edit{background:var(--editlt);color:var(--edit);border-color:rgba(192,132,252,.25)}
 
 /* ── COLLAPSIBLE CARD ── */
@@ -67,7 +67,7 @@ input[type=checkbox]:checked::after{
 .bblue{background:var(--blue);color:#fff;box-shadow:0 3px 12px rgba(78,168,222,.3)}
 .bdng{background:var(--red);color:#fff;box-shadow:0 3px 12px rgba(255,107,107,.3)}
 .bghost{background:var(--card2);color:var(--text);border:1px solid var(--border)}
-.bghost:hover{border-color:var(--accent);color:var(--accent)}
+.bghost:hover{border-color:var(--accent);color:var(--accent-ink)}
 .bsm{padding:6px 11px;font-size:12px;border-radius:5px}
 .bbig{font-size:15px;padding:14px 18px;border-radius:var(--r);width:100%}
 .brow{display:flex;gap:9px;flex-wrap:wrap;margin-top:5px}
@@ -86,7 +86,7 @@ input[type=checkbox]:checked::after{
 /* ── FILTER CHIPS ── */
 .fchips{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .fchip{padding:6px 12px;border-radius:30px;border:1px solid var(--border);background:var(--card2);font-size:12px;font-weight:800;cursor:pointer;color:var(--muted);transition:all .15s}
-.fchip.on{background:var(--aclt);border-color:var(--accent);color:var(--accent)}
+.fchip.on{background:var(--aclt);border-color:var(--accent);color:var(--accent-ink)}
 .fchip.fav-on{background:var(--goldlt);border-color:var(--gold);color:var(--gold)}
 
 /* ── PLACE FILTER (scraps) ── */

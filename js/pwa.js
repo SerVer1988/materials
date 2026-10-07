@@ -16,23 +16,23 @@
     <div style="display:flex;align-items:center;gap:12px;flex:1">
       <div style="width:40px;height:40px;background:#F6C90E;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦</div>
       <div>
-        <div style="font-weight:800;font-size:14px;color:#EEEEEE">Установить приложение</div>
-        <div style="font-size:11px;color:#7A8C99;margin-top:1px">Добавить на главный экран</div>
+        <div style="font-weight:800;font-size:14px;color:var(--text)">Установить приложение</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px">Добавить на главный экран</div>
       </div>
     </div>
     <button id="pwa-install-btn" style="background:#F6C90E;color:#111;border:none;border-radius:8px;padding:9px 16px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0">Установить</button>
-    <button id="pwa-dismiss-btn" style="background:none;border:none;color:#7A8C99;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button>
+    <button id="pwa-dismiss-btn" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button>
   `;
   Object.assign(banner.style, {
     display: 'none',
     position: 'fixed',
     bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
     left: '12px', right: '12px',
-    background: '#252C33',
-    border: '1px solid #3A4750',
+    background: 'var(--card)',
+    border: '1px solid var(--border)',
     borderRadius: '14px',
     padding: '12px 14px',
-    boxShadow: '0 6px 28px rgba(0,0,0,.6)',
+    boxShadow: 'var(--shl)',
     zIndex: '150',
     display: 'flex',
     alignItems: 'center',

@@ -26,7 +26,7 @@ function openScrapModal(recId){
     return `
     <div class="scrap-piece-item" id="spi-${i}" style="margin-bottom:12px;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs)">
       <div class="scrap-piece-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span class="scrap-piece-size" style="font-weight:800;font-size:13px;color:var(--accent)">Обрезок ${i+1}${p.qty>1?` · ${p.qty} шт.`:''}</span>
+        <span class="scrap-piece-size" style="font-weight:800;font-size:13px;color:var(--accent-ink)">Обрезок ${i+1}${p.qty>1?` · ${p.qty} шт.`:''}</span>
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer">
           <input type="checkbox" id="spi-chk-${i}" ${p.save?'checked':''} onchange="toggleScrapPiece(${i})">
           сохранить

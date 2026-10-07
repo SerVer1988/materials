@@ -1,9 +1,4 @@
-// ▸ ui.js — UI-утилиты: toast, confirm, подсветка строк, заглушки темы
-// ══════════════════════════════════════ THEME (только тёмная)
-function toggleTheme(){}
-function updateThemeBtns(){}
-function updateThemeUI(){}
-
+// ▸ ui.js — UI-утилиты: toast, confirm, подсветка строк
 // ══════════════════════════════════════ MODAL / TOAST / UTILS
 function confirm2(txt,cb){document.getElementById('ov-txt').textContent=txt;document.getElementById('ov-yes').onclick=()=>{cb();closeOv();};document.getElementById('ov').classList.add('show');}
 function closeOv(){document.getElementById('ov').classList.remove('show');}

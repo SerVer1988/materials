@@ -4,8 +4,8 @@
 .ac-dropdown.show{display:block}
 .ac-item{padding:10px 12px;font-size:14px;font-weight:600;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);transition:background .12s}
 .ac-item:last-child{border-bottom:none}
-.ac-item:hover,.ac-item.focused{background:var(--aclt);color:var(--accent)}
-.ac-item mark{background:none;color:var(--accent);font-weight:800}
+.ac-item:hover,.ac-item.focused{background:var(--aclt);color:var(--accent-ink)}
+.ac-item mark{background:none;color:var(--accent-ink);font-weight:800}
 
 
 /* ── FAB — плавающая кнопка, правый нижний угол ── */
@@ -30,7 +30,7 @@
 .fab-yellow{background:#F6C90E;color:#1A2027}
 /* ── Section header row ── */
 .sec-hdr{display:flex;align-items:center;gap:9px;margin-bottom:9px}
-.sec-hdr-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--accent);white-space:nowrap}
+.sec-hdr-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--accent-ink);white-space:nowrap}
 .sec-hdr .swrap{flex:1;margin:0;position:relative}
 .search-bar-wrap .ac-dropdown{position:absolute;top:46px;left:0;right:0;z-index:200}
 /* ── Add panel (slide-down) ── */
@@ -40,3 +40,8 @@
 .swrap{position:relative}
 .swrap input{padding-left:38px}
 .swrap::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
+
+/* ── Переключатель темы (настройки) ── */
+.theme-seg{display:flex;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:3px}
+.theme-opt{flex:1;padding:9px 6px;border-radius:7px;border:none;background:none;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;transition:all .18s}
+.theme-opt.active{background:var(--accent);color:#111;box-shadow:0 2px 10px rgba(246,201,14,.3)}

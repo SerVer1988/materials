@@ -1,6 +1,6 @@
 /* ══ REM CARDS — same style as stkcard ══ */
 .remcard{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:5px 11px;margin-bottom:5px;transition:background .2s,border-color .2s}
-.remmat-name{font-size:14px;font-weight:800;color:var(--accent);margin-bottom:7px}
+.remmat-name{font-size:14px;font-weight:800;color:var(--accent-ink);margin-bottom:7px}
 .remtotals{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
 .remarea-badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}
 .rem-pos{background:var(--blt);color:var(--blue)}
@@ -46,10 +46,10 @@
 /* ── PENDING ── */
 .pitem{display:flex;align-items:center;gap:7px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
 .pitem:last-child{border-bottom:none}
-.pmat{font-weight:800;flex:1;color:var(--accent);font-size:13px}
+.pmat{font-weight:800;flex:1;color:var(--accent-ink);font-size:13px}
 .psz{color:var(--muted);font-size:12px}
 .parea{color:var(--blue);font-weight:800;font-size:12px}
 .pdel{background:var(--rlt);color:var(--red);border:none;border-radius:5px;width:26px;height:26px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .rres{background:var(--aclt);border:1.5px solid var(--accent);border-radius:var(--rs);padding:12px;margin-top:9px;text-align:center}
-.rbig{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--accent)}
+.rbig{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--accent-ink)}
 .rsub{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}

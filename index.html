@@ -8,12 +8,12 @@
 <!-- PWA: основные мета-теги -->
 <meta name="application-name" content="Листовой материал">
 <meta name="description" content="Учёт листового материала: приход, расход, обрезки">
-<meta name="theme-color" content="#1A2027">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Листовой мат.">
-<meta name="msapplication-TileColor" content="#1A2027">
+<meta name="msapplication-TileColor" content="#FFFFFF">
 <meta name="msapplication-tap-highlight" content="no">
 
 <!-- PWA: иконки и манифест -->
@@ -25,7 +25,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
+<!-- Тема применяется до отрисовки, чтобы не было вспышки -->
+<script src="js/theme-init.js"></script>
+
 <!-- Стили (порядок важен — каскад как в исходном файле) -->
+<link rel="stylesheet" href="css/themes.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
@@ -46,7 +50,7 @@
   padding:32px 24px;box-sizing:border-box
 ">
   <div style="font-size:52px;margin-bottom:16px">📦</div>
-  <div style="font-size:22px;font-weight:900;color:var(--accent);font-family:'Syne',sans-serif;margin-bottom:6px;text-align:center">Листовой материал</div>
+  <div style="font-size:22px;font-weight:900;color:var(--accent-ink);font-family:'Syne',sans-serif;margin-bottom:6px;text-align:center">Листовой материал</div>
   <div style="font-size:13px;color:var(--muted);margin-bottom:32px;text-align:center;line-height:1.5;max-width:280px">
     Введите код доступа вашей организации.<br>У каждой фирмы свои данные.
   </div>
@@ -85,7 +89,7 @@
   <div class="hdr-ico" style="background:none;padding:0;overflow:hidden"><img src="assets/logo.jpg" width="34" height="34" style="display:block;border-radius:8px"></div>
   <div class="hdr-t">Листовой<br><span>материал</span></div>
   <div id="hdr-tab-pill" style="flex:1;display:flex;align-items:center;justify-content:center;min-width:0">
-    <div class="tab-name-wrap" style="width:220px;flex-shrink:0;position:relative"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 206.21 30.87" preserveAspectRatio="none"><rect fill="#252C33" x="0" width="206.21" height="30.87" rx="13.19" ry="15.43"/><path fill="#3D4550" d="M25.01 2.05l165.4 0c7.35,0 13.36,6.01 13.36,13.36 0,7.35 -6.01,13.36 -13.36,13.36l-165.48 0c0.36,-0.24 0.72,-0.5 1.07,-0.77 0.22,-0.17 0.41,-0.34 0.61,-0.53 0.17,-0.13 0.33,-0.26 0.49,-0.41 1.73,-1.59 3.31,-4.14 4.08,-6.36 1.68,-4.84 0.92,-10.09 -1.9,-14.35 -1.06,-1.6 -2.34,-2.87 -3.87,-4.02 -0.13,-0.1 -0.27,-0.2 -0.41,-0.29z"/><path fill="#EFCA46" d="M15.72 1.93c-2.62,0 -5.6,0.99 -7.68,2.56 -1.29,0.97 -2.36,2.01 -3.26,3.36 -2.38,3.58 -3.02,7.92 -1.6,12 0.62,1.8 1.97,3.99 3.37,5.27 0.15,0.13 0.29,0.24 0.41,0.33 0.15,0.14 0.31,0.3 0.52,0.47 2.63,2.03 5.31,3.02 8.66,3.02 1.89,0 3.62,-0.5 5.35,-1.22 1.4,-0.58 2.93,-1.71 4.01,-2.78 4.66,-4.64 5.19,-11.9 1.46,-17.27 -2.6,-3.74 -6.71,-5.75 -11.24,-5.75z"/><text id="hdr-pill-icon" x="15.7" y="21" text-anchor="middle" font-size="13" style="dominant-baseline:middle;user-select:none">📥</text></svg><span class="tab-name-text" id="hdr-pill-text">УЧЁТ</span></div>
+    <div class="tab-name-wrap" style="width:220px;flex-shrink:0;position:relative"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 206.21 30.87" preserveAspectRatio="none"><rect style="fill:var(--pill-base)" x="0" width="206.21" height="30.87" rx="13.19" ry="15.43"/><path style="fill:var(--pill-shade)" d="M25.01 2.05l165.4 0c7.35,0 13.36,6.01 13.36,13.36 0,7.35 -6.01,13.36 -13.36,13.36l-165.48 0c0.36,-0.24 0.72,-0.5 1.07,-0.77 0.22,-0.17 0.41,-0.34 0.61,-0.53 0.17,-0.13 0.33,-0.26 0.49,-0.41 1.73,-1.59 3.31,-4.14 4.08,-6.36 1.68,-4.84 0.92,-10.09 -1.9,-14.35 -1.06,-1.6 -2.34,-2.87 -3.87,-4.02 -0.13,-0.1 -0.27,-0.2 -0.41,-0.29z"/><path fill="#EFCA46" d="M15.72 1.93c-2.62,0 -5.6,0.99 -7.68,2.56 -1.29,0.97 -2.36,2.01 -3.26,3.36 -2.38,3.58 -3.02,7.92 -1.6,12 0.62,1.8 1.97,3.99 3.37,5.27 0.15,0.13 0.29,0.24 0.41,0.33 0.15,0.14 0.31,0.3 0.52,0.47 2.63,2.03 5.31,3.02 8.66,3.02 1.89,0 3.62,-0.5 5.35,-1.22 1.4,-0.58 2.93,-1.71 4.01,-2.78 4.66,-4.64 5.19,-11.9 1.46,-17.27 -2.6,-3.74 -6.71,-5.75 -11.24,-5.75z"/><text id="hdr-pill-icon" x="15.7" y="21" text-anchor="middle" font-size="13" style="dominant-baseline:middle;user-select:none">📥</text></svg><span class="tab-name-text" id="hdr-pill-text">УЧЁТ</span></div>
   </div>
   <div class="hdr-right">
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
@@ -110,9 +114,9 @@
       </div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
       <div class="search-bar-wrap" style="flex:1">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 526.81 55.86" preserveAspectRatio="none"><rect fill="#252C33" x="0" y="0" width="526.81" height="55.86" rx="33.69" ry="27.93"/><path fill="#3D4550" d="M44.43 4.64l454.99 0c12.81,0 23.3,10.48 23.3,23.3 0,12.81 -10.48,23.3 -23.3,23.3l-455.12 0c0.63,-0.42 1.25,-0.87 1.86,-1.35 0.38,-0.29 0.72,-0.6 1.07,-0.92 0.29,-0.22 0.58,-0.46 0.85,-0.71 3.02,-2.77 5.77,-7.22 7.12,-11.09 2.93,-8.44 1.61,-17.6 -3.31,-25.01 -1.85,-2.79 -4.09,-5 -6.75,-7 -0.23,-0.17 -0.47,-0.35 -0.71,-0.51z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 526.81 55.86" preserveAspectRatio="none"><rect style="fill:var(--pill-base)" x="0" y="0" width="526.81" height="55.86" rx="33.69" ry="27.93"/><path style="fill:var(--pill-shade)" d="M44.43 4.64l454.99 0c12.81,0 23.3,10.48 23.3,23.3 0,12.81 -10.48,23.3 -23.3,23.3l-455.12 0c0.63,-0.42 1.25,-0.87 1.86,-1.35 0.38,-0.29 0.72,-0.6 1.07,-0.92 0.29,-0.22 0.58,-0.46 0.85,-0.71 3.02,-2.77 5.77,-7.22 7.12,-11.09 2.93,-8.44 1.61,-17.6 -3.31,-25.01 -1.85,-2.79 -4.09,-5 -6.75,-7 -0.23,-0.17 -0.47,-0.35 -0.71,-0.51z"/></svg>
       <div class="search-bar-inner">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.17 6.18" width="36" height="36" style="fill-rule:evenodd;cursor:pointer;flex-shrink:0" onclick="toggleSearchDropdown('ac-in-s','in-s')"><path fill="#252C33" d="M5.13 5.39c-0.04,0.04 -0.08,0.07 -0.12,0.1 -0.59,0.46 -1.21,0.68 -1.97,0.68 -0.43,0 -0.82,-0.11 -1.22,-0.27 -0.33,-0.14 -0.67,-0.39 -0.93,-0.64 -1.06,-1.06 -1.19,-2.73 -0.34,-3.95 0.59,-0.85 1.53,-1.32 2.57,-1.32 0.61,0 1.29,0.22 1.77,0.59 0.29,0.22 0.54,0.46 0.74,0.77 0.54,0.81 0.68,1.82 0.36,2.74 -0.15,0.42 -0.45,0.91 -0.78,1.22 -0.03,0.03 -0.06,0.05 -0.09,0.08z"/><path fill="#EFCA46" d="M3.12 0.51c0.5,0 1.07,0.19 1.47,0.49 0.25,0.19 0.45,0.38 0.62,0.64 0.45,0.68 0.58,1.51 0.31,2.29 -0.12,0.34 -0.38,0.76 -0.64,1.01 -0.03,0.03 -0.06,0.05 -0.08,0.06 -0.03,0.03 -0.06,0.06 -0.1,0.09 -0.5,0.39 -1.01,0.58 -1.66,0.58 -0.36,0 -0.69,-0.1 -1.02,-0.23 -0.27,-0.11 -0.56,-0.33 -0.77,-0.53 -0.89,-0.89 -0.99,-2.27 -0.28,-3.3 0.5,-0.71 1.28,-1.1 2.15,-1.1zm-0.26 1.08c-0.7,0 -1.27,0.57 -1.27,1.27 0,0.7 0.57,1.27 1.27,1.27 0.27,0 0.52,-0.08 0.73,-0.23l0.61 0.61c0.09,0.09 0.23,0.09 0.32,0 0.09,-0.09 0.09,-0.23 0,-0.32l-0.61 -0.61c0.14,-0.21 0.23,-0.46 0.23,-0.73 0,-0.7 -0.57,-1.27 -1.27,-1.27zm0 0.45c0.46,0 0.82,0.37 0.82,0.82 0,0.46 -0.37,0.82 -0.82,0.82 -0.46,0 -0.82,-0.37 -0.82,-0.82 0,-0.46 0.37,-0.82 0.82,-0.82z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.17 6.18" width="36" height="36" style="fill-rule:evenodd;cursor:pointer;flex-shrink:0" onclick="toggleSearchDropdown('ac-in-s','in-s')"><path style="fill:var(--pill-disc)" d="M5.13 5.39c-0.04,0.04 -0.08,0.07 -0.12,0.1 -0.59,0.46 -1.21,0.68 -1.97,0.68 -0.43,0 -0.82,-0.11 -1.22,-0.27 -0.33,-0.14 -0.67,-0.39 -0.93,-0.64 -1.06,-1.06 -1.19,-2.73 -0.34,-3.95 0.59,-0.85 1.53,-1.32 2.57,-1.32 0.61,0 1.29,0.22 1.77,0.59 0.29,0.22 0.54,0.46 0.74,0.77 0.54,0.81 0.68,1.82 0.36,2.74 -0.15,0.42 -0.45,0.91 -0.78,1.22 -0.03,0.03 -0.06,0.05 -0.09,0.08z"/><path fill="#EFCA46" d="M3.12 0.51c0.5,0 1.07,0.19 1.47,0.49 0.25,0.19 0.45,0.38 0.62,0.64 0.45,0.68 0.58,1.51 0.31,2.29 -0.12,0.34 -0.38,0.76 -0.64,1.01 -0.03,0.03 -0.06,0.05 -0.08,0.06 -0.03,0.03 -0.06,0.06 -0.1,0.09 -0.5,0.39 -1.01,0.58 -1.66,0.58 -0.36,0 -0.69,-0.1 -1.02,-0.23 -0.27,-0.11 -0.56,-0.33 -0.77,-0.53 -0.89,-0.89 -0.99,-2.27 -0.28,-3.3 0.5,-0.71 1.28,-1.1 2.15,-1.1zm-0.26 1.08c-0.7,0 -1.27,0.57 -1.27,1.27 0,0.7 0.57,1.27 1.27,1.27 0.27,0 0.52,-0.08 0.73,-0.23l0.61 0.61c0.09,0.09 0.23,0.09 0.32,0 0.09,-0.09 0.09,-0.23 0,-0.32l-0.61 -0.61c0.14,-0.21 0.23,-0.46 0.23,-0.73 0,-0.7 -0.57,-1.27 -1.27,-1.27zm0 0.45c0.46,0 0.82,0.37 0.82,0.82 0,0.46 -0.37,0.82 -0.82,0.82 -0.46,0 -0.82,-0.37 -0.82,-0.82 0,-0.46 0.37,-0.82 0.82,-0.82z"/></svg>
         <input type="text" id="in-s" placeholder="Поиск..." autocomplete="off" oninput="renderIn();inClearBtn();inAcInput()" onfocus="inAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-in-s');if(d)d.classList.remove('show');},150)" onkeydown="inAcKey(event)">
         <div class="ac-dropdown" id="ac-in-s" style="top:44px"></div>
         <button class="search-bar-btn" id="in-s-clear" onclick="document.getElementById('in-s').value='';renderIn();inClearBtn();document.getElementById('ac-in-s').classList.remove('show')" tabindex="-1" style="display:none">✕</button>
@@ -177,9 +181,9 @@
       </div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
       <div class="search-bar-wrap" style="flex:1">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 526.81 55.86" preserveAspectRatio="none"><rect fill="#252C33" x="0" y="0" width="526.81" height="55.86" rx="33.69" ry="27.93"/><path fill="#3D4550" d="M44.43 4.64l454.99 0c12.81,0 23.3,10.48 23.3,23.3 0,12.81 -10.48,23.3 -23.3,23.3l-455.12 0c0.63,-0.42 1.25,-0.87 1.86,-1.35 0.38,-0.29 0.72,-0.6 1.07,-0.92 0.29,-0.22 0.58,-0.46 0.85,-0.71 3.02,-2.77 5.77,-7.22 7.12,-11.09 2.93,-8.44 1.61,-17.6 -3.31,-25.01 -1.85,-2.79 -4.09,-5 -6.75,-7 -0.23,-0.17 -0.47,-0.35 -0.71,-0.51z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 526.81 55.86" preserveAspectRatio="none"><rect style="fill:var(--pill-base)" x="0" y="0" width="526.81" height="55.86" rx="33.69" ry="27.93"/><path style="fill:var(--pill-shade)" d="M44.43 4.64l454.99 0c12.81,0 23.3,10.48 23.3,23.3 0,12.81 -10.48,23.3 -23.3,23.3l-455.12 0c0.63,-0.42 1.25,-0.87 1.86,-1.35 0.38,-0.29 0.72,-0.6 1.07,-0.92 0.29,-0.22 0.58,-0.46 0.85,-0.71 3.02,-2.77 5.77,-7.22 7.12,-11.09 2.93,-8.44 1.61,-17.6 -3.31,-25.01 -1.85,-2.79 -4.09,-5 -6.75,-7 -0.23,-0.17 -0.47,-0.35 -0.71,-0.51z"/></svg>
       <div class="search-bar-inner">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.17 6.18" width="36" height="36" style="fill-rule:evenodd;cursor:pointer;flex-shrink:0" onclick="toggleSearchDropdown('ac-out-s','out-s')"><path fill="#252C33" d="M5.13 5.39c-0.04,0.04 -0.08,0.07 -0.12,0.1 -0.59,0.46 -1.21,0.68 -1.97,0.68 -0.43,0 -0.82,-0.11 -1.22,-0.27 -0.33,-0.14 -0.67,-0.39 -0.93,-0.64 -1.06,-1.06 -1.19,-2.73 -0.34,-3.95 0.59,-0.85 1.53,-1.32 2.57,-1.32 0.61,0 1.29,0.22 1.77,0.59 0.29,0.22 0.54,0.46 0.74,0.77 0.54,0.81 0.68,1.82 0.36,2.74 -0.15,0.42 -0.45,0.91 -0.78,1.22 -0.03,0.03 -0.06,0.05 -0.09,0.08z"/><path fill="#EFCA46" d="M3.12 0.51c0.5,0 1.07,0.19 1.47,0.49 0.25,0.19 0.45,0.38 0.62,0.64 0.45,0.68 0.58,1.51 0.31,2.29 -0.12,0.34 -0.38,0.76 -0.64,1.01 -0.03,0.03 -0.06,0.05 -0.08,0.06 -0.03,0.03 -0.06,0.06 -0.1,0.09 -0.5,0.39 -1.01,0.58 -1.66,0.58 -0.36,0 -0.69,-0.1 -1.02,-0.23 -0.27,-0.11 -0.56,-0.33 -0.77,-0.53 -0.89,-0.89 -0.99,-2.27 -0.28,-3.3 0.5,-0.71 1.28,-1.1 2.15,-1.1zm-0.26 1.08c-0.7,0 -1.27,0.57 -1.27,1.27 0,0.7 0.57,1.27 1.27,1.27 0.27,0 0.52,-0.08 0.73,-0.23l0.61 0.61c0.09,0.09 0.23,0.09 0.32,0 0.09,-0.09 0.09,-0.23 0,-0.32l-0.61 -0.61c0.14,-0.21 0.23,-0.46 0.23,-0.73 0,-0.7 -0.57,-1.27 -1.27,-1.27zm0 0.45c0.46,0 0.82,0.37 0.82,0.82 0,0.46 -0.37,0.82 -0.82,0.82 -0.46,0 -0.82,-0.37 -0.82,-0.82 0,-0.46 0.37,-0.82 0.82,-0.82z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.17 6.18" width="36" height="36" style="fill-rule:evenodd;cursor:pointer;flex-shrink:0" onclick="toggleSearchDropdown('ac-out-s','out-s')"><path style="fill:var(--pill-disc)" d="M5.13 5.39c-0.04,0.04 -0.08,0.07 -0.12,0.1 -0.59,0.46 -1.21,0.68 -1.97,0.68 -0.43,0 -0.82,-0.11 -1.22,-0.27 -0.33,-0.14 -0.67,-0.39 -0.93,-0.64 -1.06,-1.06 -1.19,-2.73 -0.34,-3.95 0.59,-0.85 1.53,-1.32 2.57,-1.32 0.61,0 1.29,0.22 1.77,0.59 0.29,0.22 0.54,0.46 0.74,0.77 0.54,0.81 0.68,1.82 0.36,2.74 -0.15,0.42 -0.45,0.91 -0.78,1.22 -0.03,0.03 -0.06,0.05 -0.09,0.08z"/><path fill="#EFCA46" d="M3.12 0.51c0.5,0 1.07,0.19 1.47,0.49 0.25,0.19 0.45,0.38 0.62,0.64 0.45,0.68 0.58,1.51 0.31,2.29 -0.12,0.34 -0.38,0.76 -0.64,1.01 -0.03,0.03 -0.06,0.05 -0.08,0.06 -0.03,0.03 -0.06,0.06 -0.1,0.09 -0.5,0.39 -1.01,0.58 -1.66,0.58 -0.36,0 -0.69,-0.1 -1.02,-0.23 -0.27,-0.11 -0.56,-0.33 -0.77,-0.53 -0.89,-0.89 -0.99,-2.27 -0.28,-3.3 0.5,-0.71 1.28,-1.1 2.15,-1.1zm-0.26 1.08c-0.7,0 -1.27,0.57 -1.27,1.27 0,0.7 0.57,1.27 1.27,1.27 0.27,0 0.52,-0.08 0.73,-0.23l0.61 0.61c0.09,0.09 0.23,0.09 0.32,0 0.09,-0.09 0.09,-0.23 0,-0.32l-0.61 -0.61c0.14,-0.21 0.23,-0.46 0.23,-0.73 0,-0.7 -0.57,-1.27 -1.27,-1.27zm0 0.45c0.46,0 0.82,0.37 0.82,0.82 0,0.46 -0.37,0.82 -0.82,0.82 -0.46,0 -0.82,-0.37 -0.82,-0.82 0,-0.46 0.37,-0.82 0.82,-0.82z"/></svg>
         <input type="text" id="out-s" placeholder="Поиск..." autocomplete="off" oninput="renderOut();outClearBtn();outAcInput()" onfocus="outAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-out-s');if(d)d.classList.remove('show');},150)" onkeydown="outAcKey(event)">
         <div class="ac-dropdown" id="ac-out-s" style="top:44px"></div>
         <button class="search-bar-btn" id="out-s-clear" onclick="document.getElementById('out-s').value='';renderOut();outClearBtn();document.getElementById('ac-out-s').classList.remove('show')" tabindex="-1" style="display:none">✕</button>
@@ -252,9 +256,9 @@
     </div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
       <div class="search-bar-wrap" style="flex:1">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 526.81 55.86" preserveAspectRatio="none"><rect fill="#252C33" x="0" y="0" width="526.81" height="55.86" rx="33.69" ry="27.93"/><path fill="#3D4550" d="M44.43 4.64l454.99 0c12.81,0 23.3,10.48 23.3,23.3 0,12.81 -10.48,23.3 -23.3,23.3l-455.12 0c0.63,-0.42 1.25,-0.87 1.86,-1.35 0.38,-0.29 0.72,-0.6 1.07,-0.92 0.29,-0.22 0.58,-0.46 0.85,-0.71 3.02,-2.77 5.77,-7.22 7.12,-11.09 2.93,-8.44 1.61,-17.6 -3.31,-25.01 -1.85,-2.79 -4.09,-5 -6.75,-7 -0.23,-0.17 -0.47,-0.35 -0.71,-0.51z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 526.81 55.86" preserveAspectRatio="none"><rect style="fill:var(--pill-base)" x="0" y="0" width="526.81" height="55.86" rx="33.69" ry="27.93"/><path style="fill:var(--pill-shade)" d="M44.43 4.64l454.99 0c12.81,0 23.3,10.48 23.3,23.3 0,12.81 -10.48,23.3 -23.3,23.3l-455.12 0c0.63,-0.42 1.25,-0.87 1.86,-1.35 0.38,-0.29 0.72,-0.6 1.07,-0.92 0.29,-0.22 0.58,-0.46 0.85,-0.71 3.02,-2.77 5.77,-7.22 7.12,-11.09 2.93,-8.44 1.61,-17.6 -3.31,-25.01 -1.85,-2.79 -4.09,-5 -6.75,-7 -0.23,-0.17 -0.47,-0.35 -0.71,-0.51z"/></svg>
       <div class="search-bar-inner">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.17 6.18" width="36" height="36" style="fill-rule:evenodd;cursor:pointer;flex-shrink:0" onclick="toggleSearchDropdown('ac-stk-s','stk-s')"><path fill="#252C33" d="M5.13 5.39c-0.04,0.04 -0.08,0.07 -0.12,0.1 -0.59,0.46 -1.21,0.68 -1.97,0.68 -0.43,0 -0.82,-0.11 -1.22,-0.27 -0.33,-0.14 -0.67,-0.39 -0.93,-0.64 -1.06,-1.06 -1.19,-2.73 -0.34,-3.95 0.59,-0.85 1.53,-1.32 2.57,-1.32 0.61,0 1.29,0.22 1.77,0.59 0.29,0.22 0.54,0.46 0.74,0.77 0.54,0.81 0.68,1.82 0.36,2.74 -0.15,0.42 -0.45,0.91 -0.78,1.22 -0.03,0.03 -0.06,0.05 -0.09,0.08z"/><path fill="#EFCA46" d="M3.12 0.51c0.5,0 1.07,0.19 1.47,0.49 0.25,0.19 0.45,0.38 0.62,0.64 0.45,0.68 0.58,1.51 0.31,2.29 -0.12,0.34 -0.38,0.76 -0.64,1.01 -0.03,0.03 -0.06,0.05 -0.08,0.06 -0.03,0.03 -0.06,0.06 -0.1,0.09 -0.5,0.39 -1.01,0.58 -1.66,0.58 -0.36,0 -0.69,-0.1 -1.02,-0.23 -0.27,-0.11 -0.56,-0.33 -0.77,-0.53 -0.89,-0.89 -0.99,-2.27 -0.28,-3.3 0.5,-0.71 1.28,-1.1 2.15,-1.1zm-0.26 1.08c-0.7,0 -1.27,0.57 -1.27,1.27 0,0.7 0.57,1.27 1.27,1.27 0.27,0 0.52,-0.08 0.73,-0.23l0.61 0.61c0.09,0.09 0.23,0.09 0.32,0 0.09,-0.09 0.09,-0.23 0,-0.32l-0.61 -0.61c0.14,-0.21 0.23,-0.46 0.23,-0.73 0,-0.7 -0.57,-1.27 -1.27,-1.27zm0 0.45c0.46,0 0.82,0.37 0.82,0.82 0,0.46 -0.37,0.82 -0.82,0.82 -0.46,0 -0.82,-0.37 -0.82,-0.82 0,-0.46 0.37,-0.82 0.82,-0.82z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.17 6.18" width="36" height="36" style="fill-rule:evenodd;cursor:pointer;flex-shrink:0" onclick="toggleSearchDropdown('ac-stk-s','stk-s')"><path style="fill:var(--pill-disc)" d="M5.13 5.39c-0.04,0.04 -0.08,0.07 -0.12,0.1 -0.59,0.46 -1.21,0.68 -1.97,0.68 -0.43,0 -0.82,-0.11 -1.22,-0.27 -0.33,-0.14 -0.67,-0.39 -0.93,-0.64 -1.06,-1.06 -1.19,-2.73 -0.34,-3.95 0.59,-0.85 1.53,-1.32 2.57,-1.32 0.61,0 1.29,0.22 1.77,0.59 0.29,0.22 0.54,0.46 0.74,0.77 0.54,0.81 0.68,1.82 0.36,2.74 -0.15,0.42 -0.45,0.91 -0.78,1.22 -0.03,0.03 -0.06,0.05 -0.09,0.08z"/><path fill="#EFCA46" d="M3.12 0.51c0.5,0 1.07,0.19 1.47,0.49 0.25,0.19 0.45,0.38 0.62,0.64 0.45,0.68 0.58,1.51 0.31,2.29 -0.12,0.34 -0.38,0.76 -0.64,1.01 -0.03,0.03 -0.06,0.05 -0.08,0.06 -0.03,0.03 -0.06,0.06 -0.1,0.09 -0.5,0.39 -1.01,0.58 -1.66,0.58 -0.36,0 -0.69,-0.1 -1.02,-0.23 -0.27,-0.11 -0.56,-0.33 -0.77,-0.53 -0.89,-0.89 -0.99,-2.27 -0.28,-3.3 0.5,-0.71 1.28,-1.1 2.15,-1.1zm-0.26 1.08c-0.7,0 -1.27,0.57 -1.27,1.27 0,0.7 0.57,1.27 1.27,1.27 0.27,0 0.52,-0.08 0.73,-0.23l0.61 0.61c0.09,0.09 0.23,0.09 0.32,0 0.09,-0.09 0.09,-0.23 0,-0.32l-0.61 -0.61c0.14,-0.21 0.23,-0.46 0.23,-0.73 0,-0.7 -0.57,-1.27 -1.27,-1.27zm0 0.45c0.46,0 0.82,0.37 0.82,0.82 0,0.46 -0.37,0.82 -0.82,0.82 -0.46,0 -0.82,-0.37 -0.82,-0.82 0,-0.46 0.37,-0.82 0.82,-0.82z"/></svg>
         <input type="text" id="stk-s" placeholder="Поиск..." autocomplete="off" oninput="renderStock();renderRemByMat();stkClearBtn();stkAcInput()" onfocus="stkAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-stk-s');if(d)d.classList.remove('show');},150)" onkeydown="stkAcKey(event)">
         <div class="ac-dropdown" id="ac-stk-s" style="top:44px"></div>
         <button class="search-bar-btn" id="stk-s-clear" onclick="document.getElementById('stk-s').value='';renderStock();renderRemByMat();stkClearBtn();document.getElementById('ac-stk-s').classList.remove('show')" tabindex="-1" style="display:none">✕</button>
@@ -345,7 +349,13 @@
   </div>
   <div class="sec-body">
 
-
+  <!-- Тема оформления -->
+  <div class="card">
+    <div class="ctitle">Тема оформления</div>
+    <div class="theme-seg">
+      <button class="theme-opt" id="theme-btn-light" onclick="setTheme('light')">☀️ Светлая</button>
+      <button class="theme-opt" id="theme-btn-dark" onclick="setTheme('dark')">🌙 Тёмная</button>
+    </div>
   </div>
 
   <!-- История — сворачиваемая -->
@@ -529,6 +539,7 @@
 <!-- Скрипты: классические (не модули), т.к. в разметке inline onclick; порядок важен, main.js — последним -->
 <script src="js/config.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/theme.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/access.js"></script>
 <script src="js/storage.js"></script>
