@@ -5,6 +5,15 @@ const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const SB_HDR  = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
 let   syncTimer = null;
 let   syncing   = false;
+let   lastSyncError = null; // причина последней ошибки синхронизации (null = всё ок)
+
+function sbErrText(e){
+  const m=String((e&&e.message)||e);
+  if(/Failed to fetch|NetworkError|Load failed|network/i.test(m)) return 'сервер недоступен (сеть, блокировка или проект Supabase приостановлен)';
+  if(/^40[13]/.test(m)) return 'нет доступа (ключ или политики RLS): '+m.slice(0,100);
+  if(/^404/.test(m))    return 'таблица material_data не найдена: '+m.slice(0,100);
+  return m.slice(0,120);
+}
 
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
@@ -68,6 +77,7 @@ async function sbPush(){
     saveLocal();
     setSyncStatus('ok');
   }catch(e){
+    lastSyncError=sbErrText(e);
     setSyncStatus('err');
     console.warn('Supabase push error',e);
   }
@@ -77,11 +87,13 @@ async function sbPull(){
   if(!ACCESS_CODE) return null;
   try{
     const r=await fetch(`${SB_URL}/rest/v1/material_data?id=eq.${encodeURIComponent(sbRowId())}&select=payload,updated_at`,{headers:SB_HDR});
-    if(!r.ok) throw new Error(r.status);
+    if(!r.ok){ const txt=await r.text().catch(()=>''); throw new Error(`${r.status}: ${txt}`); }
     const rows=await r.json();
-    if(!rows.length) return null;
+    lastSyncError=null;               // запрос прошёл успешно
+    if(!rows.length) return null;     // строки для этого кода в облаке ещё нет — это не ошибка
     return rows[0].payload;
   }catch(e){
+    lastSyncError=sbErrText(e);
     console.warn('Supabase pull error',e);
     return null;
   }
@@ -91,6 +103,11 @@ async function manualSync(){
   setSyncStatus('load');
   toast('🔄 Синхронизация...','info');
   const fresh=await sbPull();
+  if(lastSyncError){
+    setSyncStatus('err');
+    toast('⚠️ Нет связи с облаком: '+lastSyncError,'err');
+    return;
+  }
   if(fresh){
     // Объединяем — не заменяем
     mergePayload(fresh);
@@ -100,8 +117,10 @@ async function manualSync(){
     setSyncStatus('ok');
     toast('✅ Данные обновлены','ok');
   } else {
-    setSyncStatus('err');
-    toast('⚠️ Нет связи с облаком','err');
+    // Связь есть, но для этого кода в облаке ещё нет данных — отправляем локальные
+    await sbPush();
+    if(lastSyncError) toast('⚠️ Нет связи с облаком: '+lastSyncError,'err');
+    else toast('☁️ В облаке было пусто — данные отправлены','ok');
   }
 }
 
