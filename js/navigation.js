@@ -1,44 +1,61 @@
-// ▸ navigation.js — Навигация: свайпы, вкладки, плюс-кнопка, панели; свайп внутри склада
+// ▸ navigation.js — Навигация: свайпы между страницами, вкладки, плюс-кнопка, панели
 // ══════════════════════════════════════ SWIPE NAVIGATION
+// Порядок страниц: Приход → Расход → Листы → Обрезки → Настройки (свайп в другую сторону — в обратном порядке)
 (function(){
-  const NAV_ORDER=['income','expense','stock','more'];
-  let tX=0,tY=0,tT=0,swipeLocked=false;
-  function currentIdx(){
+  function pageIdx(){
     const active=document.querySelector('.sec.active');
     if(!active) return 0;
     const id=active.id.replace('sec-','');
-    return Math.max(0,NAV_ORDER.indexOf(id));
+    if(id==='income') return 0;
+    if(id==='expense') return 1;
+    if(id==='stock') return (typeof stockTab!=='undefined' && stockTab==='rem') ? 3 : 2;
+    if(id==='more') return 4;
+    return 0;
   }
-  function goIdx(i){
-    if(i<0||i>=NAV_ORDER.length) return;
-    const name=NAV_ORDER[i];
-    const btn=document.querySelector(`.nbtn:nth-child(${i+1})`);
-    if(btn) go(name,btn);
+  function goPage(i){
+    if(i<0||i>4||i===pageIdx()) return;
+    const uchetBtn=document.getElementById('nbtn-uchet');
+    const stockBtn=document.getElementById('nbtn-stock');
+    if(i===0) go('income',uchetBtn);
+    else if(i===1) go('expense',uchetBtn);
+    else if(i===2||i===3){
+      const inStock=document.getElementById('sec-stock').classList.contains('active');
+      if(!inStock) go('stock',stockBtn);
+      const tabs=document.querySelectorAll('#sec-stock .itab');
+      setStockTab(tabs[i===2?0:1], i===2?'balance':'rem');
+    }
+    else if(i===4) goMore(document.getElementById('hdr-more-btn'));
   }
+  // касание внутри горизонтально прокручиваемого блока — это его скролл, а не смена страницы
+  function inHScroll(el){
+    for(; el && el!==document.body; el=el.parentElement){
+      if(el.scrollWidth>el.clientWidth+2){
+        const ox=getComputedStyle(el).overflowX;
+        if(ox==='auto'||ox==='scroll') return true;
+      }
+    }
+    return false;
+  }
+  let tX=0,tY=0,tT=0,swipeLocked=false;
   document.addEventListener('touchstart',e=>{
-    // Не свайпаем если касание внутри скроллируемого элемента с горизонтальным скроллом
     const t=e.touches[0];
-    tX=t.clientX; tY=t.clientY; tT=Date.now(); swipeLocked=false;
+    tX=t.clientX; tY=t.clientY; tT=Date.now();
+    swipeLocked=inHScroll(e.target);
   },{passive:true});
   document.addEventListener('touchmove',e=>{
     if(swipeLocked) return;
     const t=e.touches[0];
     const dx=t.clientX-tX, dy=t.clientY-tY;
-    // Если вертикальное движение преобладает — это скролл, блокируем свайп
-    if(Math.abs(dy)>Math.abs(dx)*1.2) swipeLocked=true;
+    if(Math.abs(dy)>Math.abs(dx)*1.2) swipeLocked=true; // вертикальный скролл
   },{passive:true});
   document.addEventListener('touchend',e=>{
     if(swipeLocked) return;
-    // Не реагируем на свайп внутри открытой модалки
-    if(document.querySelector('.overlay.show')) return;
+    if(document.querySelector('.overlay.show')) return; // не листаем под открытой модалкой
     const t=e.changedTouches[0];
     const dx=t.clientX-tX, dy=t.clientY-tY;
-    const dt=Date.now()-tT;
-    // Минимум 60px по горизонтали, время < 400ms, горизонталь преобладает
-    if(dt>400||Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.8) return;
-    const idx=currentIdx();
-    if(dx<0) goIdx(idx+1); // влево → следующий
-    else      goIdx(idx-1); // вправо → предыдущий
+    if(Date.now()-tT>400||Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.8) return;
+    const idx=pageIdx();
+    goPage(dx<0 ? idx+1 : idx-1); // влево → следующая, вправо → предыдущая
   },{passive:true});
 })();
 
@@ -197,28 +214,3 @@ function toggleAddPanel(id){
     }
   }
 }
-
-// Свайп внутри склада: Листы ↔ Обрезки
-(function(){
-  const stockEl = document.getElementById('sec-stock');
-  if(!stockEl) return;
-  let sx=0, sy=0, st=0, sl=false;
-  stockEl.addEventListener('touchstart', e=>{
-    sx=e.touches[0].clientX; sy=e.touches[0].clientY; st=Date.now(); sl=false;
-  },{passive:true});
-  stockEl.addEventListener('touchmove', e=>{
-    if(sl) return;
-    const dx=e.touches[0].clientX-sx, dy=e.touches[0].clientY-sy;
-    if(Math.abs(dy)>Math.abs(dx)*1.2) sl=true;
-  },{passive:true});
-  stockEl.addEventListener('touchend', e=>{
-    if(sl) return;
-    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
-    const dt=Date.now()-st;
-    if(dt>400||Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.8) return;
-    const tabs=document.querySelectorAll('#sec-stock .itab');
-    const activeIdx=[...tabs].findIndex(b=>b.classList.contains('active'));
-    if(dx<0 && activeIdx<tabs.length-1) tabs[activeIdx+1].click();
-    else if(dx>0 && activeIdx>0) tabs[activeIdx-1].click();
-  },{passive:true});
-})();

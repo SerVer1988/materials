@@ -4,7 +4,7 @@
 .hdr-t{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;line-height:1.2;color:var(--text)}
 .hdr-t span{color:var(--accent-ink)}
 .hdr-tab-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:900;letter-spacing:.06em;color:var(--text);text-transform:uppercase;text-align:center;flex:1}
-.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
 .hdr-search-btn{background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;opacity:.85}
 .hdr-more-btn{background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;color:var(--nav-ico);transition:color .15s}
 .hdr-more-btn.active{color:var(--nav-active)}
@@ -12,9 +12,9 @@
 .uchet-tab{display:flex;align-items:center;gap:5px;flex:1;justify-content:center;background:none;border:none;border-radius:7px;padding:7px 10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;transition:all .18s;white-space:nowrap}
 .uchet-tab.active{background:var(--accent);color:var(--on-accent);box-shadow:0 2px 10px var(--accent-glow)}
 /* Подложка названия вкладки */
-.tab-name-wrap{position:relative;display:flex;align-items:center;justify-content:center;height:32px;align-self:center}
-.tab-name-wrap svg{position:absolute;inset:0;width:100%;height:100%}
-.tab-name-text{position:relative;z-index:1;font-family:'Syne',sans-serif;font-size:17px;font-weight:900;letter-spacing:.07em;color:var(--text);text-transform:uppercase;white-space:nowrap;padding:0 18px}
+.tab-name-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;height:34px;align-self:center;padding-left:36px;border-radius:999px;background:var(--pill-base);box-shadow:inset 0 -2px 0 var(--pill-shade)}
+.tab-name-wrap > svg{display:none}
+.tab-name-text{position:relative;z-index:1;font-family:'Syne',sans-serif;font-size:17px;font-weight:900;letter-spacing:.07em;color:var(--text);text-transform:uppercase;white-space:nowrap;padding:0 16px 0 6px}
 /* Строка поиска на подложке */
 .search-bar-wrap{position:relative;display:flex;align-items:center;height:40px;border-radius:999px;background:var(--search-bg);border:1px solid var(--search-border);box-shadow:var(--search-sh)}
 .search-bar-wrap > svg{display:none}

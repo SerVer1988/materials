@@ -103,9 +103,9 @@ function renderOut(){
   tb.innerHTML=rows.map((r,i)=>{
     let sizeCell;
     if(r.etype==='full'&&r.size&&r.size!=='—'){
-      sizeCell=`<span style="font-size:12px">${r.size}</span>`;
+      sizeCell=sizeStack(r.size);
     } else if(r.sourceScrap){
-      sizeCell=`<span style="font-size:11px;color:var(--blue)">${r.sourceScrap}</span>`;
+      sizeCell=`<span style="color:var(--blue)">${sizeStack(r.sourceScrap)}</span>`;
     } else if(r.det){
       sizeCell=`<span style="font-size:11px;color:var(--muted)">обрезок</span>`;
     } else {
@@ -113,11 +113,11 @@ function renderOut(){
     }
     return `<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">
       <td style="color:var(--muted);font-size:11px">${total-i}</td>
-      <td style="font-size:11px;color:var(--muted)">${r.dt}</td>
+      <td class="c-dt">${dtCell(r.dt)}</td>
       <td>${matChip(r.mat)}</td>
-      <td>${sizeCell}</td>
+      <td class="c-sz">${sizeCell}</td>
       <td><span class="badge bout">${r.qty} л.</span></td>
-      <td style="font-size:12px;color:var(--muted)">${normSizeStr(r.det)||'—'}</td>
+      <td class="c-sz c-det">${sizeStack(normSizeStr(r.det))}</td>
       <td><button class="dbtn" onclick="event.stopPropagation();del('expense',${r.id})">✕</button></td>
     </tr>`;
   }).join('');

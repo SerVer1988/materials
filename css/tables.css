@@ -39,3 +39,22 @@ tr:last-child td{border-bottom:none}
 .mat-wood{--mc-bg:var(--mat-wood-bg);--mc-fg:var(--mat-wood-fg)}
 .mat-metal{--mc-bg:var(--mat-metal-bg);--mc-fg:var(--mat-metal-fg)}
 .mat-other{--mc-bg:var(--mat-other-bg);--mc-fg:var(--mat-other-fg)}
+
+/* ── Компактные таблицы «Учёт» (приход / расход): всё помещается по ширине экрана ── */
+table.acct{min-width:0;font-size:12px}
+table.acct th{padding:8px 3px;font-size:9px;letter-spacing:.03em}
+table.acct td{padding:7px 3px}
+table.acct th:first-child,table.acct td:first-child{padding-left:8px;width:1%}
+table.acct th:last-child,table.acct td:last-child{padding-right:8px;width:1%}
+table.acct td:first-child{font-size:10px}
+.dt-d,.dt-t,.sz{display:block;white-space:nowrap}
+.dt-d{font-size:11px;font-weight:700;color:var(--info-size);line-height:1.25}
+.dt-t{font-size:10px;color:var(--muted);line-height:1.25}
+.sz{font-size:12px;font-weight:700;line-height:1.25}
+.c-det .sz{color:var(--muted);font-size:11px}
+table.acct .mat-chip{white-space:normal;font-size:11px;line-height:1.2;padding:3px 7px 3px 6px;gap:4px}
+table.acct .mat-chip svg{width:12px;height:12px}
+table.acct .badge{padding:2px 6px}
+table.acct .place-badge{font-size:11px}
+table.acct .place-badge::before{display:none}
+table.acct .dbtn{padding:3px 6px}

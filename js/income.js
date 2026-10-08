@@ -82,9 +82,9 @@ function renderIn(){
   const total=db.income.filter(r=>!inPlaceFilter||(r.place||'')=== inPlaceFilter).length;
   tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.income===r.id?'is-editing':''}" onclick="editIncome(${r.id})">
     <td style="color:var(--muted);font-size:11px">${total-i}</td>
-    <td style="font-size:11px;color:var(--muted)">${r.dt}</td>
+    <td class="c-dt">${dtCell(r.dt)}</td>
     <td>${matChip(r.mat)}</td>
-    <td style="font-size:12px">${r.size}</td>
+    <td class="c-sz">${sizeStack(r.size)}</td>
     <td><span class="badge bin">${r.qty} л.</span></td>
     <td><span class="place-badge">${r.place||'—'}</span></td>
     <td><button class="dbtn" onclick="event.stopPropagation();del('income',${r.id})">✕</button></td>

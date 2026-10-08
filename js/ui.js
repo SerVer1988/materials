@@ -69,3 +69,17 @@ function matChip(name){
   const esc=n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   return `<span class="mat-chip mat-${f[1]}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${MAT_ICONS[f[2]]}</svg>${esc}</span>`;
 }
+
+// ══════════════════════════════════════ ЯЧЕЙКИ ТАБЛИЦ: дата и размер
+// Дата в две строки: 29.04.26 / 14:35 (понимает и "29.04.2026 14:35", и "29.04.26 14:35")
+function dtCell(dt){
+  const m=String(dt||'').match(/(\d{2})\.(\d{2})\.(\d{2,4})[,\s]+(\d{2}):(\d{2})/);
+  if(!m) return String(dt||'—');
+  return `<span class="dt-d">${m[1]}.${m[2]}.${m[3].slice(-2)}</span><span class="dt-t">${m[4]}:${m[5]}</span>`;
+}
+// Размер в две строки: 1220× / 2440 (если это не размер — возвращается как есть)
+function sizeStack(s){
+  const m=String(s==null?'':s).trim().match(/^(\d+(?:[.,]\d+)?)\s*[хxX×*]\s*(\d+(?:[.,]\d+)?)$/);
+  if(!m) return String(s||'—');
+  return `<span class="sz">${m[1]}×</span><span class="sz">${m[2]}</span>`;
+}
