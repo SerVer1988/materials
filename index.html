@@ -119,7 +119,7 @@
         <svg class="search-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" onclick="toggleSearchDropdown('ac-in-s','in-s')"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
         <input type="text" id="in-s" placeholder="Поиск..." autocomplete="off" oninput="renderIn();inClearBtn();inAcInput()" onfocus="inAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-in-s');if(d)d.classList.remove('show');},150)" onkeydown="inAcKey(event)">
         <div class="ac-dropdown" id="ac-in-s" style="top:44px"></div>
-        <button class="search-bar-btn" id="in-s-clear" onclick="document.getElementById('in-s').value='';renderIn();inClearBtn();document.getElementById('ac-in-s').classList.remove('show')" tabindex="-1" style="display:none">✕</button>
+        <button class="search-bar-btn sclear" id="in-s-clear" onclick="document.getElementById('in-s').value='';renderIn();inClearBtn();document.getElementById('ac-in-s').classList.remove('show')" tabindex="-1" title="Очистить">✕</button>
       </div>
     </div>
       </div>
@@ -185,7 +185,7 @@
         <svg class="search-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" onclick="toggleSearchDropdown('ac-out-s','out-s')"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
         <input type="text" id="out-s" placeholder="Поиск..." autocomplete="off" oninput="renderOut();outClearBtn();outAcInput()" onfocus="outAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-out-s');if(d)d.classList.remove('show');},150)" onkeydown="outAcKey(event)">
         <div class="ac-dropdown" id="ac-out-s" style="top:44px"></div>
-        <button class="search-bar-btn" id="out-s-clear" onclick="document.getElementById('out-s').value='';renderOut();outClearBtn();document.getElementById('ac-out-s').classList.remove('show')" tabindex="-1" style="display:none">✕</button>
+        <button class="search-bar-btn sclear" id="out-s-clear" onclick="document.getElementById('out-s').value='';renderOut();outClearBtn();document.getElementById('ac-out-s').classList.remove('show')" tabindex="-1" title="Очистить">✕</button>
       </div>
     </div>
       </div>
@@ -259,7 +259,7 @@
         <svg class="search-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" onclick="toggleSearchDropdown('ac-stk-s','stk-s')"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
         <input type="text" id="stk-s" placeholder="Поиск..." autocomplete="off" oninput="renderStock();renderRemByMat();stkClearBtn();stkAcInput()" onfocus="stkAcInput()" onblur="setTimeout(()=>{const d=document.getElementById('ac-stk-s');if(d)d.classList.remove('show');},150)" onkeydown="stkAcKey(event)">
         <div class="ac-dropdown" id="ac-stk-s" style="top:44px"></div>
-        <button class="search-bar-btn" id="stk-s-clear" onclick="document.getElementById('stk-s').value='';renderStock();renderRemByMat();stkClearBtn();document.getElementById('ac-stk-s').classList.remove('show')" tabindex="-1" style="display:none">✕</button>
+        <button class="search-bar-btn sclear" id="stk-s-clear" onclick="document.getElementById('stk-s').value='';renderStock();renderRemByMat();stkClearBtn();document.getElementById('ac-stk-s').classList.remove('show')" tabindex="-1" title="Очистить">✕</button>
       </div>
     </div>
       </div>
