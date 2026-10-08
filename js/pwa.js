@@ -24,7 +24,6 @@
     <button id="pwa-dismiss-btn" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button>
   `;
   Object.assign(banner.style, {
-    display: 'none',
     position: 'fixed',
     bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
     left: '12px', right: '12px',
@@ -34,7 +33,7 @@
     padding: '12px 14px',
     boxShadow: 'var(--shl)',
     zIndex: '150',
-    display: 'flex',
+    display: 'none', // показывается только из beforeinstallprompt, один раз
     alignItems: 'center',
     gap: '10px',
     animation: 'pwa-slide-up .3s ease'
@@ -46,14 +45,18 @@
   document.head.appendChild(style);
   document.body.appendChild(banner);
 
-  // Ловим событие beforeinstallprompt (Chrome/Android)
+  // Не показываем, если приложение уже запущено как установленное
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  // Баннер показывается ОДИН раз за всё время: после показа, установки или закрытия больше не появляется
+  const alreadyHandled = () => ['pwa_banner_shown','pwa_installed','pwa_dismissed'].some(k => localStorage.getItem(k));
+
+  // Ловим событие beforeinstallprompt (Chrome/Android/Desktop)
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    // Показываем баннер только если не отклоняли раньше 
-    if(!localStorage.getItem('pwa_dismissed')){
-      banner.style.display = 'flex';
-    }
+    if(isStandalone || alreadyHandled()) return;
+    banner.style.display = 'flex';
+    localStorage.setItem('pwa_banner_shown','1');
   });
 
   document.getElementById('pwa-install-btn').addEventListener('click', () => {
