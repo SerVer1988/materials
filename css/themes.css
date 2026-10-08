@@ -60,6 +60,10 @@
   --ic-gear-bg:#DCE8F7;  --ic-gear-bg-on:#BFD7F3;  --ic-gear-fg:#3F5F8F;
   --ni-uchet-bg:#DCE8F9; --ni-uchet-bg-on:#BCD5F5; --ni-uchet-fg:#3F6FB6;
   --ni-stock-bg:#E4DFF9; --ni-stock-bg-on:#D0C8F3; --ni-stock-fg:#6A5BC2;
+  --search-bg:linear-gradient(180deg,#FFFFFF,#F1F6FC);
+  --search-border:#D9E5F3;
+  --search-sh:0 2px 10px rgba(60,90,130,.08);
+  --search-ico:#3F6FB6;
   --plus-ring:#DCE6F1;
   --plus-income:#6DBF8C; --plus-expense:#EF8A85; --plus-rem:#F2C75C; --plus-off:#A9B4C2;
 
@@ -130,6 +134,10 @@
   --ic-gear-bg:currentColor; --ic-gear-bg-on:currentColor; --ic-gear-fg:transparent;
   --ni-uchet-bg:currentColor; --ni-uchet-bg-on:currentColor; --ni-uchet-fg:transparent;
   --ni-stock-bg:currentColor; --ni-stock-bg-on:currentColor; --ni-stock-fg:transparent;
+  --search-bg:var(--pill-base);
+  --search-border:var(--pill-shade);
+  --search-sh:none;
+  --search-ico:#EFCA46;
   --plus-ring:#242222;
   --plus-income:#22c55e; --plus-expense:#ef4444; --plus-rem:#EFCA46; --plus-off:#666;
 
