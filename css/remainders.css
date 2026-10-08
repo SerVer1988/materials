@@ -19,7 +19,7 @@
   -webkit-user-select:none;user-select:none;
 }
 .piece-row:last-child{border-bottom:none}
-.piece-row:hover{background:rgba(246,201,14,.05);border-radius:var(--rs)}
+.piece-row:hover{background:var(--row-hover);border-radius:var(--rs)}
 .piece-row.is-editing{background:var(--editlt);border-radius:var(--rs);border-bottom:none;border-left:2px solid var(--edit)}
 
 /* LEFT: size — left aligned */

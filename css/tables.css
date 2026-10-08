@@ -14,7 +14,7 @@ tr:last-child td{border-bottom:none}
 .tabrow{display:flex;gap:5px;margin-bottom:10px;overflow-x:auto}
 .tabrow::-webkit-scrollbar{display:none}
 .tab{flex-shrink:0;padding:6px 13px;border-radius:30px;border:1px solid var(--border);background:var(--card2);font-size:12px;font-weight:800;cursor:pointer;color:var(--muted);transition:all .15s}
-.tab.active{background:var(--accent);border-color:var(--accent);color:#111}
+.tab.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 
 /* ── SCRAP PREVIEW BANNERS ── */
 #scrap-preview,#scrap-neg-preview{border-radius:var(--rs);padding:10px;margin-bottom:10px;font-size:13px;font-weight:700}
@@ -27,3 +27,15 @@ tr:last-child td{border-bottom:none}
 .toast.ok{background:var(--green);color:#111;border-color:var(--green)}
 .toast.err{background:var(--red);color:#fff;border-color:var(--red)}
 .toast.info{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ── Чип материала с иконкой ── */
+.mat-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 8px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;background:var(--mc-bg);color:var(--mc-fg)}
+.mat-chip svg{width:14px;height:14px;flex:none}
+.mat-pvh{--mc-bg:var(--mat-pvh-bg);--mc-fg:var(--mat-pvh-fg)}
+.mat-acr{--mc-bg:var(--mat-acr-bg);--mc-fg:var(--mat-acr-fg)}
+.mat-akp{--mc-bg:var(--mat-akp-bg);--mc-fg:var(--mat-akp-fg)}
+.mat-abs{--mc-bg:var(--mat-abs-bg);--mc-fg:var(--mat-abs-fg)}
+.mat-pet{--mc-bg:var(--mat-pet-bg);--mc-fg:var(--mat-pet-fg)}
+.mat-wood{--mc-bg:var(--mat-wood-bg);--mc-fg:var(--mat-wood-fg)}
+.mat-metal{--mc-bg:var(--mat-metal-bg);--mc-fg:var(--mat-metal-fg)}
+.mat-other{--mc-bg:var(--mat-other-bg);--mc-fg:var(--mat-other-fg)}

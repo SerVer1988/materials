@@ -114,7 +114,7 @@ function setSyncStatus(state){
     el.style.color='var(--green)';
     localStorage.setItem('lm7_last_sync',t);
   }
-  if(state==='err')  { el.textContent='⚠️ Нет связи'; el.style.color='var(--red)'; }
+  if(state==='err')  { el.textContent='⚠️ Нет связи'; el.style.color='var(--warn)'; }
   if(state==='sync') { el.textContent='🔄 Сохранение...'; el.style.color='var(--muted)'; }
   if(state==='load') {
     const last=localStorage.getItem('lm7_last_sync');

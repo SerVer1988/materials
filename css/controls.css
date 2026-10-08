@@ -27,7 +27,7 @@
 .fab:active{transform:scale(.9);box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .fab-green{background:#22c55e;color:#fff}
 .fab-red{background:#ef4444;color:#fff}
-.fab-yellow{background:#F6C90E;color:#1A2027}
+.fab-yellow{background:var(--accent);color:var(--on-accent)}
 /* ── Section header row ── */
 .sec-hdr{display:flex;align-items:center;gap:9px;margin-bottom:9px}
 .sec-hdr-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--accent-ink);white-space:nowrap}
@@ -44,4 +44,4 @@
 /* ── Переключатель темы (настройки) ── */
 .theme-seg{display:flex;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:3px}
 .theme-opt{flex:1;padding:9px 6px;border-radius:7px;border:none;background:none;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;transition:all .18s}
-.theme-opt.active{background:var(--accent);color:#111;box-shadow:0 2px 10px rgba(246,201,14,.3)}
+.theme-opt.active{background:var(--accent);color:var(--on-accent);box-shadow:0 2px 10px var(--accent-glow)}

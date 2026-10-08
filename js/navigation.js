@@ -140,10 +140,11 @@ function updatePlusBtn(name){
   // path[1] = внешняя тень, path[2] = белый highlight, path[3] = цветной круг, path[4] polygon = крест
   // Ищем третий path (цветной)
   if(paths.length >= 3){
-    if(name==='income')      paths[2].setAttribute('fill','#22c55e');
-    else if(name==='expense') paths[2].setAttribute('fill','#ef4444');
-    else if(name==='stock' && stockTab==='rem') paths[2].setAttribute('fill','#EFCA46');
-    else { paths[2].setAttribute('fill','#666'); }
+    const f=paths[2].style;
+    if(name==='income')      f.fill='var(--plus-income)';
+    else if(name==='expense') f.fill='var(--plus-expense)';
+    else if(name==='stock' && stockTab==='rem') f.fill='var(--plus-rem)';
+    else f.fill='var(--plus-off)';
   }
   plusWrap.style.opacity = isStockBalance ? '0.45' : '1';
   plusWrap.style.pointerEvents = isStockBalance ? 'none' : '';

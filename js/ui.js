@@ -48,3 +48,24 @@ function highlightLastPiece(mat){
     });
   });
 }
+
+// ══════════════════════════════════════ ЧИП МАТЕРИАЛА (цвет и иконка по типу материала)
+const MAT_ICONS={
+  cube:'<path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+  hex:'<path d="M12 3 4 7.5v9l8 4.5 8-4.5v-9L12 3Z"/>',
+  layers:'<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/>',
+  sheet:'<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>'
+};
+const MAT_FAMILIES=[ // [начало названия, css-класс, иконка]
+  ['пвх','pvh','cube'],['акрил','acr','hex'],['акп','akp','layers'],['абс','abs','hex'],
+  ['пэт','pet','hex'],['полик','pet','hex'],
+  ['фанера','wood','layers'],['мдф','wood','layers'],['дсп','wood','layers'],
+  ['алл','metal','sheet'],['алюм','metal','sheet'],['жесть','metal','sheet']
+];
+function matChip(name){
+  const n=String(name==null?'':name);
+  const low=n.trim().toLowerCase();
+  const f=MAT_FAMILIES.find(x=>low.startsWith(x[0]))||[,'other','sheet'];
+  const esc=n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<span class="mat-chip mat-${f[1]}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${MAT_ICONS[f[2]]}</svg>${esc}</span>`;
+}

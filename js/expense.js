@@ -114,7 +114,7 @@ function renderOut(){
     return `<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">
       <td style="color:var(--muted);font-size:11px">${total-i}</td>
       <td style="font-size:11px;color:var(--muted)">${r.dt}</td>
-      <td style="font-weight:800;font-size:12px;color:var(--accent-ink)">${r.mat}</td>
+      <td>${matChip(r.mat)}</td>
       <td>${sizeCell}</td>
       <td><span class="badge bout">${r.qty} л.</span></td>
       <td style="font-size:12px;color:var(--muted)">${normSizeStr(r.det)||'—'}</td>

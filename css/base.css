@@ -54,5 +54,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
   --gap: clamp(7px, 2vw, 12px);
 }
 
+body{background:var(--bg-body);background-attachment:fixed}
 @media(min-width:480px){html,body{font-size:15px}}
 @media(min-width:768px){html,body{font-size:16px}}

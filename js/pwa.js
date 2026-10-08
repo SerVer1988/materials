@@ -14,13 +14,13 @@
   banner.id = 'pwa-banner';
   banner.innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;flex:1">
-      <div style="width:40px;height:40px;background:#F6C90E;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦</div>
+      <img src="assets/logo.png" width="40" height="40" alt="" style="flex-shrink:0;display:block">
       <div>
         <div style="font-weight:800;font-size:14px;color:var(--text)">Установить приложение</div>
         <div style="font-size:11px;color:var(--muted);margin-top:1px">Добавить на главный экран</div>
       </div>
     </div>
-    <button id="pwa-install-btn" style="background:#F6C90E;color:#111;border:none;border-radius:8px;padding:9px 16px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0">Установить</button>
+    <button id="pwa-install-btn" style="background:var(--accent);color:var(--on-accent);border:none;border-radius:8px;padding:9px 16px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0">Установить</button>
     <button id="pwa-dismiss-btn" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button>
   `;
   Object.assign(banner.style, {
