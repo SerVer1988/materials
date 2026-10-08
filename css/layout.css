@@ -55,3 +55,10 @@
 #nbtn-stock.active{--ni-stock-bg:var(--ni-stock-bg-on)}
 
 .search-ico{flex-shrink:0;cursor:pointer;color:var(--search-ico)}
+
+/* ── Иконка в плашке названия раздела (как в нижней навигации) ── */
+.pill-ico{position:absolute;left:3px;top:50%;transform:translateY(-50%);width:28px;height:28px;z-index:1;display:flex;color:var(--nav-active)}
+.pill-ico svg{width:100%;height:100%;display:block}
+.pi-uchet .b{fill:var(--ni-uchet-bg-on)} .pi-uchet .g{fill:var(--ni-uchet-fg)}
+.pi-stock .b{fill:var(--ni-stock-bg-on)} .pi-stock .g{fill:var(--ni-stock-fg)}
+.pi-gear .b{fill:var(--ic-gear-bg-on)}   .pi-gear .g{fill:var(--ic-gear-fg)}

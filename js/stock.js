@@ -5,10 +5,6 @@ function setStockTab(btn,tab){
   // Обновляем название вкладки и цвет плюса
   const tnEl=document.getElementById('sec-tab-name-stock');
   if(tnEl) tnEl.textContent=tab==='rem'?'ОБРЕЗКИ':'ЛИСТЫ';
-  const pillEl=document.getElementById('hdr-pill-text');
-  if(pillEl) pillEl.textContent=tab==='rem'?'ОБРЕЗКИ':'ЛИСТЫ';
-  const pillIc=document.getElementById('hdr-pill-icon');
-  if(pillIc) pillIc.textContent=tab==='rem'?'✂️':'📄';
   updatePlusBtn('stock');
   document.getElementById('panel-balance').style.display=tab==='balance'?'':'none';
   document.getElementById('panel-rem').style.display=tab==='rem'?'':'none';
