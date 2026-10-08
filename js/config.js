@@ -15,6 +15,7 @@ let htab='', stockTab='balance', filterLow=false, filterFav=false;
 let lastRemMat='', lastInMat='', lastOutMat='';
 let favorites=new Set();
 let remPlaceFilter='';
+let stkPlaceFilter='';   // фильтр по месту хранения в разделе «Листы»
 let inPlaceFilter='';
 let outFilter='';
 let remBigFilter=false;

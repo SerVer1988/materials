@@ -32,7 +32,7 @@
 .sec-hdr{display:flex;align-items:center;gap:9px;margin-bottom:9px}
 .sec-hdr-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--accent-ink);white-space:nowrap}
 .sec-hdr .swrap{flex:1;margin:0;position:relative}
-.search-bar-wrap .ac-dropdown{position:absolute;top:46px;left:0;right:0;z-index:200}
+.search-bar-wrap .ac-dropdown{position:absolute;top:40px;left:0;right:0;z-index:200}
 /* ── Add panel (slide-down) ── */
 .add-panel{overflow:hidden;max-height:0;transition:max-height .32s cubic-bezier(.4,0,.2,1);background:var(--card);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:10px}
 .add-panel.open{max-height:1200px}

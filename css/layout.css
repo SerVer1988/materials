@@ -16,7 +16,7 @@
 .tab-name-wrap > svg{display:none}
 .tab-name-text{position:relative;z-index:1;font-family:'Syne',sans-serif;font-size:17px;font-weight:900;letter-spacing:.07em;color:var(--text);text-transform:uppercase;white-space:nowrap;padding:0 16px 0 6px}
 /* Строка поиска на подложке */
-.search-bar-wrap{position:relative;display:flex;align-items:center;height:40px;border-radius:999px;background:var(--search-bg);border:1px solid var(--search-border);box-shadow:var(--search-sh)}
+.search-bar-wrap{position:relative;display:flex;align-items:center;height:34px;border-radius:999px;background:var(--search-bg);border:1px solid var(--search-border);box-shadow:var(--search-sh)}
 .search-bar-wrap > svg{display:none}
 .search-bar-inner{position:absolute;inset:0;z-index:1;display:flex;align-items:center;gap:10px;padding:0 12px 0 14px}
 .search-bar-inner input{flex:1;background:none;border:none;outline:none;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text);padding:4px 0}
@@ -70,3 +70,5 @@
 /* Фокус: рамка у всего поля, а не у внутреннего input */
 .search-bar-inner input,.search-bar-inner input:focus{border:none;box-shadow:none;background:none;outline:none}
 .search-bar-wrap:focus-within{border-color:var(--accent)}
+
+.sec-hdr .itabrow{margin-bottom:0}

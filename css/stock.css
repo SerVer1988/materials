@@ -1,16 +1,13 @@
 /* ── STOCK CARDS — компактные ── */
 .stkcard{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:5px 11px;margin-bottom:5px;transition:border-color .2s}
-.stkcard.fav{border-left:3px solid var(--gold);background:var(--card)}
 .stkcard-head{display:none}
 .stkmat{font-size:12px;font-weight:800;color:var(--accent-ink)}
-.star-btn{background:none;border:none;font-size:13px;cursor:pointer;padding:0 0 0 3px;line-height:1;flex-shrink:0;transition:transform .14s;opacity:.45}
 .star-btn:active{transform:scale(.83)}
-.stkcard.fav .star-btn{opacity:1}
-.stkrow{display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border)}
+.stkrow{display:grid;grid-template-columns:minmax(0,1fr) 62px 100px 26px;align-items:center;column-gap:6px;padding:5px 0;border-bottom:1px solid var(--border)}
 .stkrow:last-child{border-bottom:none}
-.stksz{color:var(--muted);font-size:11px;font-weight:700;width:88px;flex-shrink:0}
-.stkmat-inline{font-size:12px;font-weight:800;color:var(--accent-ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stkmath{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;margin-left:auto;flex-shrink:0}
+.stksz{color:var(--muted);font-size:11px;font-weight:700;text-align:left;white-space:nowrap}
+.stkmat-inline{font-size:12px;font-weight:800;color:var(--accent-ink);min-width:0;line-height:1.2;overflow-wrap:anywhere}
+.stkmath{display:flex;align-items:center;justify-content:flex-end;gap:3px;font-size:11px;font-weight:800;white-space:nowrap}
 .stkmath .inc{color:var(--green)}
 .stkmath .sep{color:var(--muted)}
 .stkmath .dec{color:var(--red)}
@@ -18,3 +15,19 @@
 .stkmath .res{color:var(--text);font-size:13px;line-height:1;margin-left:1px;font-weight:900}
 .stkmath .res.low{color:var(--gold)}
 .stkmath .res.zero{color:var(--red);font-weight:800}
+
+/* ── Звёзды избранного: один размер, жёлтая / серая ── */
+.star-btn{background:none;border:none;width:26px;height:26px;margin-left:6px;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .14s}
+.star-btn:active{transform:scale(.83)}
+.star-ico{display:block;fill:none;stroke:var(--muted);stroke-width:1.8;opacity:.6}
+.star-ico.on{fill:var(--gold);stroke:var(--gold);opacity:1}
+
+/* ── Выпадающий фильтр по месту ── */
+.fdd-wrap{position:relative;margin-left:auto}
+.fchip.fdd{display:inline-flex;align-items:center;gap:5px}
+.fchip.fdd.on{background:var(--aclt);border-color:var(--accent);color:var(--accent-ink)}
+.fdd-caret{font-size:9px;opacity:.7}
+.pmenu{display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:40;min-width:190px;max-height:260px;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shl);padding:4px}
+.pmenu.show{display:block}
+.pmenu-item{padding:9px 12px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;white-space:nowrap}
+.pmenu-item:active,.pmenu-item.on{background:var(--aclt);color:var(--accent-ink)}
