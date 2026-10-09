@@ -125,7 +125,30 @@ function deletePiece(recId,pi){
 }
 
 // ══════════════════════════════════════ REM BY MATERIAL
+let remVisibleMats=[]; // материалы, показанные сейчас (для «Свернуть/Развернуть все»)
+
+// Короткая дата для строки обрезка: 01.04.26 16:56 (понимает и 01.04.2026, и 01.04.26)
+function shortDt(dt){
+  const m=String(dt||'').match(/(\d{2})\.(\d{2})\.(\d{2,4})[,\s]+(\d{2}):(\d{2})/);
+  return m?`${m[1]}.${m[2]}.${m[3].slice(-2)} ${m[4]}:${m[5]}`:String(dt||'');
+}
+
+// Свернуть / развернуть все списки материалов
+function toggleAllRemGroups(){
+  if(selMode) return;
+  const allOpen=remVisibleMats.length>0&&remVisibleMats.every(m=>remOpenGroups.has(m));
+  if(allOpen) remVisibleMats.forEach(m=>remOpenGroups.delete(m));
+  else remVisibleMats.forEach(m=>remOpenGroups.add(m));
+  renderRemByMat();
+}
+function updateRemToggle(){
+  const el=document.getElementById('fchip-rem-toggle'); if(!el) return;
+  const allOpen=remVisibleMats.length>0&&remVisibleMats.every(m=>remOpenGroups.has(m));
+  el.innerHTML=allOpen?'▲ Свернуть':'▼ Развернуть';
+}
+
 function renderRemByMat(){
+  remVisibleMats=[];
   updatePlaceChips();
 
   const container=document.getElementById('rem-by-mat');
@@ -157,6 +180,7 @@ function renderRemByMat(){
   const byMat={};
   visiblePieces.forEach(p=>{if(!byMat[p.mat]) byMat[p.mat]=[];byMat[p.mat].push(p);});
   const mats=Object.keys(byMat).sort();
+  remVisibleMats=mats;
 
   container.innerHTML=mats.map((mat,mi)=>{
     const pieces=byMat[mat];
@@ -180,9 +204,9 @@ function renderRemByMat(){
       const pieceKey=`${p.recId}-${p.pi}`;
       const isSel=selSet.has(pieceKey);
       const m2Html=`<span class="piece-m2 pm2-pos">${p.m2.toFixed(3)} м²</span>`;
-      const placeTag=p.place?`<span class="piece-place">📍 ${p.place}</span>`:'';
-      const dateTag=p.dt?`<span style="font-size:10px;color:var(--muted);flex-shrink:0">${p.dt}</span>`:'';
-      const typeTag=p.type==='scrap_add'?`<span style="font-size:11px;color:var(--muted);flex-shrink:0" title="Добавлен вручную">✍</span>`:''
+      const placeTag=`<span class="piece-place">${p.place||''}</span>`;
+      const dateTag=p.dt?`<span class="piece-dt">${shortDt(p.dt)}</span>`:'';
+      const typeTag=`<span class="piece-type-ico"${p.type==='scrap_add'?' title="Добавлен вручную">✍':'>'}</span>`;
 
       const placeOpts=PLACES.map(pl=>`<option value="${pl}"${p.place===pl?' selected':''}>${pl}</option>`).join('')+`<option value="${CUSTOM_VAL}">✏️ Свой вариант...</option>`;
       const matOptsAc=`<div class="ac-wrap"><input type="text" id="pef-mat-${p.recId}-${p.pi}" value="${p.mat.replace(/"/g,'&quot;')}" autocomplete="off" oninput="acInputEl(this,'pef-mat-${p.recId}-${p.pi}')" onfocus="acInputEl(this,'pef-mat-${p.recId}-${p.pi}')" onblur="acBlur('pef-mat-${p.recId}-${p.pi}')" onkeydown="acKey(event,'pef-mat-${p.recId}-${p.pi}')"><div class="ac-dropdown" id="ac-pef-mat-${p.recId}-${p.pi}"></div></div>`;
@@ -203,10 +227,9 @@ function renderRemByMat(){
           id="pr-${p.recId}-${p.pi}"
           data-recid="${p.recId}" data-pi="${p.pi}">
         <span class="sel-check">${isSel?'✓':''}</span>
-        <span class="piece-left"><span class="piece-sz">${p.w}х${p.l}</span></span>
+        <span class="piece-left"><span class="piece-sz">${p.w}х${p.l}</span>${dateTag}</span>
         <span class="piece-right">
           ${placeTag}
-          ${dateTag}
           ${typeTag}
           <span class="piece-pcs">${p.qty} шт.</span>
           ${m2Html}
@@ -288,6 +311,7 @@ function renderRemByMat(){
       updateSelCount(); renderRemByMat();
     });
   });
+  updateRemToggle();
 }
 
 // ══════════════════════════════════════ REM BIG FILTER

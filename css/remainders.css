@@ -23,17 +23,17 @@
 .piece-row.is-editing{background:var(--editlt);border-radius:var(--rs);border-bottom:none;border-left:2px solid var(--edit)}
 
 /* LEFT: size — left aligned */
-.piece-left{display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:74px;}
+.piece-left{display:flex;flex-direction:column;gap:1px;flex-shrink:0;min-width:84px;}
 .piece-sz{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;text-align:left;}
 
 /* RIGHT GROUP: all other data — right-aligned, no wrap */
-.piece-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:nowrap;justify-content:flex-end;flex-shrink:0;}
+.piece-right{display:grid;grid-template-columns:76px 14px 38px 64px;column-gap:6px;align-items:center;margin-left:auto;flex-shrink:0;}
 
 .piece-place{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--card2);color:var(--muted);border:1px solid var(--border);white-space:nowrap}
 .piece-type{font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;white-space:nowrap}
 .pt-in{background:var(--blt);color:var(--blue)}
 .pt-out{background:var(--rlt);color:var(--red)}
-.piece-pcs{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap}
+.piece-pcs{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;text-align:left;justify-self:start}
 .piece-m2{font-size:13px;font-weight:800;white-space:nowrap;min-width:64px;text-align:right;display:inline-block}
 .pm2-pos{color:var(--blue)}
 .pm2-neg{color:var(--red)}
@@ -53,3 +53,9 @@
 .rres{background:var(--aclt);border:1.5px solid var(--accent);border-radius:var(--rs);padding:12px;margin-top:9px;text-align:center}
 .rbig{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--accent-ink)}
 .rsub{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
+
+/* Колонки выровнены по левому краю: место / «шт.»; дата — мелко под размером */
+.piece-right .piece-place{justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.piece-right .piece-place:empty{background:none;border-color:transparent}
+.piece-dt{font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap}
+.piece-type-ico{font-size:11px;color:var(--muted);text-align:center}
