@@ -90,6 +90,3 @@ input[type=checkbox]:checked::after{
 .fchip.fav-on{background:var(--goldlt);border-color:var(--gold);color:var(--gold)}
 
 /* ── PLACE FILTER (scraps) ── */
-.place-filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
-.place-chip{padding:5px 12px;border-radius:30px;border:1px solid var(--border);background:var(--card2);font-size:12px;font-weight:800;cursor:pointer;color:var(--muted);transition:all .15s;-webkit-user-select:none}
-.place-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:0 2px 8px var(--accent-glow)}

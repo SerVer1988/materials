@@ -155,7 +155,12 @@
         <button class="btn bprim bbig" id="in-save-btn" onclick="saveIncome()">✅ Записать приход</button>
       </div>
     </div>
-    <div id="in-place-filter" class="place-filter-row" style="margin-bottom:6px;flex-wrap:wrap;gap:5px;display:flex"></div>
+    <div class="fchips" style="margin-bottom:6px">
+        <div class="fdd-wrap">
+          <div class="fchip fdd" id="fchip-place-in" onclick="togglePlaceMenu(event,'in')">📍 <span id="fchip-place-label-in">Место</span> <span class="fdd-caret">▼</span></div>
+          <div class="pmenu" id="place-menu-in"></div>
+        </div>
+      </div>
   </div>
   <div class="sec-body">
     <div class="card" style="padding:0;overflow:hidden">
@@ -229,6 +234,10 @@
     <div class="fchips" style="margin-bottom:6px">
       <div class="fchip" id="out-fchip-full"    onclick="setOutFilter('full')">📋 Листы</div>
       <div class="fchip" id="out-fchip-partial" onclick="setOutFilter('partial')">✂️ Обрезки</div>
+      <div class="fdd-wrap">
+          <div class="fchip fdd" id="fchip-place-out" onclick="togglePlaceMenu(event,'out')">📍 <span id="fchip-place-label-out">Место</span> <span class="fdd-caret">▼</span></div>
+          <div class="pmenu" id="place-menu-out"></div>
+        </div>
     </div>
   </div>
   <div class="sec-body">
@@ -305,19 +314,20 @@
         <div class="fchip" id="fchip-low" onclick="toggleFilter('low')">⚠️ Мало (≤2)</div>
         <div class="fchip" id="fchip-fav" onclick="toggleFilter('fav')">⭐ Избранные</div>
         <div class="fdd-wrap">
-          <div class="fchip fdd" id="fchip-place" onclick="togglePlaceMenu(event)">📍 <span id="fchip-place-label">Место</span> <span class="fdd-caret">▼</span></div>
-          <div class="pmenu" id="place-menu"></div>
+          <div class="fchip fdd" id="fchip-place-stk" onclick="togglePlaceMenu(event,'stk')">📍 <span id="fchip-place-label-stk">Место</span> <span class="fdd-caret">▼</span></div>
+          <div class="pmenu" id="place-menu-stk"></div>
         </div>
       </div>
     </div>
     <!-- Обрезки — только фильтры -->
     <div id="panel-top-rem" style="display:none">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-        <div id="rem-place-filter" class="place-filter-row" style="margin-bottom:0;flex-wrap:wrap;gap:5px;display:flex"></div>
-      </div>
       <div class="fchips" style="margin-bottom:8px">
         <div class="fchip" id="fchip-rem-big" onclick="toggleRemBig()">📐 ≥ 0,5 м²</div>
         <div class="fchip" id="fchip-rem-small" onclick="toggleRemSmall()">✂️ ≤ 0,5 м²</div>
+        <div class="fdd-wrap">
+          <div class="fchip fdd" id="fchip-place-rem" onclick="togglePlaceMenu(event,'rem')">📍 <span id="fchip-place-label-rem">Место</span> <span class="fdd-caret">▼</span></div>
+          <div class="pmenu" id="place-menu-rem"></div>
+        </div>
       </div>
     </div>
   </div><!-- /sec-top -->
@@ -548,6 +558,7 @@
 <script src="js/navigation.js"></script>
 <script src="js/search.js"></script>
 <script src="js/stock.js"></script>
+<script src="js/place-filter.js"></script>
 <script src="js/scrap-calc.js"></script>
 <script src="js/income.js"></script>
 <script src="js/expense.js"></script>

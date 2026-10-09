@@ -78,7 +78,7 @@ function saveListEdit(key,i){
   list[i]=val;
   if(key==='places'){
     renamePlaceInDB(old, val);
-    if(remPlaceFilter===old) remPlaceFilter=val;
+    placeFilterRenamed(old,val);
   }
   if(key==='mats'){
     renameMatInDB(old, val);
@@ -107,9 +107,9 @@ function listDel(key,i){
     list.splice(i,1);
     if(key==='places'){
       removePlaceFromDB(delVal);           // убираем место из всех записей БД
-      if(remPlaceFilter===delVal) remPlaceFilter=''; // сбрасываем активный фильтр
+      placeFilterDeleted(delVal); // сбрасываем активные фильтры по этому месту
     }
-    save(); fillAllSelects(); renderListEditor(key); renderRemByMat(); renderIn();
+    save(); fillAllSelects(); renderListEditor(key); renderRemByMat(); renderIn(); renderOut(); renderStock();
     toast('Удалено');
   });
 }

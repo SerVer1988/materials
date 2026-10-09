@@ -17,6 +17,7 @@ let favorites=new Set();
 let remPlaceFilter='';
 let stkPlaceFilter='';   // фильтр по месту хранения в разделе «Листы»
 let inPlaceFilter='';
+let outPlaceFilter='';
 let outFilter='';
 let remBigFilter=false;
 let remSmallFilter=false;

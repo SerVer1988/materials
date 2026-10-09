@@ -63,15 +63,7 @@ function cancelEdit(type){
   }
 }
 function renderIn(){
-  // ── Place filter chips ──
-  const filterRow=document.getElementById('in-place-filter');
-  if(filterRow){
-    const usedPlaces=[...new Set(db.income.map(r=>r.place||'').filter(Boolean))].sort();
-    if(usedPlaces.length>1){
-      filterRow.style.display='flex';
-      filterRow.innerHTML=usedPlaces.map(p=>`<span class="place-chip ${inPlaceFilter===p?'on':''}" onclick="setInPlace('${p.replace(/'/g,"\\'")}')">${p}</span>`).join('');
-    } else { filterRow.style.display='none'; filterRow.innerHTML=''; }
-  }
+  updatePlaceChips();
   const tb=document.getElementById('in-tbody');
   let rows=[...db.income].reverse();
   const sq=(document.getElementById('in-s')?.value||'').toLowerCase();
@@ -90,4 +82,3 @@ function renderIn(){
     <td><button class="dbtn" onclick="event.stopPropagation();del('income',${r.id})">✕</button></td>
   </tr>`).join('');
 }
-function setInPlace(p){inPlaceFilter=(inPlaceFilter===p?'':p);renderIn();}

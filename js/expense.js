@@ -97,6 +97,8 @@ function renderOut(){
   if(outFilter==='full')    rows=rows.filter(r=>r.etype==='full');
   if(outFilter==='partial') rows=rows.filter(r=>r.etype==='partial');
   if(sq) rows=rows.filter(r=>r.mat&&r.mat.toLowerCase().includes(sq));
+  if(outPlaceFilter) rows=rows.filter(r=>expRowPlaces(r).has(outPlaceFilter));
+  updatePlaceChips();
   const total=rows.length;
   rows=rows.slice(0,60);
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>';return;}

@@ -24,33 +24,6 @@ function starSvg(on){
   return `<svg class="star-ico ${on?'on':''}" viewBox="0 0 24 24" width="18" height="18"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8L12 2.8z" stroke-linejoin="round"/></svg>`;
 }
 
-// ── Фильтр по месту хранения (выпадающий список) ──
-function placeOptions(){
-  const used=db.income.map(r=>r.place||'').filter(Boolean);
-  return [...new Set([...PLACES,...used])];
-}
-function togglePlaceMenu(ev){
-  if(ev) ev.stopPropagation();
-  const m=document.getElementById('place-menu');
-  if(m.classList.contains('show')){ m.classList.remove('show'); return; }
-  const esc=p=>p.replace(/'/g,"\\'");
-  m.innerHTML=`<div class="pmenu-item ${!stkPlaceFilter?'on':''}" onclick="setStkPlace('')">Все места</div>`+
-    placeOptions().map(p=>`<div class="pmenu-item ${stkPlaceFilter===p?'on':''}" onclick="setStkPlace('${esc(p)}')">📍 ${p}</div>`).join('');
-  m.classList.add('show');
-}
-function setStkPlace(p){
-  stkPlaceFilter=p||'';
-  document.getElementById('place-menu').classList.remove('show');
-  const chip=document.getElementById('fchip-place');
-  chip.classList.toggle('on',!!stkPlaceFilter);
-  document.getElementById('fchip-place-label').textContent=stkPlaceFilter?stkPlaceFilter:'Место';
-  renderStock();
-}
-document.addEventListener('click',e=>{
-  const m=document.getElementById('place-menu');
-  if(m && m.classList.contains('show') && !e.target.closest('.fdd-wrap')) m.classList.remove('show');
-});
-
 function toggleFilter(type){
   if(type==='low'){filterLow=!filterLow;document.getElementById('fchip-low').classList.toggle('on',filterLow);}
   else{filterFav=!filterFav;document.getElementById('fchip-fav').classList.toggle('fav-on',filterFav);}
@@ -73,6 +46,7 @@ function calcStockDetailed(){
   return res;
 }
 function renderStock(){
+  updatePlaceChips();
   const q=(document.getElementById('stk-s')?.value||'').toLowerCase();
   const by=calcStockDetailed(); const grid=document.getElementById('stk-grid');
   // Фильтр по месту: позиции (материал+размер), которые поступали в выбранное место

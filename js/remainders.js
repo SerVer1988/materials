@@ -125,36 +125,8 @@ function deletePiece(recId,pi){
 }
 
 // ══════════════════════════════════════ REM BY MATERIAL
-function getAllRemPlaces(){
-  // Собираем места с учётом активных фильтров размера
-  const usedInDB = new Set();
-  db.remainders.forEach(rec=>{
-    rec.pieces.forEach(p=>{
-      if(!p.place && !rec.place) return;
-      const place = p.place || rec.place;
-      // Если активен фильтр размера — показываем место только если в нём есть подходящие обрезки
-      if(remBigFilter || remSmallFilter){
-        const m2 = p.w*p.l*(p.qty||1)/1e6;
-        if(remBigFilter && m2 >= 0.5) usedInDB.add(place);
-        if(remSmallFilter && m2 <= 0.5) usedInDB.add(place);
-      } else {
-        usedInDB.add(place);
-      }
-    });
-  });
-  return PLACES.filter(p => usedInDB.has(p));
-}
-function setRemPlace(p){remPlaceFilter=(remPlaceFilter===p?'':p);syncRemGroupsToFilter();renderRemByMat();}
-
 function renderRemByMat(){
-  // ── Place filter buttons (in sec-top) ──
-  const filterRow=document.getElementById('rem-place-filter');
-  if(filterRow){
-    const allPlaces=getAllRemPlaces();
-    if(allPlaces.length>=1){
-      filterRow.innerHTML=allPlaces.map(p=>`<span class="place-chip ${remPlaceFilter===p?'on':''}" onclick="setRemPlace('${p.replace(/'/g,"\\'")}')">${p}</span>`).join('');
-    } else { filterRow.innerHTML=''; }
-  }
+  updatePlaceChips();
 
   const container=document.getElementById('rem-by-mat');
   const stkQ=(document.getElementById('stk-s')?.value||'').toLowerCase();
