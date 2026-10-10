@@ -4,6 +4,8 @@
 const INBOX_ON_KEY='lm7_inbox_on';      // '1' / '0' — выбор пользователя в настройках
 const INBOX_SEEN_KEY='lm7_inbox_seen';  // id последнего обработанного сообщения
 const INBOX_MAX_AGE=15*60*1000;         // более старые сообщения не подставляем
+const CMD_SEEN_KEY='lm7_cmd_seen';      // id последней обработанной команды (например, «закрыть заказ»)
+const CMD_MAX_AGE=24*60*60*1000;        // команды ждут до суток, если приложение было закрыто
 
 // По умолчанию включено на компьютере (мышь) и выключено на телефоне — чтобы телефон не реагировал на макрос
 function inboxEnabled(){
@@ -24,6 +26,21 @@ function updateInboxBtns(){
   if(b) b.classList.toggle('active',!on);
 }
 
+// Команды из макроса (сейчас одна: closeOrder — закрыть заказ)
+function handleInboxCommand(p){
+  if(!p || !p.id || localStorage.getItem(CMD_SEEN_KEY)===p.id) return;
+  localStorage.setItem(CMD_SEEN_KEY,p.id);
+  const age=Date.now()-new Date(p.t).getTime();
+  if(isNaN(age) || age>CMD_MAX_AGE) return;
+  if(p.action==='closeOrder'){
+    const o=findOrderForCommand(p.order||'');
+    if(!o){ toast(`⚠️ Заказ «${p.order}» не найден в приложении`,'err'); return; }
+    if(o.status==='closed'){ toast(`Заказ ${o.key} уже закрыт`,'info'); return; }
+    setOrderStatus(o.key,'closed');
+    toast(`🔒 Заказ ${o.key} закрыт (из CorelDRAW)`,'ok');
+  }
+}
+
 let inboxBusy=false;
 async function inboxPoll(){
   if(inboxBusy || !inboxEnabled() || !ACCESS_CODE) return;
@@ -32,10 +49,14 @@ async function inboxPoll(){
   if(!acc || getComputedStyle(acc).display!=='none' || !sel || sel.options.length<2) return; // приложение ещё не готово
   inboxBusy=true;
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/material_data?id=eq.${encodeURIComponent(sbRowId()+'::inbox')}&select=payload`,{headers:SB_HDR});
+    const idIn=sbRowId()+'::inbox', idCmd=sbRowId()+'::cmd';
+    const flt='in.'+encodeURIComponent(`("${idIn}","${idCmd}")`);
+    const r=await fetch(`${SB_URL}/rest/v1/material_data?id=${flt}&select=id,payload`,{headers:SB_HDR});
     if(!r.ok) return;
     const rows=await r.json();
-    const p=rows[0] && rows[0].payload;
+    const rowIn=rows.find(x=>x.id===idIn), rowCmd=rows.find(x=>x.id===idCmd);
+    if(rowCmd) handleInboxCommand(rowCmd.payload);
+    const p=rowIn && rowIn.payload;
     if(!p || !p.id) return;
     if(localStorage.getItem(INBOX_SEEN_KEY)===p.id) return;      // уже обработано
     localStorage.setItem(INBOX_SEEN_KEY,p.id);

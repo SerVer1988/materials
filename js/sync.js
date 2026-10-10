@@ -18,7 +18,7 @@ function sbErrText(e){
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces] };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -40,6 +40,10 @@ function mergeList(local=[], cloud=[]){
 // ── Применяет облачный payload с объединением (не заменой) ──
 function mergePayload(p){
   if(!p) return;
+  // Переименования: сначала объединяем списки замен, затем применяем их и к облачным данным, и к локальным
+  if(p.renames) mergeRenames(p.renames);
+  applyRenamesToPayload(p);
+  applyRenamesLocal();
   // Сначала принимаем удалённые id из облака
   if(p.deletedIds) p.deletedIds.forEach(id=>deletedIds.add(id));
   if(p.deletedPieces) p.deletedPieces.forEach(k=>deletedPieces.add(k));

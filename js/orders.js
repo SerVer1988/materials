@@ -191,3 +191,15 @@ function renderOrders(){
   window.__ordKeys=keys;
   box.innerHTML=html;
 }
+
+// Поиск заказа по ключу из внешней команды (макрос CorelDRAW): точное совпадение без учёта регистра/пробелов,
+// иначе — по номеру заказа, если он однозначный
+function findOrderForCommand(key){
+  const norm=x=>String(x||'').toLowerCase().replace(/\s+/g,' ').trim();
+  const list=ordersList();
+  const exact=list.find(o=>norm(o.key)===norm(key));
+  if(exact) return exact;
+  const no=norm(splitOrder(String(key||'')).no);
+  const same=list.filter(o=>norm(o.no)===no);
+  return same.length===1?same[0]:null;
+}

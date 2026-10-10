@@ -10,7 +10,7 @@ function addPiece(){
   if(!mat){toast('Введите материал','err');return;}
   if(!parsed){toast('Введите размер в формате 234×2132','err');return;}
   const {w,l}=parsed;
-  if(!MATS.includes(mat)){MATS.push(mat);save();}
+  if(!MATS.includes(mat)){MATS.push(mat);releaseRename('mats',mat);save();}
 
   // Сразу сохраняем в базу — без промежуточного буфера
   const piece={mat,w,l,qty,type:'scrap_add',place};

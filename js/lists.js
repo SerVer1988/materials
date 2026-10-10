@@ -40,16 +40,6 @@ function startListEdit(key,i){
   const editBtn=valEl.parentElement.querySelector('.list-item-edit');
   if(editBtn){ editBtn.textContent='💾'; editBtn.onclick=()=>saveListEdit(key,i); }
 }
-// Переименовать место хранения во всех обрезках в БД
-function renamePlaceInDB(oldVal, newVal){
-  db.remainders.forEach(rec=>{
-    if(rec.place===oldVal) rec.place=newVal;
-    rec.pieces.forEach(p=>{ if(p.place===oldVal) p.place=newVal; });
-  });
-  // Также в приходе
-  db.income.forEach(r=>{ if(r.place===oldVal) r.place=newVal; });
-}
-
 // Удалить место хранения из всех обрезков и прихода в БД (ставим пустую строку)
 function removePlaceFromDB(val){
   db.remainders.forEach(rec=>{
@@ -59,15 +49,6 @@ function removePlaceFromDB(val){
   db.income.forEach(r=>{ if(r.place===val) r.place=''; });
 }
 
-// Переименовать материал во всех записях БД
-function renameMatInDB(oldVal, newVal){
-  db.income.forEach(r=>{ if(r.mat===oldVal) r.mat=newVal; });
-  db.expense.forEach(r=>{ if(r.mat===oldVal) r.mat=newVal; });
-  db.remainders.forEach(rec=>{
-    rec.pieces.forEach(p=>{ if(p.mat===oldVal) p.mat=newVal; });
-  });
-}
-
 function saveListEdit(key,i){
   const inp=document.getElementById(`lei-${key}-${i}`);
   if(!inp) return;
@@ -75,16 +56,12 @@ function saveListEdit(key,i){
   if(!val){toast('Значение не может быть пустым','err');return;}
   const list=key==='mats'?MATS:key==='sizes'?SIZES:PLACES;
   const old=list[i];
+  if(old===val){ renderListEditor(key); return; }
   list[i]=val;
-  if(key==='places'){
-    renamePlaceInDB(old, val);
-    placeFilterRenamed(old,val);
-  }
-  if(key==='mats'){
-    renameMatInDB(old, val);
-  }
-  save(); fillAllSelects(); renderListEditor(key);
-  renderRemByMat(); renderIn(); renderOut(); renderStock();
+  addRename(key,old,val);                 // меняем во всех записях, избранном и справочнике (и запоминаем для синхронизации)
+  if(key==='places') placeFilterRenamed(old,val);
+  const uniq=[...new Set(list)]; list.length=0; list.push(...uniq);
+  save(); fillAllSelects(); renderListEditor(key); renderAll();
   toast('✅ Сохранено','ok');
 }
 function listAdd(key){
@@ -96,6 +73,7 @@ function listAdd(key){
   const list=key==='mats'?MATS:key==='sizes'?SIZES:PLACES;
   if(list.includes(val)){toast('Уже есть в списке','err');return;}
   list.push(val);
+  releaseRename(key,val);
   inp.value='';
   save(); fillAllSelects(); renderListEditor(key); renderRemByMat();
   toast(`✅ Добавлено: ${val}`,'ok');

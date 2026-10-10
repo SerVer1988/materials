@@ -4,7 +4,7 @@ function saveExpense(){
   const mat=(document.getElementById('out-mat').value||'').trim(); const qty=parseInt(document.getElementById('out-qty').value);
   if(!mat||!qty||qty<1){toast('Заполните все поля','err');return;}
   const order=readOrderField('out-order'); if(order===null){toast('Введите заказ: номер_заказчик','err');return;}
-  if(!MATS.includes(mat)){MATS.push(mat);save();}
+  if(!MATS.includes(mat)){MATS.push(mat);releaseRename('mats',mat);save();}
   const detStr=document.getElementById('out-det').value.trim(); const det=parseSizeStr(detStr);
   const sheetSel=isSheetSelected(); let size='—',w=0,l=0,etype='partial';
   if(sheetSel){const sz=getSizeWL('out-pre');size=document.getElementById('out-pre').value;w=sz.w;l=sz.l;etype='full';}

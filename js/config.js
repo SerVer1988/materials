@@ -7,6 +7,8 @@ const DEFAULT_SIZE="1220х2440", CUSTOM_VAL="__custom__";
 
 // ══════════════════════════════════════ STATE
 let db={income:[],expense:[],remainders:[],orders:[]};
+// Переименования справочников {from,to}: применяются при каждой синхронизации, чтобы старое имя не возвращалось с других устройств
+let renames=JSON.parse(localStorage.getItem('lm7_renames')||'null')||{mats:[],sizes:[],places:[]};
 let deletedIds=new Set(JSON.parse(localStorage.getItem('lm7_deleted')||'[]'));
 // Удалённые куски: "recId|mat|w|l" — уникальный ключ куска чтобы не вернулся из облака
 let deletedPieces=new Set(JSON.parse(localStorage.getItem('lm7_deleted_pieces')||'[]'));

@@ -6,7 +6,7 @@ function saveIncome(){
   if(!mat||!size||size===CUSTOM_VAL||!qty||qty<1){toast('Заполните все поля','err');return;}
   const order=readOrderField('in-order'); if(order===null){toast('Введите заказ: номер_заказчик','err');return;}
   const place=placeVal===CUSTOM_VAL?'':placeVal;
-  if(!MATS.includes(mat)){MATS.push(mat);save();}
+  if(!MATS.includes(mat)){MATS.push(mat);releaseRename('mats',mat);save();}
   if(order) ensureOrder(order);
   const sz=getSizeWL('in-pre');
   const rec={mat,size,w:sz.w,l:sz.l,qty,place,order,note:document.getElementById('in-note').value.trim()};
