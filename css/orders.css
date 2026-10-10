@@ -1,0 +1,46 @@
+/* ── Заказы: бронь на складе, раздел «Заказы» ── */
+/* метка заказа в таблицах прихода/расхода */
+.ord-tag{margin-top:3px;font-size:10px;font-weight:700;color:var(--accent-ink);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* бронь в строках склада */
+.stkres{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:2px 0 3px}
+.rchip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--aclt);color:var(--accent-ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rfree{font-size:10px;font-weight:800;color:var(--muted)}
+
+/* раздел «Заказы» */
+.ord-new{display:flex;gap:6px}
+.ord-new input{flex:1;min-width:0}
+.ord-new .btn{white-space:nowrap}
+.ogroup{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:12px 2px 6px;font-size:13px;font-weight:900;color:var(--text)}
+.ogroup:first-child{margin-top:2px}
+.ogroup-sum{font-size:10px;font-weight:700;color:var(--muted)}
+.ocard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:7px;overflow:hidden}
+.ocard.is-closed{opacity:.8}
+.ohead{position:relative;padding:9px 30px 9px 12px;cursor:pointer}
+.otitle{font-size:14px;font-weight:800;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ocust{color:var(--accent-ink);font-weight:800}
+.osum{margin-top:4px;font-size:11px;font-weight:700;color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.osum b{color:var(--text)}
+.ochev{position:absolute;right:11px;top:12px;font-size:10px;color:var(--muted)}
+.obody{border-top:1px solid var(--border);padding:8px 12px 10px}
+.opos{padding:6px 0;border-bottom:1px solid var(--inforow-line)}
+.opos-name{font-size:12px;font-weight:800;color:var(--accent-ink)}
+.opos-sz{font-size:11px;font-weight:700;color:var(--muted);margin-left:4px}
+.opos-nums{margin-top:3px;font-size:11px;font-weight:700;color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.opos-nums b{color:var(--text)}
+.opos-empty{padding:8px 0;font-size:12px;color:var(--muted)}
+.oarea{margin-top:8px;font-size:11px;font-weight:700;color:var(--muted);line-height:1.7}
+.oarea b{color:var(--text)}
+.oactions{margin-top:10px;display:flex;gap:8px}
+.oactions .btn{flex:1}
+.ostat{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.ostat.open{background:var(--aclt);color:var(--accent-ink)}
+.ostat.closed{background:var(--card2);color:var(--muted)}
+.ostat.ok{background:var(--glt);color:var(--green)}
+.ostat.bad{background:var(--rlt);color:var(--red)}
+.ostat.info{background:var(--blt);color:var(--blue)}
+
+/* иконка «Заказы» в нижнем меню и в плашке */
+#nbtn-orders .oi-b{fill:var(--ni-ord-bg)} #nbtn-orders .oi-g{stroke:var(--ni-ord-fg)}
+#nbtn-orders.active{--ni-ord-bg:var(--ni-ord-bg-on)}
+.pi-orders .b{fill:var(--ni-ord-bg-on)} .pi-orders .g2{stroke:var(--ni-ord-fg)}

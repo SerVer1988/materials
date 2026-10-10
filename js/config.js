@@ -6,7 +6,7 @@ let PLACES=["Склад А","Склад Б","Стеллаж 1","Стеллаж 2
 const DEFAULT_SIZE="1220х2440", CUSTOM_VAL="__custom__";
 
 // ══════════════════════════════════════ STATE
-let db={income:[],expense:[],remainders:[]};
+let db={income:[],expense:[],remainders:[],orders:[]};
 let deletedIds=new Set(JSON.parse(localStorage.getItem('lm7_deleted')||'[]'));
 // Удалённые куски: "recId|mat|w|l" — уникальный ключ куска чтобы не вернулся из облака
 let deletedPieces=new Set(JSON.parse(localStorage.getItem('lm7_deleted_pieces')||'[]'));

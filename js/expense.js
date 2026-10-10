@@ -3,16 +3,18 @@
 function saveExpense(){
   const mat=(document.getElementById('out-mat').value||'').trim(); const qty=parseInt(document.getElementById('out-qty').value);
   if(!mat||!qty||qty<1){toast('Заполните все поля','err');return;}
+  const order=readOrderField('out-order'); if(order===null){toast('Введите заказ: номер_заказчик','err');return;}
   if(!MATS.includes(mat)){MATS.push(mat);save();}
   const detStr=document.getElementById('out-det').value.trim(); const det=parseSizeStr(detStr);
   const sheetSel=isSheetSelected(); let size='—',w=0,l=0,etype='partial';
   if(sheetSel){const sz=getSizeWL('out-pre');size=document.getElementById('out-pre').value;w=sz.w;l=sz.l;etype='full';}
-  const rec={mat,size,w,l,qty,etype,det:detStr,note:document.getElementById('out-note').value.trim()};
+  const rec={mat,size,w,l,qty,etype,order,det:detStr,note:document.getElementById('out-note').value.trim()};
   if(editMode.expense!==null){
     const idx=db.expense.findIndex(r=>r.id===editMode.expense);
     if(idx>=0){
       const oldRec = db.expense[idx];
       db.expense[idx]={...oldRec,...rec};
+      if(order) ensureOrder(order);
       // Пересчитываем связанный обрезок (если есть)
       const expId = oldRec.id;
       const linkedScrap = db.remainders.find(r=>r.id===expId+1 || r.expenseId===expId);
@@ -76,6 +78,7 @@ function editExpense(id){
   document.getElementById('out-qty').value=r.qty;
   document.getElementById('out-det').value=r.det||'';
   document.getElementById('out-note').value=r.note||'';
+  setOrderSelect('out-order',r.order||'');
   parseDetSize(); renderOut(); window.scrollTo(0,0);
 }
 function setOutFilter(f){
@@ -116,7 +119,7 @@ function renderOut(){
     return `<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">
       <td style="color:var(--muted);font-size:11px">${total-i}</td>
       <td class="c-dt">${dtCell(r.dt)}</td>
-      <td>${matChip(r.mat)}</td>
+      <td>${matChip(r.mat)}${ordTag(r.order)}</td>
       <td class="c-sz">${sizeCell}</td>
       <td><span class="badge bout">${r.qty} л.</span></td>
       <td class="c-sz c-det">${sizeStack(normSizeStr(r.det))}</td>

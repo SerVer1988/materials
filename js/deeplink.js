@@ -8,17 +8,14 @@ let pendingDeepLink=(function(){
     const q=new URLSearchParams(location.search);
     if(q.get('add')!=='expense') return null;
     const d={mat:(q.get('mat')||'').trim(), det:(q.get('det')||'').trim(), sheet:(q.get('sheet')||'').trim(),
-             qty:parseInt(q.get('qty')||'',10), note:(q.get('note')||'').trim()};
+             qty:parseInt(q.get('qty')||'',10), note:(q.get('note')||'').trim(), order:(q.get('order')||'').trim()};
     history.replaceState(null,'',location.pathname+location.hash);
     return d;
   }catch(e){ return null; }
 })();
 
-// Вызывается из init() после первой отрисовки (и после ввода кода доступа)
-function applyPendingDeepLink(){
-  const d=pendingDeepLink; if(!d) return;
-  pendingDeepLink=null;
-
+// Заполняет форму расхода (используется и ссылкой, и приёмом из облака): d = {mat, det, sheet, qty, note}
+function fillExpenseForm(d){
   go('expense',document.getElementById('nbtn-uchet'));
   const panel=document.getElementById('add-expense');
   if(panel && !panel.classList.contains('open')) toggleAddPanel('add-expense');
@@ -40,8 +37,15 @@ function applyPendingDeepLink(){
   document.getElementById('out-qty').value=(d.qty>0?d.qty:1);
   document.getElementById('out-det').value=d.det;
   document.getElementById('out-note').value=d.note;
+  setOrderSelect('out-order',d.order||'');   // заказ из макроса: выбираем существующий или предлагаем как новый
   parseDetSize();
+}
 
+// Вызывается из init() после первой отрисовки (и после ввода кода доступа)
+function applyPendingDeepLink(){
+  const d=pendingDeepLink; if(!d) return;
+  pendingDeepLink=null;
+  fillExpenseForm(d);
   toast('📥 Данные из CorelDRAW подставлены','ok');
 }
 

@@ -38,6 +38,7 @@
 <link rel="stylesheet" href="css/remainders.css">
 <link rel="stylesheet" href="css/tables.css">
 <link rel="stylesheet" href="css/modals.css">
+<link rel="stylesheet" href="css/orders.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -148,6 +149,11 @@
           <select id="in-place" onchange="onSelectChange('in-place','in-place-custom')"></select>
           <div class="custom-input-wrap" id="in-place-custom"><input type="text" placeholder="Склад А, стеллаж 2..."><button class="custom-add-btn" onclick="addCustomOption('in-place','in-place-custom','places')">+ Добавить</button></div>
         </div>
+        <div class="fg" style="margin-bottom:9px">
+          <label>Заказ</label>
+          <select id="in-order" onchange="onSelectChange('in-order','in-order-custom')"></select>
+          <div class="custom-input-wrap" id="in-order-custom"><input type="text" placeholder="9-08-77_Заказчик"></div>
+        </div>
         <div class="frow" style="margin-bottom:9px">
           <div class="fg"><label>Кол-во</label><input type="number" id="in-qty" value="1" inputmode="numeric" min="1" onkeydown="if(event.key==='Enter'){event.preventDefault();saveIncome();}"></div>
           <div class="fg full"><label>Примечание</label><input type="text" id="in-note" placeholder="необязательно" onkeydown="if(event.key==='Enter'){event.preventDefault();saveIncome();}"></div>
@@ -223,6 +229,10 @@
               <button tabindex="-1" onclick="document.getElementById('out-det').value='';parseDetSize();document.getElementById('out-det').focus()"
                 style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--red);font-size:15px;cursor:pointer;padding:2px;line-height:1;opacity:.7">✕</button>
             </div>
+          </div>
+          <div class="fg full"><label>Заказ</label>
+            <select id="out-order" onchange="onSelectChange('out-order','out-order-custom')"></select>
+            <div class="custom-input-wrap" id="out-order-custom"><input type="text" placeholder="9-08-77_Заказчик"></div>
           </div>
           <div class="fg full"><label>Примечание</label><input type="text" id="out-note" placeholder="необязательно"></div>
         </div>
@@ -352,6 +362,30 @@
   </div>
 </div>
 
+<!-- ══ ЗАКАЗЫ ══ -->
+<div class="sec" id="sec-orders">
+  <div class="sec-top">
+    <div class="sec-hdr" style="flex-direction:column;gap:6px;align-items:stretch;margin-bottom:6px">
+      <div class="search-bar-wrap" style="flex-shrink:0">
+        <div class="search-bar-inner">
+          <svg class="search-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
+          <input type="text" id="ord-s" placeholder="Поиск по номеру или заказчику..." autocomplete="off" oninput="renderOrders()">
+        </div>
+      </div>
+      <div class="fchips" style="margin-bottom:0">
+        <div class="fchip on" id="ofl-open" onclick="setOrdersFilter('open')">🔒 В работе</div>
+        <div class="fchip" id="ofl-closed" onclick="setOrdersFilter('closed')">✅ Закрытые</div>
+        <div class="fchip" id="ofl-all" onclick="setOrdersFilter('all')">Все</div>
+      </div>
+      <div class="ord-new">
+        <input type="text" id="ord-new-inp" placeholder="Новый заказ: 9-08-77_Заказчик" onkeydown="if(event.key==='Enter')createOrder()">
+        <button class="btn bprim" onclick="createOrder()">➕ Создать</button>
+      </div>
+    </div>
+  </div>
+  <div class="sec-body"><div id="orders-list"></div></div>
+</div>
+
 <!-- ══ ЕЩЁ ══ -->
 <div class="sec" id="sec-more">
   <div class="sec-top">
@@ -365,6 +399,15 @@
     <div class="theme-seg">
       <button class="theme-opt" id="theme-btn-light" onclick="setTheme('light')">☀️ Светлая</button>
       <button class="theme-opt" id="theme-btn-dark" onclick="setTheme('dark')">🌙 Тёмная</button>
+    </div>
+  </div>
+
+  <!-- Приём данных из CorelDRAW -->
+  <div class="card">
+    <div class="ctitle">Приём из CorelDRAW на этом устройстве</div>
+    <div class="theme-seg">
+      <button class="theme-opt" id="inbox-btn-on" onclick="setInbox(true)">✅ Включён</button>
+      <button class="theme-opt" id="inbox-btn-off" onclick="setInbox(false)">⛔ Выключен</button>
     </div>
   </div>
 
@@ -532,6 +575,9 @@
     <button class="nbtn nbtn-side" id="nbtn-stock" onclick="go('stock',this)">
       <div class="ni-wrap" style="width:52px;height:52px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.9 6.9" width="40" height="40" style="fill-rule:evenodd"><circle class="ni-g" cx="3.45" cy="3.45" r="2.95"/><path class="ni-b" d="M3.5 0c0.67,0 1.43,0.25 1.96,0.65 0.33,0.25 0.6,0.51 0.83,0.86 0.61,0.92 0.77,2.02 0.41,3.07 -0.16,0.46 -0.5,1.02 -0.86,1.35 -0.04,0.03 -0.07,0.06 -0.1,0.08 -0.04,0.04 -0.08,0.08 -0.13,0.12 -0.67,0.52 -1.36,0.77 -2.21,0.77 -0.48,0 -0.93,-0.13 -1.37,-0.31 -0.36,-0.15 -0.75,-0.44 -1.02,-0.71 -1.19,-1.19 -1.33,-3.04 -0.37,-4.41 0.66,-0.96 1.72,-1.47 2.87,-1.47zm-1.22 5.3l2.33 0 0 -1.75 -2.33 0 0 1.75zm-0.87 -2.64l0 2.51c0,0.06 0.07,0.13 0.13,0.13l0.46 0 0 -1.87c0,-0.05 0.02,-0.1 0.04,-0.13 0.03,-0.03 0.07,-0.04 0.13,-0.04l2.57 0c0.11,0 0.17,0.06 0.17,0.17l0 1.87 0.45 0c0.06,0 0.13,-0.07 0.13,-0.13l0 -2.51c0,-0.09 -0.24,-0.23 -0.35,-0.3l-1.15 -0.8c-0.07,-0.05 -0.47,-0.34 -0.52,-0.34 -0.08,0 -0.09,0.02 -0.17,0.07 -0.04,0.03 -0.09,0.06 -0.13,0.09 -0.08,0.06 -0.17,0.12 -0.26,0.18l-1.4 0.97c-0.04,0.03 -0.09,0.07 -0.09,0.12zm1.89 -0.29c0,0.22 0.29,0.22 0.29,0 0,-0.07 -0.06,-0.13 -0.16,-0.13 -0.06,0 -0.13,0.07 -0.13,0.13zm-0.29 0.02c0,-0.44 0.61,-0.63 0.83,-0.18 0.05,0.11 0.05,0.24 0,0.35 -0.22,0.44 -0.83,0.26 -0.83,-0.18zm-0.26 2.18l1.4 0c0.23,0 0.23,0.29 0,0.29l-1.42 0c-0.19,0 -0.22,-0.29 0.02,-0.29zm0 -0.58l1.4 0c0.23,0 0.23,0.29 0,0.29l-1.42 0c-0.19,0 -0.22,-0.29 0.02,-0.29z"/></svg></div>
     </button>
+    <button class="nbtn nbtn-side" id="nbtn-orders" onclick="go('orders',this)">
+      <div class="ni-wrap" style="width:52px;height:52px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7" width="40" height="40"><circle class="oi-b" cx="3.5" cy="3.5" r="3.45"/><g class="oi-g" fill="none" stroke-width=".36" stroke-linecap="round" stroke-linejoin="round"><rect x="1.95" y="1.5" width="3.1" height="4" rx=".45"/><path d="M2.85 1.5V1.2h1.3v.3M2.8 3h1.4M2.8 3.9h1.4M2.8 4.7h.9"/></g></svg></div>
+    </button>
   </div>
 </nav>
 
@@ -559,8 +605,10 @@
 <script src="js/navigation.js"></script>
 <script src="js/search.js"></script>
 <script src="js/stock.js"></script>
+<script src="js/orders.js"></script>
 <script src="js/place-filter.js"></script>
 <script src="js/deeplink.js"></script>
+<script src="js/inbox.js"></script>
 <script src="js/scrap-calc.js"></script>
 <script src="js/income.js"></script>
 <script src="js/expense.js"></script>

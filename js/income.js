@@ -4,10 +4,12 @@ function saveIncome(){
   const size=document.getElementById('in-pre').value;
   const placeVal=document.getElementById('in-place').value; const qty=parseInt(document.getElementById('in-qty').value);
   if(!mat||!size||size===CUSTOM_VAL||!qty||qty<1){toast('Заполните все поля','err');return;}
+  const order=readOrderField('in-order'); if(order===null){toast('Введите заказ: номер_заказчик','err');return;}
   const place=placeVal===CUSTOM_VAL?'':placeVal;
   if(!MATS.includes(mat)){MATS.push(mat);save();}
+  if(order) ensureOrder(order);
   const sz=getSizeWL('in-pre');
-  const rec={mat,size,w:sz.w,l:sz.l,qty,place,note:document.getElementById('in-note').value.trim()};
+  const rec={mat,size,w:sz.w,l:sz.l,qty,place,order,note:document.getElementById('in-note').value.trim()};
   if(editMode.income!==null){
     const idx=db.income.findIndex(r=>r.id===editMode.income);
     if(idx>=0) db.income[idx]={...db.income[idx],...rec};
@@ -18,6 +20,7 @@ function saveIncome(){
     document.getElementById('in-mat').value='';
     document.getElementById('in-qty').value='1';
     document.getElementById('in-note').value='';
+    setOrderSelect('in-order',''); fillOrderSelects();
     document.getElementById('add-income')?.classList.remove('open');
     toast('✅ Приход записан','ok');
     save(); renderAll();
@@ -36,6 +39,7 @@ function editIncome(id){
   document.getElementById('in-pre').value=r.size;
   document.getElementById('in-qty').value=r.qty;
   document.getElementById('in-note').value=r.note||'';
+  setOrderSelect('in-order',r.order||'');
   const sel=document.getElementById('in-place');
   if(r.place&&[...sel.options].some(o=>o.value===r.place)) sel.value=r.place;
   else if(!r.place&&sel.options.length>0) sel.selectedIndex=0;
@@ -45,6 +49,7 @@ function editIncome(id){
 function cancelEdit(type){
   if(type==='income'){
     editMode.income=null;
+    setOrderSelect('in-order','');
     document.getElementById('add-income').classList.remove('open');
     document.getElementById('in-edit-banner').style.display='none';
     document.getElementById('in-save-btn').textContent='✅ Записать приход';
@@ -57,6 +62,7 @@ function cancelEdit(type){
     document.getElementById('out-save-btn').textContent='📤 Записать расход';
     document.getElementById('out-save-btn').className='btn bdng bbig';
     document.getElementById('out-mat').value='';
+    setOrderSelect('out-order','');
     document.getElementById('scrap-preview').style.display='none';
     document.getElementById('scrap-neg-preview').style.display='none';
     renderOut();
@@ -75,7 +81,7 @@ function renderIn(){
   tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.income===r.id?'is-editing':''}" onclick="editIncome(${r.id})">
     <td style="color:var(--muted);font-size:11px">${total-i}</td>
     <td class="c-dt">${dtCell(r.dt)}</td>
-    <td>${matChip(r.mat)}</td>
+    <td>${matChip(r.mat)}${ordTag(r.order)}</td>
     <td class="c-sz">${sizeStack(r.size)}</td>
     <td><span class="badge bin">${r.qty} л.</span></td>
     <td><span class="place-badge">${r.place||'—'}</span></td>

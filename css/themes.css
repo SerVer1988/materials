@@ -64,6 +64,7 @@
   --search-border:#D9E5F3;
   --search-sh:0 2px 10px rgba(60,90,130,.08);
   --search-ico:#3F6FB6;
+  --ni-ord-bg:#DDF1E6; --ni-ord-bg-on:#BFE6CF; --ni-ord-fg:#2E8B62;
   --plus-ring:#DCE6F1;
   --plus-income:#6DBF8C; --plus-expense:#EF8A85; --plus-rem:#F2C75C; --plus-off:#A9B4C2;
 
@@ -138,6 +139,7 @@
   --search-border:var(--pill-shade);
   --search-sh:none;
   --search-ico:#EFCA46;
+  --ni-ord-bg:currentColor; --ni-ord-bg-on:currentColor; --ni-ord-fg:var(--nav-bg);
   --plus-ring:#242222;
   --plus-income:#22c55e; --plus-expense:#ef4444; --plus-rem:#EFCA46; --plus-off:#666;
 

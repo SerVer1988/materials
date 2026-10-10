@@ -284,12 +284,14 @@ function onScrapFindChk(i, checked){
 function _commitExpense(rec){
   rec.id = Date.now(); rec.dt = now();
   db.expense.push(rec);
+  if(rec.order) ensureOrder(rec.order);
   lastOutMat = rec.mat;
   save(); renderAll();
   document.getElementById('out-mat').value='';
   ['out-det','out-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('out-qty').value='1';
   document.getElementById('out-pre').value='';
+  setOrderSelect('out-order',''); fillOrderSelects();
   document.getElementById('scrap-preview').style.display='none';
   document.getElementById('scrap-neg-preview').style.display='none';
   document.getElementById('add-expense')?.classList.remove('open');
@@ -298,6 +300,7 @@ function _commitExpense(rec){
   if(btn){btn.textContent='📤 Записать расход';btn.className='btn bdng bbig';}
   renderStock();
   highlightLastRow('out-tbody');
+  orderShortageHint(rec);
 }
 
 // Применяет вырезку выбранных обрезков + записывает расход

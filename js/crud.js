@@ -2,7 +2,7 @@
 // ══════════════════════════════════════ RENDER ALL
 // Перерисовывает всё — вызывать после любого изменения данных
 function renderAll(){
-  renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist();
+  renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist(); renderOrders();
 }
 
 // ══════════════════════════════════════ DELETE

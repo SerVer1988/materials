@@ -49,6 +49,7 @@ function renderStock(){
   updatePlaceChips();
   const q=(document.getElementById('stk-s')?.value||'').toLowerCase();
   const by=calcStockDetailed(); const grid=document.getElementById('stk-grid');
+  const reserves=calcReserves(); // бронь под заказы
   // Фильтр по месту: позиции (материал+размер), которые поступали в выбранное место
   const placeKeys=stkPlaceFilter?new Set(db.income.filter(r=>(r.place||'')===stkPlaceFilter).map(r=>`${r.mat}||${r.size}`)):null;
   const inPlace=(m,sz)=>!placeKeys||placeKeys.has(`${m}||${sz}`);
@@ -68,6 +69,9 @@ function renderStock(){
     const rows=sizes.map((s,i)=>{
       const favKey=`${mat}||${s.size}`;
       const isFavRow=favorites.has(favKey);
+      const rs=reserves[favKey]||[];
+      const free=Math.max(0,s.qty-rs.reduce((t,x)=>t+x.left,0));
+      const resRow=rs.length?`<div class="stkres">${rs.map(x=>`<span class="rchip" title="${escHtml(x.order)}">🔒 ${escHtml(x.order)} · ${x.left} шт</span>`).join('')}<span class="rfree">свободно ${free}</span></div>`:'';
       return `
       <div class="stkrow">
         ${i===0
@@ -79,6 +83,7 @@ function renderStock(){
           <span class="res ${s.qty===0?'zero':s.qty<=2?'low':''}">${s.qty}шт</span>
         </span>
         <button class="star-btn" onclick="event.stopPropagation();toggleFav('${mat.replace(/'/g,"\\'")}','${s.size.replace(/'/g,"\\'")}')">${starSvg(isFavRow)}</button>
+        ${resRow}
       </div>`;
     }).join('');
     return `<div class="stkcard ${anyFav?'fav':''}">${rows}</div>`;

@@ -25,6 +25,7 @@ async function init(){
   migrateScrapQty(); // исправляем старые записи
   renderAll();
   updateThemeBtns();
+  applyPendingDeepLink(); // данные из макроса CorelDRAW (если открыли по ссылке)
 
   // Тянем свежие данные из облака
   setSyncStatus('load');
@@ -72,6 +73,7 @@ function fillAllSelects(){
   fillSelect('in-pre',SIZES,false,DEFAULT_SIZE);
   fillSelect('out-pre',SIZES,true,null,'— без листа —');
   fillSelect('in-place',PLACES,true); fillSelect('rem-place',PLACES,true);
+  fillOrderSelects();
   const op=document.getElementById('out-pre');
   if(op){
     op.removeEventListener('change',parseDetSize);
