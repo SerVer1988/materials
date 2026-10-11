@@ -24,7 +24,27 @@ function ordersList(){
   });
   return [...map.values()].map(o=>({key:o.key,status:o.status==='closed'?'closed':'open',...splitOrder(o.key)}));
 }
+// Освободить записи от удалённых заказов (d — объект данных {income,expense,orders})
+function applyDeletedOrders(d){
+  if(!d || !deletedOrders.length) return;
+  const gone=new Set(deletedOrders);
+  [...(d.income||[]),...(d.expense||[])].forEach(r=>{ if(r.order && gone.has(r.order)) r.order=''; });
+  if(d.orders) d.orders=d.orders.filter(o=>!gone.has(o.key));
+}
+function deleteOrder(i){
+  const key=window.__ordKeys[i]; if(key===undefined) return;
+  const nIn=db.income.filter(r=>r.order===key).length, nOut=db.expense.filter(r=>r.order===key).length;
+  confirm2(`Удалить заказ ${key}?`+((nIn||nOut)?` Приходов: ${nIn}, расходов: ${nOut} — записи останутся, но перестанут быть привязаны к заказу (листы вернутся в запас).`:''),()=>{
+    if(!deletedOrders.includes(key)) deletedOrders.push(key);
+    applyDeletedOrders(db);
+    ordersOpen.delete(key);
+    save(); renderAll(); fillOrderSelects();
+    toast('🗑 Заказ удалён','ok');
+  });
+}
+
 function ensureOrder(key){
+  deletedOrders=deletedOrders.filter(k=>k!==key);   // заказ создан заново — он больше не «удалённый»
   if(!db.orders) db.orders=[];
   if(!db.orders.some(o=>o.key===key)) db.orders.push({id:Date.now(),key,status:'open',created:now()});
 }
@@ -177,7 +197,7 @@ function renderOrders(){
             <div>Площадь: заказано <b>${m2fmt(t.gotM2)} м²</b> · израсходовано <b>${m2fmt(t.usedM2)} м²</b> ${diffLabel(Math.round(t.diffM2*100)/100,o.status,n=>m2fmt(n)+' м²')}</div>
             <div>Изделия: <b>${m2fmt(detTotal)} м²</b> (из листов ${m2fmt(d.detFull)} · из обрезков ${m2fmt(d.detScrap)})${d.detFull>0&&t.usedM2>0?` · в обрезки/отходы листов ≈ <b>${m2fmt(Math.max(0,waste))} м²</b>`:''}</div>
           </div>
-          <div class="oactions">${o.status==='closed'?`<button class="btn bghost" onclick="reopenOrder(${idx})">↩️ Открыть снова</button>`:`<button class="btn bprim" onclick="closeOrder(${idx})">✅ Закрыть заказ</button>`}</div>
+          <div class="oactions">${o.status==='closed'?`<button class="btn bghost" onclick="reopenOrder(${idx})">↩️ Открыть снова</button>`:`<button class="btn bprim" onclick="closeOrder(${idx})">✅ Закрыть заказ</button>`}<button class="btn bdng odel" onclick="deleteOrder(${idx})" title="Удалить заказ">🗑 Удалить</button></div>
         </div>`;
       }
       html+=`<div class="ocard ${o.status==='closed'?'is-closed':''}">

@@ -25,6 +25,7 @@ function saveLocal(){
   localStorage.setItem('lm7_deleted_pieces',JSON.stringify([...deletedPieces]));
   localStorage.setItem('lm7_renames',JSON.stringify(renames));
   localStorage.setItem('lm7_list_ts',JSON.stringify(listTs));
+  localStorage.setItem('lm7_deleted_orders',JSON.stringify(deletedOrders));
 }
 
 // ══════════════════════════════════════ STORAGE
@@ -39,6 +40,7 @@ function save(){
   localStorage.setItem('lm7_deleted_pieces',JSON.stringify([...deletedPieces]));
   localStorage.setItem('lm7_renames',JSON.stringify(renames));
   localStorage.setItem('lm7_list_ts',JSON.stringify(listTs));
+  localStorage.setItem('lm7_deleted_orders',JSON.stringify(deletedOrders));
   upStats();
   // 2. В Supabase — с задержкой 1.5с чтобы не спамить при быстрых изменениях
   setSyncStatus('sync');

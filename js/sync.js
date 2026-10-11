@@ -18,7 +18,7 @@ function sbErrText(e){
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -48,6 +48,10 @@ function mergePayload(p){
   if(p.renames) mergeRenames(p.renames);
   applyRenamesToPayload(p);
   applyRenamesLocal();
+  // Удалённые заказы: объединяем списки и применяем к облачным и локальным данным
+  if(p.deletedOrders) deletedOrders=[...new Set([...deletedOrders,...p.deletedOrders])];
+  applyDeletedOrders(p.db);
+  applyDeletedOrders(db);
   // Сначала принимаем удалённые id из облака
   if(p.deletedIds) p.deletedIds.forEach(id=>deletedIds.add(id));
   if(p.deletedPieces) p.deletedPieces.forEach(k=>deletedPieces.add(k));
