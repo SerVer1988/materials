@@ -1,0 +1,22 @@
+/* ── ПЛАН: потребность по заказам ── */
+#nbtn-plan .pl-b{fill:var(--ni-plan-bg)} #nbtn-plan .pl-g{stroke:var(--ni-plan-fg)}
+#nbtn-plan.active{--ni-plan-bg:var(--ni-plan-bg-on)}
+.pi-plan .b{fill:var(--ni-plan-bg-on)} .pi-plan .g2{stroke:var(--ni-plan-fg)}
+
+.pl-row{padding:9px 0;border-bottom:1px solid var(--inforow-line)}
+.pl-row:last-child{border-bottom:none}
+.pl-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pl-st{font-size:10px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pl-st.buy{background:var(--rlt);color:var(--red)}
+.pl-st.ordered{background:var(--blt);color:var(--blue)}
+.pl-st.received{background:var(--glt);color:var(--green)}
+.pl-need{margin-top:6px;font-size:13px;color:var(--text)}
+.pl-strip{font-weight:800;color:var(--accent-ink)}
+.pl-line{margin-top:4px;font-size:11px;font-weight:700;color:var(--muted);line-height:1.5}
+.pl-line b{color:var(--text)}
+.pl-line.ok{color:var(--green)} .pl-line.ok b{color:var(--green)}
+.pl-line.bad{color:var(--red)}
+.pl-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pl-btns .btn{padding:7px 11px;font-size:12px}
+.pl-btns .pl-del{margin-left:auto}
+.pl-clear{margin-left:6px;border:none;background:none;color:var(--muted);font-size:10px;font-weight:700;text-decoration:underline;cursor:pointer}

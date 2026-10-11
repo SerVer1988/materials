@@ -39,6 +39,7 @@
 <link rel="stylesheet" href="css/tables.css">
 <link rel="stylesheet" href="css/modals.css">
 <link rel="stylesheet" href="css/orders.css">
+<link rel="stylesheet" href="css/plan.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -362,6 +363,31 @@
   </div>
 </div>
 
+<!-- ══ ПЛАН ══ -->
+<div class="sec" id="sec-plan">
+  <div class="sec-top">
+    <div class="sec-hdr" style="flex-direction:column;gap:6px;align-items:stretch;margin-bottom:6px">
+      <div class="search-bar-wrap" style="flex-shrink:0">
+        <div class="search-bar-inner">
+          <svg class="search-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
+          <input type="text" id="plan-s" placeholder="Поиск по заказу..." autocomplete="off" oninput="renderPlan()">
+        </div>
+      </div>
+      <div class="fchips" style="margin-bottom:0">
+        <div class="fchip on" id="pfl-open" onclick="setPlanFilter('open')">🔒 В работе</div>
+        <div class="fchip" id="pfl-all" onclick="setPlanFilter('all')">Все заказы</div>
+        <div class="fchip" style="margin-left:auto" onclick="togglePlanAdd()">➕ Вставить заявку</div>
+      </div>
+      <div id="plan-add-panel" class="card" style="display:none;margin-bottom:0">
+        <div class="fg" style="margin-bottom:8px"><label>Заказ</label><input type="text" id="plan-order-inp" placeholder="9-08-77_Заказчик"></div>
+        <div class="fg" style="margin-bottom:8px"><label>Текст заявки</label><textarea id="plan-text" rows="6" placeholder="* ПВХ 3 мм - 1220х2440 мм - 1шт + 1220х456 мм&#10;* Акрил 3 мм (мол.) - 1220х2440 мм - 2шт + 1220х355 мм"></textarea></div>
+        <button class="btn bprim bfull" onclick="addPlanManual()">📋 Добавить в план</button>
+      </div>
+    </div>
+  </div>
+  <div class="sec-body"><div id="plan-list"></div></div>
+</div>
+
 <!-- ══ ЗАКАЗЫ ══ -->
 <div class="sec" id="sec-orders">
   <div class="sec-top">
@@ -566,6 +592,9 @@
 
 <nav class="bnav">
   <div class="bnav-inner">
+    <button class="nbtn nbtn-side" id="nbtn-plan" onclick="go('plan',this)">
+      <div class="ni-wrap" style="width:52px;height:52px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7" width="40" height="40"><circle class="pl-b" cx="3.5" cy="3.5" r="3.45"/><g class="pl-g" fill="none" stroke-width=".36" stroke-linecap="round" stroke-linejoin="round"><rect x="1.9" y="1.7" width="3.2" height="3.6" rx=".5"/><path d="M2.9 3.05h1.8M2.9 3.95h1.8M2.9 4.85h1.1"/><circle cx="2.55" cy="3.05" r=".03"/><circle cx="2.55" cy="3.95" r=".03"/><circle cx="2.55" cy="4.85" r=".03"/></g></svg></div>
+    </button>
     <button class="nbtn nbtn-side active" id="nbtn-uchet" onclick="goUchet(this)">
       <div class="ni-wrap" style="width:52px;height:52px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7.11 7.12" width="40" height="40" style="fill-rule:evenodd"><circle class="ni-g" cx="3.555" cy="3.56" r="3.05"/><path class="ni-b" d="M3.46 0c-0.68,0 -1.46,0.26 -2,0.67 -0.34,0.25 -0.61,0.52 -0.85,0.88 -0.62,0.93 -0.79,2.06 -0.42,3.13 0.16,0.47 0.51,1.04 0.88,1.37 0.04,0.03 0.08,0.06 0.11,0.09 0.04,0.04 0.08,0.08 0.14,0.12 0.69,0.53 1.38,0.79 2.26,0.79 0.49,0 0.94,-0.13 1.4,-0.32 0.37,-0.15 0.76,-0.45 1.04,-0.72 1.21,-1.21 1.35,-3.1 0.38,-4.5 -0.68,-0.97 -1.75,-1.5 -2.93,-1.5zm1.4 1.59l-2.7 0c-0.21,0 -0.39,0.17 -0.39,0.39l0 3.08c0,0.21 0.17,0.39 0.39,0.39l2.7 0c0.21,0 0.39,-0.17 0.39,-0.39l0 -3.08c0,-0.21 -0.17,-0.39 -0.39,-0.39zm-2.31 3.47l-0.39 0 0 -0.39 0.39 0 0 0.39zm0 -0.77l-0.39 0 0 -0.39 0.39 0 0 0.39zm0 -0.77l-0.39 0 0 -0.39 0.39 0 0 0.39zm0.77 1.54l-0.39 0 0 -0.39 0.39 0 0 0.39zm0 -0.77l-0.39 0 0 -0.39 0.39 0 0 0.39zm0 -0.77l-0.39 0 0 -0.39 0.39 0 0 0.39zm0.77 1.54l-0.39 0 0 -0.39 0.39 0 0 0.39zm0 -0.77l-0.39 0 0 -0.39 0.39 0 0 0.39zm0 -0.77l-0.39 0 0 -0.39 0.39 0 0 0.39zm0.77 1.54l-0.39 0 0 -1.16 0.39 0 0 1.16zm0 -1.54l-0.39 0 0 -0.39 0.39 0 0 0.39zm0 -0.77l-2.7 0 0 -0.77 2.7 0 0 0.77z"/></svg></div>
     </button>
@@ -588,7 +617,7 @@
     <div class="mtitle">Подтвердите действие</div>
     <p id="ov-txt" style="color:var(--muted);font-size:14px;margin-bottom:18px;line-height:1.5;"></p>
     <button class="btn bdng bfull" id="ov-yes" style="margin-bottom:9px">Да, удалить</button>
-    <button class="btn bghost bfull" onclick="closeOv()">Отмена</button>
+    <button class="btn bghost bfull" id="ov-no" onclick="closeOv()">Отмена</button>
   </div>
 </div>
 
@@ -606,6 +635,7 @@
 <script src="js/search.js"></script>
 <script src="js/stock.js"></script>
 <script src="js/orders.js"></script>
+<script src="js/plan.js"></script>
 <script src="js/place-filter.js"></script>
 <script src="js/deeplink.js"></script>
 <script src="js/inbox.js"></script>

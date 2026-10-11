@@ -60,6 +60,7 @@ function mergePayload(p){
     db.expense   = mergeById(db.expense,   p.db.expense   || []);
     db.remainders= mergeById(db.remainders,p.db.remainders|| []);
     db.orders    = mergeById(db.orders||[], p.db.orders    || []);
+    db.plan      = mergeById(db.plan||[],   p.db.plan      || []);
     // Убираем удалённые pieces из записей обрезков
     db.remainders.forEach(rec=>{
       rec.pieces = rec.pieces.filter(piece=>!deletedPieces.has(makePieceKey(rec.id, piece)));

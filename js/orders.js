@@ -30,6 +30,7 @@ function applyDeletedOrders(d){
   const gone=new Set(deletedOrders);
   [...(d.income||[]),...(d.expense||[])].forEach(r=>{ if(r.order && gone.has(r.order)) r.order=''; });
   if(d.orders) d.orders=d.orders.filter(o=>!gone.has(o.key));
+  if(d.plan) d.plan=d.plan.filter(l=>!gone.has(l.order));
 }
 function deleteOrder(i){
   const key=window.__ordKeys[i]; if(key===undefined) return;
@@ -63,6 +64,7 @@ function calcOrderData(){
   const get=key=>{ if(!res.has(key)) res.set(key,{pos:new Map(),detFull:0,detScrap:0,expCount:0}); return res.get(key); };
   const pos=(o,mat,size,w,l)=>{ const k=`${mat}||${size}`; if(!o.pos.has(k)) o.pos.set(k,{mat,size,w:w||0,l:l||0,got:0,used:0}); return o.pos.get(k); };
   db.income.forEach(r=>{ if(r.order) pos(get(r.order),r.mat,r.size,r.w,r.l).got+=r.qty; });
+  (db.plan||[]).forEach(l=>{ if(l.booked>0) pos(get(l.order),l.mat,l.size,l.w,l.l).got+=l.booked; });   // забронировано из наличия (раздел ПЛАН)
   db.expense.forEach(r=>{
     if(!r.order) return;
     const o=get(r.order); o.expCount++;

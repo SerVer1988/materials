@@ -54,6 +54,7 @@ function applyPayload(p){
     db=p.db;
     if(!db.remainders) db.remainders=[];
     if(!db.orders) db.orders=[];
+    if(!db.plan) db.plan=[];
   }
   if(p.MATS && p.MATS.length)   MATS=p.MATS;
   if(p.SIZES && p.SIZES.length)  SIZES=p.SIZES;
@@ -66,6 +67,7 @@ function load(){
   const r=localStorage.getItem('lm7'); if(r) db=JSON.parse(r);
   if(!db.remainders) db.remainders=[];
   if(!db.orders) db.orders=[];
+  if(!db.plan) db.plan=[];
   const fav=localStorage.getItem('lm7_fav'); if(fav) favorites=new Set(JSON.parse(fav));
   const cm=localStorage.getItem('lm7_mats'); if(cm) MATS=JSON.parse(cm);
   const cs=localStorage.getItem('lm7_sizes'); if(cs) SIZES=JSON.parse(cs);

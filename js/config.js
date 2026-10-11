@@ -6,7 +6,7 @@ let PLACES=["Склад А","Склад Б","Стеллаж 1","Стеллаж 2
 const DEFAULT_SIZE="1220х2440", CUSTOM_VAL="__custom__";
 
 // ══════════════════════════════════════ STATE
-let db={income:[],expense:[],remainders:[],orders:[]};
+let db={income:[],expense:[],remainders:[],orders:[],plan:[]};
 // Переименования справочников {from,to}: применяются при каждой синхронизации, чтобы старое имя не возвращалось с других устройств
 // Время последнего ручного изменения порядка списков — по нему при синхронизации побеждает более свежий порядок
 let listTs=JSON.parse(localStorage.getItem('lm7_list_ts')||'null')||{mats:0,sizes:0,places:0};

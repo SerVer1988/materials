@@ -49,13 +49,15 @@ async function inboxPoll(){
   if(!acc || getComputedStyle(acc).display!=='none' || !sel || sel.options.length<2) return; // приложение ещё не готово
   inboxBusy=true;
   try{
-    const idIn=sbRowId()+'::inbox', idCmd=sbRowId()+'::cmd';
-    const flt='in.'+encodeURIComponent(`("${idIn}","${idCmd}")`);
+    const idIn=sbRowId()+'::inbox', idCmd=sbRowId()+'::cmd', idPlan=sbRowId()+'::plan';
+    const flt='in.'+encodeURIComponent(`("${idIn}","${idCmd}","${idPlan}")`);
     const r=await fetch(`${SB_URL}/rest/v1/material_data?id=${flt}&select=id,payload`,{headers:SB_HDR});
     if(!r.ok) return;
     const rows=await r.json();
     const rowIn=rows.find(x=>x.id===idIn), rowCmd=rows.find(x=>x.id===idCmd);
+    const rowPlan=rows.find(x=>x.id===idPlan);
     if(rowCmd) handleInboxCommand(rowCmd.payload);
+    if(rowPlan) handleInboxPlan(rowPlan.payload);   // заявка из CorelDRAW → раздел «ПЛАН»
     const p=rowIn && rowIn.payload;
     if(!p || !p.id) return;
     if(localStorage.getItem(INBOX_SEEN_KEY)===p.id) return;      // уже обработано

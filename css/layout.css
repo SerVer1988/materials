@@ -29,7 +29,7 @@
 /* ── BOTTOM NAV ── */
 .bnav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:transparent;border-top:none;display:flex;align-items:center;justify-content:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:none;pointer-events:none}
 .bnav-inner{display:inline-flex;align-items:center;justify-content:center;gap:0;background:var(--nav-bg);box-shadow:var(--nav-shadow);border-radius:50px;padding:5px 6px;width:auto;pointer-events:all}
-.nbtn{display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;border:none;background:none;color:var(--nav-ico);font-family:'Nunito',sans-serif;font-size:0;font-weight:700;transition:color .2s;padding:6px 14px;border-radius:30px}
+.nbtn{display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;border:none;background:none;color:var(--nav-ico);font-family:'Nunito',sans-serif;font-size:0;font-weight:700;transition:color .2s;padding:6px 6px;border-radius:30px}
 .nbtn .ni-wrap{width:54px;height:54px;display:flex;align-items:center;justify-content:center;transition:all .2s;color:var(--nav-ico)}
 .nbtn.active .ni-wrap{color:var(--nav-active)}
 .nbtn.active{color:var(--nav-active)}
@@ -72,3 +72,6 @@
 .search-bar-wrap:focus-within{border-color:var(--accent)}
 
 .sec-hdr .itabrow{margin-bottom:0}
+
+/* пять кнопок в нижнем меню: на узких экранах чуть меньше значки */
+@media(max-width:360px){.bnav-inner .nbtn .ni-wrap{width:44px!important;height:44px!important}.bnav-inner .nbtn svg{width:36px;height:36px}}
