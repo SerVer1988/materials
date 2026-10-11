@@ -282,7 +282,8 @@ function onScrapFindChk(i, checked){
 
 
 function _commitExpense(rec){
-  rec.id = Date.now(); rec.dt = now();
+  if(!rec.id) rec.id = Date.now();   // id уже выдан в saveExpense — на него ссылаются обрезки (expenseId)
+  rec.dt = now();
   db.expense.push(rec);
   if(rec.order) ensureOrder(rec.order);
   lastOutMat = rec.mat;
@@ -351,6 +352,7 @@ function applyScrapCut(){
     }
   });
 
+  const linkedExpId = pendingExpRec ? pendingExpRec.id : undefined;   // к этому расходу привяжем оставшиеся куски
   // Записываем расход
   if(pendingExpRec){
     pendingExpRec.etype = 'partial';
@@ -366,6 +368,7 @@ function applyScrapCut(){
     const newRecId = Date.now()+1;
     db.remainders.push({
       id: newRecId, dt: now(),
+      expenseId: linkedExpId,
       pieces: newScrapPieces.map(p=>({...p, type:'scrap_add'})),
       totalM2: +newScrapPieces.reduce((s,p)=>s+p.w*p.l*(p.qty||1)/1e6,0).toFixed(4),
       totalPcs: newScrapPieces.reduce((s,p)=>s+(p.qty||1),0),

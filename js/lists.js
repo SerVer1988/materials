@@ -1,16 +1,66 @@
 // ▸ lists.js — Редактор справочников: материалы, размеры, места
-// ══════════════════════════════════════ LIST SORT
-function listMoveUp(key,i){
-  const list=key==='mats'?MATS:key==='sizes'?SIZES:PLACES;
-  if(i===0) return;
-  [list[i-1],list[i]]=[list[i],list[i-1]];
-  save(); fillAllSelects(); renderListEditor(key);
-}
-function listMoveDown(key,i){
-  const list=key==='mats'?MATS:key==='sizes'?SIZES:PLACES;
-  if(i>=list.length-1) return;
-  [list[i],list[i+1]]=[list[i+1],list[i]];
-  save(); fillAllSelects(); renderListEditor(key);
+// ══════════════════════════════════════ LIST SORT — перетаскивание
+const listOf=key=>key==='mats'?MATS:key==='sizes'?SIZES:PLACES;
+
+// Тянем строку за ручку ⠿: порядок меняется прямо в списке, при отпускании сохраняется (мышь и палец)
+function startListDrag(container,key,row,e){
+  const items=()=>[...container.querySelectorAll('.list-item')];
+  row.classList.add('dragging');
+  document.body.classList.add('list-dragging');
+
+  // ближайший прокручиваемый родитель (для автопрокрутки у краёв экрана)
+  let scroller=container.parentElement;
+  while(scroller && scroller!==document.body){
+    const oy=getComputedStyle(scroller).overflowY;
+    if((oy==='auto'||oy==='scroll') && scroller.scrollHeight>scroller.clientHeight) break;
+    scroller=scroller.parentElement;
+  }
+  if(!scroller || scroller===document.body) scroller=document.scrollingElement;
+
+  let lastY=e.clientY, raf=0;
+  function reposition(){
+    let before=null;
+    for(const r of items()){
+      if(r===row) continue;
+      const b=r.getBoundingClientRect();
+      if(lastY<b.top+b.height/2){ before=r; break; }
+    }
+    if(before){ if(row.nextElementSibling!==before) container.insertBefore(row,before); }
+    else if(container.lastElementChild!==row) container.appendChild(row);
+  }
+  function tick(){
+    const rect=scroller===document.scrollingElement?{top:0,bottom:window.innerHeight}:scroller.getBoundingClientRect();
+    const zone=56;
+    if(lastY<rect.top+zone) scroller.scrollTop-=Math.max(4,(rect.top+zone-lastY)/3);
+    else if(lastY>rect.bottom-zone) scroller.scrollTop+=Math.max(4,(lastY-(rect.bottom-zone))/3);
+    reposition();
+    raf=requestAnimationFrame(tick);
+  }
+  raf=requestAnimationFrame(tick);
+
+  const onMove=ev=>{ lastY=ev.clientY; };
+  const finish=()=>{
+    cancelAnimationFrame(raf);
+    document.removeEventListener('pointermove',onMove);
+    document.removeEventListener('pointerup',finish);
+    document.removeEventListener('pointercancel',finish);
+    row.classList.remove('dragging');
+    document.body.classList.remove('list-dragging');
+    const order=items().map(r=>Number(r.dataset.i));
+    const list=listOf(key), snap=[...list];
+    const changed=order.some((v,i)=>v!==i);
+    if(changed){
+      list.splice(0,list.length,...order.map(i=>snap[i]));
+      listTs[key]=Date.now();        // свежий порядок побеждает при синхронизации
+      save(); fillAllSelects();
+      toast('✅ Порядок сохранён','ok');
+    }
+    renderListEditor(key);
+  };
+  // слушаем весь документ: при перестановке строки браузер сбрасывает «захват» указателя на самой ручке
+  document.addEventListener('pointermove',onMove);
+  document.addEventListener('pointerup',finish);
+  document.addEventListener('pointercancel',finish);
 }
 
 // ══════════════════════════════════════ LIST EDITOR
@@ -21,13 +71,20 @@ function renderListEditor(key){
   const container=document.getElementById(`list-${key}`);
   if(!container) return;
   container.innerHTML=list.map((v,i)=>`
-    <div class="list-item" id="li-${key}-${i}">
+    <div class="list-item" id="li-${key}-${i}" data-i="${i}">
+      <span class="list-handle" title="Перетащите, чтобы изменить порядок">⠿</span>
       <span class="list-item-val" id="liv-${key}-${i}">${v}</span>
-      <button class="list-item-up" onclick="listMoveUp('${key}',${i})" title="Выше" ${i===0?'style="opacity:.3;cursor:default"':''}>↑</button>
-      <button class="list-item-dn" onclick="listMoveDown('${key}',${i})" title="Ниже" ${i===list.length-1?'style="opacity:.3;cursor:default"':''}>↓</button>
       <button class="list-item-edit" onclick="startListEdit('${key}',${i})">✏️</button>
       <button class="list-item-del" onclick="listDel('${key}',${i})">✕</button>
     </div>`).join('');
+  if(!container.dataset.dragInit){
+    container.dataset.dragInit='1';
+    container.addEventListener('pointerdown',ev=>{
+      const h=ev.target.closest('.list-handle'); if(!h) return;
+      ev.preventDefault();
+      startListDrag(container,key,h.closest('.list-item'),ev);
+    });
+  }
 }
 function startListEdit(key,i){
   const list=key==='mats'?MATS:key==='sizes'?SIZES:PLACES;

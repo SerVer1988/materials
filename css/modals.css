@@ -64,8 +64,6 @@
 .move-group-btn:active{background:var(--accent)}
 
 /* ── LIST SORT BUTTONS ── */
-.list-item-up,.list-item-dn{background:var(--card2);color:var(--muted);border:1px solid var(--border);border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;flex-shrink:0;-webkit-user-select:none}
-.list-item-up:active,.list-item-dn:active{background:var(--aclt);color:var(--accent-ink)}
 .list-add-row{display:flex;gap:7px;margin-bottom:10px}
 .list-add-row input{flex:1}
 .list-items{display:flex;flex-direction:column;gap:0}
@@ -75,3 +73,9 @@
 .list-item-edit{background:var(--aclt);color:var(--accent-ink);border:1px solid var(--accent-glow);border-radius:5px;font-size:12px;font-weight:800;padding:3px 8px;cursor:pointer;font-family:'Nunito',sans-serif}
 .list-item-del{background:var(--rlt);color:var(--red);border:none;border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;flex-shrink:0}
 .list-item-input{flex:1;font-size:13px;padding:5px 8px}
+
+/* ── Перетаскивание строк справочников ── */
+.list-handle{flex-shrink:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;color:var(--muted);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:5px}
+.list-handle:active{cursor:grabbing;color:var(--accent-ink);background:var(--aclt)}
+.list-item.dragging{background:var(--card2);box-shadow:var(--shl);border-radius:var(--rs);position:relative;z-index:5}
+body.list-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}

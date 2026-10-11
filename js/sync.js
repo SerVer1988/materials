@@ -18,7 +18,7 @@ function sbErrText(e){
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -32,9 +32,13 @@ function mergeById(local=[], cloud=[]){
 }
 
 // ── MERGE: объединяет строковые справочники (MATS, SIZES, PLACES) ──
-function mergeList(local=[], cloud=[]){
-  const s = new Set([...cloud, ...local]);
-  return [...s];
+// Объединение списка (материалы/размеры/места): состав — сумма обоих, порядок — от стороны, где его меняли позже
+function mergeList(local=[], cloud=[], kind, cloudTs){
+  const lt=(listTs&&listTs[kind])||0, ct=(cloudTs&&cloudTs[kind])||0;
+  const cloudWins=ct>lt;
+  if(cloudWins) listTs[kind]=ct;
+  const base=cloudWins?cloud:local, other=cloudWins?local:cloud;
+  return [...new Set([...base,...other])];
 }
 
 // ── Применяет облачный payload с объединением (не заменой) ──
@@ -59,9 +63,9 @@ function mergePayload(p){
     });
     db.remainders = db.remainders.filter(r=>!deletedIds.has(r.id));
   }
-  if(p.MATS  && p.MATS.length)   MATS   = mergeList(MATS,   p.MATS);
-  if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES);
-  if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES);
+  if(p.MATS  && p.MATS.length)   MATS   = mergeList(MATS,   p.MATS,   'mats',   p.listTs);
+  if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES,  'sizes',  p.listTs);
+  if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES, 'places', p.listTs);
   if(p.fav)  p.fav.forEach(f=>favorites.add(f));
 }
 
