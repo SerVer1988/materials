@@ -44,5 +44,3 @@
 #nbtn-orders .oi-b{fill:var(--ni-ord-bg)} #nbtn-orders .oi-g{stroke:var(--ni-ord-fg)}
 #nbtn-orders.active{--ni-ord-bg:var(--ni-ord-bg-on)}
 .pi-orders .b{fill:var(--ni-ord-bg-on)} .pi-orders .g2{stroke:var(--ni-ord-fg)}
-
-.oactions .odel{flex:0 0 auto;padding-left:14px;padding-right:14px}

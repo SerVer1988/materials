@@ -24,28 +24,7 @@ function ordersList(){
   });
   return [...map.values()].map(o=>({key:o.key,status:o.status==='closed'?'closed':'open',...splitOrder(o.key)}));
 }
-// Освободить записи от удалённых заказов (d — объект данных {income,expense,orders})
-function applyDeletedOrders(d){
-  if(!d || !deletedOrders.length) return;
-  const gone=new Set(deletedOrders);
-  [...(d.income||[]),...(d.expense||[])].forEach(r=>{ if(r.order && gone.has(r.order)) r.order=''; });
-  if(d.orders) d.orders=d.orders.filter(o=>!gone.has(o.key));
-  if(d.plan) d.plan=d.plan.filter(l=>!gone.has(l.order));
-}
-function deleteOrder(i){
-  const key=window.__ordKeys[i]; if(key===undefined) return;
-  const nIn=db.income.filter(r=>r.order===key).length, nOut=db.expense.filter(r=>r.order===key).length;
-  confirm2(`Удалить заказ ${key}?`+((nIn||nOut)?` Приходов: ${nIn}, расходов: ${nOut} — записи останутся, но перестанут быть привязаны к заказу (листы вернутся в запас).`:''),()=>{
-    if(!deletedOrders.includes(key)) deletedOrders.push(key);
-    applyDeletedOrders(db);
-    ordersOpen.delete(key);
-    save(); renderAll(); fillOrderSelects();
-    toast('🗑 Заказ удалён','ok');
-  });
-}
-
 function ensureOrder(key){
-  deletedOrders=deletedOrders.filter(k=>k!==key);   // заказ создан заново — он больше не «удалённый»
   if(!db.orders) db.orders=[];
   if(!db.orders.some(o=>o.key===key)) db.orders.push({id:Date.now(),key,status:'open',created:now()});
 }
@@ -64,7 +43,6 @@ function calcOrderData(){
   const get=key=>{ if(!res.has(key)) res.set(key,{pos:new Map(),detFull:0,detScrap:0,expCount:0}); return res.get(key); };
   const pos=(o,mat,size,w,l)=>{ const k=`${mat}||${size}`; if(!o.pos.has(k)) o.pos.set(k,{mat,size,w:w||0,l:l||0,got:0,used:0}); return o.pos.get(k); };
   db.income.forEach(r=>{ if(r.order) pos(get(r.order),r.mat,r.size,r.w,r.l).got+=r.qty; });
-  (db.plan||[]).forEach(l=>{ if(l.booked>0) pos(get(l.order),l.mat,l.size,l.w,l.l).got+=l.booked; });   // забронировано из наличия (раздел ПЛАН)
   db.expense.forEach(r=>{
     if(!r.order) return;
     const o=get(r.order); o.expCount++;
@@ -199,7 +177,7 @@ function renderOrders(){
             <div>Площадь: заказано <b>${m2fmt(t.gotM2)} м²</b> · израсходовано <b>${m2fmt(t.usedM2)} м²</b> ${diffLabel(Math.round(t.diffM2*100)/100,o.status,n=>m2fmt(n)+' м²')}</div>
             <div>Изделия: <b>${m2fmt(detTotal)} м²</b> (из листов ${m2fmt(d.detFull)} · из обрезков ${m2fmt(d.detScrap)})${d.detFull>0&&t.usedM2>0?` · в обрезки/отходы листов ≈ <b>${m2fmt(Math.max(0,waste))} м²</b>`:''}</div>
           </div>
-          <div class="oactions">${o.status==='closed'?`<button class="btn bghost" onclick="reopenOrder(${idx})">↩️ Открыть снова</button>`:`<button class="btn bprim" onclick="closeOrder(${idx})">✅ Закрыть заказ</button>`}<button class="btn bdng odel" onclick="deleteOrder(${idx})" title="Удалить заказ">🗑 Удалить</button></div>
+          <div class="oactions">${o.status==='closed'?`<button class="btn bghost" onclick="reopenOrder(${idx})">↩️ Открыть снова</button>`:`<button class="btn bprim" onclick="closeOrder(${idx})">✅ Закрыть заказ</button>`}</div>
         </div>`;
       }
       html+=`<div class="ocard ${o.status==='closed'?'is-closed':''}">
@@ -212,16 +190,4 @@ function renderOrders(){
   });
   window.__ordKeys=keys;
   box.innerHTML=html;
-}
-
-// Поиск заказа по ключу из внешней команды (макрос CorelDRAW): точное совпадение без учёта регистра/пробелов,
-// иначе — по номеру заказа, если он однозначный
-function findOrderForCommand(key){
-  const norm=x=>String(x||'').toLowerCase().replace(/\s+/g,' ').trim();
-  const list=ordersList();
-  const exact=list.find(o=>norm(o.key)===norm(key));
-  if(exact) return exact;
-  const no=norm(splitOrder(String(key||'')).no);
-  const same=list.filter(o=>norm(o.no)===no);
-  return same.length===1?same[0]:null;
 }

@@ -20,22 +20,8 @@ function migrateScrapQty(){
   if(changed){ save(); }
 }
 
-// Старые записи: связь «обрезок → расход» могла сломаться (id расхода менялся при сохранении) — восстанавливаем по близкому id
-function migrateScrapLinks(){
-  const ids=new Set(db.expense.map(e=>e.id)); let changed=false;
-  db.remainders.forEach(r=>{
-    if(!r.expenseId || ids.has(r.expenseId)) return;
-    const cand=db.expense
-      .filter(e=>e.id>=r.expenseId && e.id-r.expenseId<=500 && !db.remainders.some(x=>x!==r && x.expenseId===e.id))
-      .sort((a,b)=>a.id-b.id)[0];
-    if(cand){ r.expenseId=cand.id; changed=true; }
-  });
-  if(changed) save();
-}
-
 async function init(){
   load(); fillAllSelects();
-  migrateScrapLinks(); // чиним связи обрезков с расходом
   migrateScrapQty(); // исправляем старые записи
   renderAll();
   updateThemeBtns();

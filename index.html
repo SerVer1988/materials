@@ -610,6 +610,19 @@
   </div>
 </nav>
 
+<!-- ПЛАН: получено → приход -->
+<div class="overlay" id="plan-recv-modal">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">📥 Получено — добавить в приход</div>
+    <p id="plan-recv-info" style="color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.5"></p>
+    <div class="fg" style="margin-bottom:10px"><label>Количество листов</label><input type="number" id="plan-recv-qty" min="1" inputmode="numeric"></div>
+    <div class="fg" style="margin-bottom:14px"><label>Место хранения</label><select id="plan-recv-place"></select></div>
+    <button class="btn bprim bfull" onclick="confirmPlanReceive()" style="margin-bottom:9px">📥 Добавить в приход</button>
+    <button class="btn bghost bfull" onclick="closePlanRecv()">Отмена</button>
+  </div>
+</div>
+
 <div class="toast" id="tst"></div>
 <div class="overlay" id="ov">
   <div class="modal">

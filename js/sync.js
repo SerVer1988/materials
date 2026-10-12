@@ -18,7 +18,7 @@ function sbErrText(e){
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces] };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -32,26 +32,14 @@ function mergeById(local=[], cloud=[]){
 }
 
 // ── MERGE: объединяет строковые справочники (MATS, SIZES, PLACES) ──
-// Объединение списка (материалы/размеры/места): состав — сумма обоих, порядок — от стороны, где его меняли позже
-function mergeList(local=[], cloud=[], kind, cloudTs){
-  const lt=(listTs&&listTs[kind])||0, ct=(cloudTs&&cloudTs[kind])||0;
-  const cloudWins=ct>lt;
-  if(cloudWins) listTs[kind]=ct;
-  const base=cloudWins?cloud:local, other=cloudWins?local:cloud;
-  return [...new Set([...base,...other])];
+function mergeList(local=[], cloud=[]){
+  const s = new Set([...cloud, ...local]);
+  return [...s];
 }
 
 // ── Применяет облачный payload с объединением (не заменой) ──
 function mergePayload(p){
   if(!p) return;
-  // Переименования: сначала объединяем списки замен, затем применяем их и к облачным данным, и к локальным
-  if(p.renames) mergeRenames(p.renames);
-  applyRenamesToPayload(p);
-  applyRenamesLocal();
-  // Удалённые заказы: объединяем списки и применяем к облачным и локальным данным
-  if(p.deletedOrders) deletedOrders=[...new Set([...deletedOrders,...p.deletedOrders])];
-  applyDeletedOrders(p.db);
-  applyDeletedOrders(db);
   // Сначала принимаем удалённые id из облака
   if(p.deletedIds) p.deletedIds.forEach(id=>deletedIds.add(id));
   if(p.deletedPieces) p.deletedPieces.forEach(k=>deletedPieces.add(k));
@@ -60,7 +48,6 @@ function mergePayload(p){
     db.expense   = mergeById(db.expense,   p.db.expense   || []);
     db.remainders= mergeById(db.remainders,p.db.remainders|| []);
     db.orders    = mergeById(db.orders||[], p.db.orders    || []);
-    db.plan      = mergeById(db.plan||[],   p.db.plan      || []);
     // Убираем удалённые pieces из записей обрезков
     db.remainders.forEach(rec=>{
       rec.pieces = rec.pieces.filter(piece=>!deletedPieces.has(makePieceKey(rec.id, piece)));
@@ -68,9 +55,9 @@ function mergePayload(p){
     });
     db.remainders = db.remainders.filter(r=>!deletedIds.has(r.id));
   }
-  if(p.MATS  && p.MATS.length)   MATS   = mergeList(MATS,   p.MATS,   'mats',   p.listTs);
-  if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES,  'sizes',  p.listTs);
-  if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES, 'places', p.listTs);
+  if(p.MATS  && p.MATS.length)   MATS   = mergeList(MATS,   p.MATS);
+  if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES);
+  if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES);
   if(p.fav)  p.fav.forEach(f=>favorites.add(f));
 }
 

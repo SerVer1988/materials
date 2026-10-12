@@ -23,9 +23,6 @@ function saveLocal(){
   localStorage.setItem('lm7_places', JSON.stringify(PLACES));
   localStorage.setItem('lm7_deleted',JSON.stringify([...deletedIds]));
   localStorage.setItem('lm7_deleted_pieces',JSON.stringify([...deletedPieces]));
-  localStorage.setItem('lm7_renames',JSON.stringify(renames));
-  localStorage.setItem('lm7_list_ts',JSON.stringify(listTs));
-  localStorage.setItem('lm7_deleted_orders',JSON.stringify(deletedOrders));
 }
 
 // ══════════════════════════════════════ STORAGE
@@ -38,9 +35,6 @@ function save(){
   localStorage.setItem('lm7_places',JSON.stringify(PLACES));
   localStorage.setItem('lm7_deleted',JSON.stringify([...deletedIds]));
   localStorage.setItem('lm7_deleted_pieces',JSON.stringify([...deletedPieces]));
-  localStorage.setItem('lm7_renames',JSON.stringify(renames));
-  localStorage.setItem('lm7_list_ts',JSON.stringify(listTs));
-  localStorage.setItem('lm7_deleted_orders',JSON.stringify(deletedOrders));
   upStats();
   // 2. В Supabase — с задержкой 1.5с чтобы не спамить при быстрых изменениях
   setSyncStatus('sync');
@@ -54,7 +48,6 @@ function applyPayload(p){
     db=p.db;
     if(!db.remainders) db.remainders=[];
     if(!db.orders) db.orders=[];
-    if(!db.plan) db.plan=[];
   }
   if(p.MATS && p.MATS.length)   MATS=p.MATS;
   if(p.SIZES && p.SIZES.length)  SIZES=p.SIZES;
@@ -67,7 +60,6 @@ function load(){
   const r=localStorage.getItem('lm7'); if(r) db=JSON.parse(r);
   if(!db.remainders) db.remainders=[];
   if(!db.orders) db.orders=[];
-  if(!db.plan) db.plan=[];
   const fav=localStorage.getItem('lm7_fav'); if(fav) favorites=new Set(JSON.parse(fav));
   const cm=localStorage.getItem('lm7_mats'); if(cm) MATS=JSON.parse(cm);
   const cs=localStorage.getItem('lm7_sizes'); if(cs) SIZES=JSON.parse(cs);

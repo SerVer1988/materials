@@ -27,10 +27,75 @@ function parsePlanText(text){
     const sheet=sizes[0];
     let strip=null;
     if(sizes[1] && /\+/.test(rest.slice(sheet.index+sheet[0].length,sizes[1].index))) strip=sizes[1];
-    const q=rest.match(/(\d+)\s*шт/i);
-    out.push({mat,w:+sheet[1],l:+sheet[2],qty:q?+q[1]:(strip?0:1),sw:strip?+strip[1]:0,sl:strip?+strip[2]:0});
+    const q=rest.match(/(\d+(?:[.,]\d+)?)\s*(?:шт|лист)/i);          // «1шт», «4 листа», «0,7 листа»
+    const qF=q?parseFloat(q[1].replace(',','.')):null;
+    const w=+sheet[1], l=+sheet[2];
+    if(!q){ out.push({mat,w,l,qty:strip?0:1,sw:strip?+strip[1]:0,sl:strip?+strip[2]:0,simple:!strip}); return; }
+    if(strip){ out.push({mat,w,l,qty:Math.round(qF),sw:+strip[1],sl:+strip[2]}); return; }
+    const isSheet=sheetCandidates(mat).some(sh=>sameDims(sh,{w,l}));
+    if(!isSheet){                                                       // размер — раскладка, а не лист: повторяем её нужное число раз
+      for(let k=0;k<Math.max(1,Math.round(qF));k++) out.push({mat,w,l,qty:1,sw:0,sl:0,simple:true});
+      return;
+    }
+    // размер — лист, количество в листах (может быть дробным: 0,7 листа → полоса во всю ширину)
+    const W=Math.min(w,l), L=Math.max(w,l);
+    let whole=Math.floor(qF), frac=qF-whole;
+    if(frac>=PLAN_WHOLE_RATIO){ whole++; frac=0; }
+    out.push({mat,w,l,qty:whole,sw:frac>0.001?W:0,sl:frac>0.001?Math.round(frac*L):0,frac:qF!==Math.round(qF)?qF:null});
   });
-  return out;
+  return out.filter(x=>!x.simple).concat(planFromBlocks(out.filter(x=>x.simple)));
+}
+
+// ── Размеры листов по материалам (первое слово названия). Порядок не важен: берётся самый маленький лист, на который помещается раскладка ──
+const SHEETS_BY_FAMILY={
+  'акрил':[[1220,2440],[2050,3050]],
+  'пвх':[[1220,2440],[2050,3050]],
+  'акп':[[1220,2440],[1500,4000],[1220,4000],[1500,5000]],
+  'фанера':[[1220,2440],[1500,2440],[1500,1500]],
+  'полик-нат':[[2050,3050]],
+  'абс':[[1200,600],[1240,615],[1220,900]],
+  'дсп':[[2750,2070]],
+  'пэт':[[1250,2050]]
+};
+const PLAN_WHOLE_RATIO=0.75;   // раскладка занимает ≥ 75% длины листа — считаем целым листом (остаток слишком мал)
+const familyOf=mat=>String(mat||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ')[0];
+function sheetCandidates(mat){
+  const f=SHEETS_BY_FAMILY[familyOf(mat)];
+  return f?f.map(([w,l])=>({w,l})):SIZES.map(parseSizeStr).filter(Boolean);
+}
+// Помещается ли раскладка a×b на лист sh; ширина листа W — меньшая сторона. Возвращает занятую длину листа
+function fitBlock(a,b,sh){
+  const W=Math.min(sh.w,sh.l), L=Math.max(sh.w,sh.l);
+  let len=null;
+  [[a,b],[b,a]].forEach(([bw,bl])=>{ if(bw<=W&&bl<=L&&(len===null||bl<len)) len=bl; });
+  return len===null?null:{W,L,len};
+}
+function placeBlock(mat,a,b){
+  let best=null;
+  const tryList=list=>list.forEach(sh=>{ const f=fitBlock(a,b,sh); if(f&&(!best||sh.w*sh.l<best.area)) best={sh,f,area:sh.w*sh.l}; });
+  tryList(sheetCandidates(mat));
+  if(!best) tryList(SIZES.map(parseSizeStr).filter(Boolean));   // семейство неизвестно или не влезло — любой лист из справочника
+  return best;
+}
+// Раскладки «Материал - 1155х2038 мм» (без количества) → листы: целые листы + полоса «дорезать» шириной во весь лист
+function planFromBlocks(list){
+  const groups=new Map(), res=[];
+  list.forEach(x=>{
+    const pb=placeBlock(x.mat,x.w,x.l);
+    if(!pb){ res.push({mat:x.mat,w:x.w,l:x.l,qty:1,sw:0,sl:0,blocks:[x.w+'×'+x.l],noFit:true}); return; }   // не помещается ни на один лист
+    const key=x.mat+'||'+pb.sh.w+'x'+pb.sh.l;
+    if(!groups.has(key)) groups.set(key,{mat:x.mat,sh:pb.sh,W:pb.f.W,L:pb.f.L,whole:0,partial:0,blocks:[]});
+    const g=groups.get(key);
+    g.blocks.push(x.w+'×'+x.l);
+    if(pb.f.len/pb.f.L>=PLAN_WHOLE_RATIO) g.whole++; else g.partial+=pb.f.len;
+  });
+  groups.forEach(g=>{
+    let whole=g.whole, rem=g.partial;
+    const extra=Math.floor(rem/g.L); whole+=extra; rem-=extra*g.L;
+    if(rem/g.L>=PLAN_WHOLE_RATIO){ whole++; rem=0; }
+    res.push({mat:g.mat,w:g.sh.w,l:g.sh.l,qty:whole,sw:rem>0?g.W:0,sl:rem>0?Math.round(rem):0,blocks:g.blocks,frac:whole+(rem>0?rem/g.L:0)});
+  });
+  return res;
 }
 const normName=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 function canonMat(name){ const n=normName(name); return MATS.find(m=>normName(m)===n)||String(name).replace(/\s+/g,' ').trim(); }
@@ -49,7 +114,7 @@ function addPlanFromText(order,text,baseId){
   if(!parsed.length){ toast('Не удалось разобрать заявку: нужны строки вида «Материал - 1220х2440 - 1шт + 1220х456»','err'); return false; }
   if(!db.plan) db.plan=[];
   const base=baseId||Date.now()*100;
-  let lines=parsed.map((p,i)=>({id:base+i,order,mat:canonMat(p.mat),size:fmtSheet(p.w,p.l),w:p.w,l:p.l,qty:p.qty,stripW:p.sw,stripL:p.sl,status:'buy',booked:0,created:now()}));
+  let lines=parsed.map((p,i)=>({id:base+i,order,mat:canonMat(p.mat),size:fmtSheet(p.w,p.l),w:p.w,l:p.l,qty:p.qty,stripW:p.sw,stripL:p.sl,blocks:p.blocks||null,frac:p.frac||null,noFit:!!p.noFit,status:'buy',booked:0,created:now()}));
   lines=lines.filter(l=>!db.plan.some(x=>x.id===l.id));          // уже добавлено (с другого устройства)
   if(!lines.length) return false;
   const repeats=lines.filter(l=>db.plan.some(x=>x.order===order&&x.mat===l.mat));
@@ -126,6 +191,33 @@ function planLineInfo(line,ctx){
   return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,covered,status};
 }
 
+// ── Получено → добавить в приход ──
+let planRecvId=null;
+function openPlanReceive(id){
+  const l=planLine(id); if(!l) return;
+  const f=planLineInfo(l,planContext());
+  if(f.toBuy<=0){ setPlanStatus(id,'received'); return; }          // оприходовать нечего (например, только полоса) — просто отметка
+  planRecvId=id;
+  document.getElementById('plan-recv-info').textContent=`${l.mat} — ${l.size} мм · заказ ${l.order}`;
+  document.getElementById('plan-recv-qty').value=f.toBuy;
+  const sel=document.getElementById('plan-recv-place');
+  sel.innerHTML=PLACES.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('')+'<option value="">— не указано —</option>';
+  document.getElementById('plan-recv-modal').classList.add('show');
+}
+function closePlanRecv(){ document.getElementById('plan-recv-modal').classList.remove('show'); planRecvId=null; }
+function confirmPlanReceive(){
+  const l=planLine(planRecvId); if(!l) return;
+  const qty=parseInt(document.getElementById('plan-recv-qty').value,10);
+  if(!qty||qty<1){ toast('Укажите количество листов','err'); return; }
+  const place=document.getElementById('plan-recv-place').value;
+  if(!MATS.includes(l.mat)){ MATS.push(l.mat); releaseRename('mats',l.mat); }
+  if(!SIZES.includes(l.size)) SIZES.push(l.size);
+  db.income.push({id:Date.now(),dt:now(),mat:l.mat,size:l.size,w:l.w,l:l.l,qty,place,order:l.order,note:'Из плана закупок'});
+  ensureOrder(l.order);
+  closePlanRecv(); save(); fillAllSelects(); renderAll();
+  toast(`📥 Добавлено в приход: ${l.mat} ${l.size} — ${qty} шт`,'ok');
+}
+
 // ── Действия ──
 const planLine=id=>db.plan.find(x=>x.id===id);
 function bookPlan(id){
@@ -159,6 +251,7 @@ function setPlanFilter(f){
 }
 
 // ── Отрисовка ──
+const fmtFrac=v=>String(Math.round(v*100)/100).replace('.',',');
 const STATUS_TXT={buy:'Закупить',ordered:'Заказано',received:'Получено'};
 function renderPlan(){
   const box=document.getElementById('plan-list'); if(!box) return;
@@ -194,13 +287,15 @@ function renderPlan(){
       if(f.booked) btns.push(`<button class="btn bghost" onclick="unbookPlan(${l.id})">Снять бронь</button>`);
       if(f.status!=='received'){
         btns.push(l.status==='ordered'?`<button class="btn bghost" onclick="setPlanStatus(${l.id},'buy')">↩️ В закупку</button>`:`<button class="btn bghost" onclick="setPlanStatus(${l.id},'ordered')">📦 Заказано</button>`);
-        btns.push(`<button class="btn bghost" onclick="setPlanStatus(${l.id},'received')">✅ Получено</button>`);
+        btns.push(`<button class="btn bghost" onclick="openPlanReceive(${l.id})">✅ Получено</button>`);
       }
       if(f.hasStrip&&!f.stripDone) btns.push(`<button class="btn bghost" onclick="cutStrip(${l.id})">✂️ Дорезать</button>`);
       btns.push(`<button class="btn bdng pl-del" onclick="deletePlanLine(${l.id})" title="Удалить строку">🗑</button>`);
       return `<div class="pl-row">
         <div class="pl-head"><div class="pl-name">${matChip(l.mat)}</div><span class="pl-st ${f.status}">${STATUS_TXT[f.status]}</span></div>
         <div class="pl-need"><b>${l.size}</b> мм — <b>${l.qty} шт</b>${stripTxt}</div>
+        ${l.blocks?`<div class="pl-line">Раскладка: ${l.blocks.join(' + ')}${l.frac?` → <b>≈ ${fmtFrac(l.frac)} листа</b>`:''}</div>`:''}
+        ${l.noFit?'<div class="pl-line bad">⚠️ Размер раскладки не помещается ни на один стандартный лист — проверьте</div>':''}
         <div class="pl-line">${avail}</div>${strip}
         <div class="pl-btns">${btns.join('')}</div>
       </div>`;
