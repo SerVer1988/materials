@@ -2,12 +2,23 @@
 // ══════════════════════════════════════ RENDER ALL
 // Перерисовывает всё — вызывать после любого изменения данных
 function renderAll(){
-  renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist(); renderOrders();
+  renderIn(); renderOut(); renderStock(); renderRemByMat(); renderHist(); renderOrders(); renderPlan();
 }
 
 // ══════════════════════════════════════ DELETE
+// Обрезки, образовавшиеся при операции расхода
+function scrapsOfExpense(id){ return db.remainders.filter(r=>r.expenseId===id || r.id===id+1 || r.id===id+2); }
 function del(tbl,id){
-  confirm2('Удалить эту запись?',()=>{
+  let ask='Удалить эту запись?';
+  if(tbl==='expense'){
+    const linked=scrapsOfExpense(id);
+    if(linked.length){
+      const pcs=linked.reduce((s,r)=>s+r.pieces.reduce((t,p)=>t+(p.qty||1),0),0);
+      const m2=linked.reduce((s,r)=>s+r.pieces.reduce((t,p)=>t+p.w*p.l*(p.qty||1)/1e6,0),0);
+      ask=`Удалить расход? Вместе с ним удалятся образовавшиеся обрезки: ${pcs} шт. (${(Math.round(m2*100)/100).toFixed(2)} м²).`;
+    }
+  }
+  confirm2(ask,()=>{
     if(tbl==='expense'){
       const exp=db.expense.find(r=>r.id===id);
       // Восстанавливаем обрезки использованные через applyScrapPlan
