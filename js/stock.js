@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['stock']='2026-10-13a';
 // ▸ stock.js — Склад: вкладки Листы/Обрезки, фильтры, остатки
 function setStockTab(btn,tab){
   document.querySelectorAll('.itab').forEach(b=>b.classList.remove('active'));

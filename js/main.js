@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['main']='2026-10-13a';
 // ▸ main.js — Точка входа (подключается последней)
 // ══════════════════════════════════════ ENTRY POINT
 ACCESS_CODE = getAccessCode();

@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['pwa']='2026-10-13a';
 // ▸ pwa.js — PWA: регистрация service worker и баннер установки
 // ══════════════════════════════════════ PWA: SERVICE WORKER + INSTALL
 (function(){

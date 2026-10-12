@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['autocomplete']='2026-10-13a';
 // ▸ autocomplete.js — Автокомплит материалов и «свой вариант» в селектах
 // ══════════════════════════════════════ AUTOCOMPLETE
 let acFocusIdx={};

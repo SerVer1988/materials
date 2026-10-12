@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['search']='2026-10-13a';
 // ▸ search.js — Поиск в приходе/расходе/складе, выпадающий список материалов
 // ── Income search ──
 function inClearBtn(){

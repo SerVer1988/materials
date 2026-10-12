@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['remainders']='2026-10-13a';
 // ▸ remainders.js — Обрезки: добавление, правка, список по материалам, фильтры
 // ══════════════════════════════════════ REMAINDERS — ADD PENDING
 function addPiece(){

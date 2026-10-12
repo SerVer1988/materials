@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['theme']='2026-10-13a';
 // ▸ theme.js — переключение светлой/тёмной темы (настройки). Хранится на устройстве, по умолчанию светлая.
 const THEME_KEY='lm7_theme';
 const THEME_COLORS={light:'#FFFFFF', dark:'#1A2027'};

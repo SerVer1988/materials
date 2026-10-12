@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['history']='2026-10-13a';
 // ▸ history.js — История операций
 // ══════════════════════════════════════ HISTORY
 function setTab(el,val){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');htab=val;renderHist();}

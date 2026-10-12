@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['selection']='2026-10-13a';
 // ▸ selection.js — Режим выделения обрезков и перемещение
 // ══════════════════════════════════════ SELECTION MODE
 function enterSelMode(){

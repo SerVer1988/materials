@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="app-build" content="2026-10-13a">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Листовой материал</title>
 
@@ -26,21 +27,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
 <!-- Тема применяется до отрисовки, чтобы не было вспышки -->
-<script src="js/theme-init.js"></script>
+<script src="js/theme-init.js?v=2026-10-13a"></script>
 
 <!-- Стили (порядок важен — каскад как в исходном файле) -->
-<link rel="stylesheet" href="css/themes.css">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/stock.css">
-<link rel="stylesheet" href="css/controls.css">
-<link rel="stylesheet" href="css/remainders.css">
-<link rel="stylesheet" href="css/tables.css">
-<link rel="stylesheet" href="css/modals.css">
-<link rel="stylesheet" href="css/orders.css">
-<link rel="stylesheet" href="css/plan.css">
-<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/themes.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/base.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/layout.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/components.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/stock.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/controls.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/remainders.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/tables.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/modals.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/orders.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/plan.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/responsive.css?v=2026-10-13a">
 </head>
 <body>
 
@@ -635,34 +636,49 @@
 </div>
 
 <!-- Скрипты: классические (не модули), т.к. в разметке inline onclick; порядок важен, main.js — последним -->
-<script src="js/config.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/theme.js"></script>
-<script src="js/sync.js"></script>
-<script src="js/access.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/crud.js"></script>
-<script src="js/init.js"></script>
-<script src="js/autocomplete.js"></script>
-<script src="js/navigation.js"></script>
-<script src="js/search.js"></script>
-<script src="js/stock.js"></script>
-<script src="js/orders.js"></script>
-<script src="js/plan.js"></script>
-<script src="js/place-filter.js"></script>
-<script src="js/deeplink.js"></script>
-<script src="js/inbox.js"></script>
-<script src="js/scrap-calc.js"></script>
-<script src="js/income.js"></script>
-<script src="js/expense.js"></script>
-<script src="js/remainders.js"></script>
-<script src="js/scrap-modals.js"></script>
-<script src="js/selection.js"></script>
-<script src="js/history.js"></script>
-<script src="js/export.js"></script>
-<script src="js/renames.js"></script>
-<script src="js/lists.js"></script>
-<script src="js/pwa.js"></script>
-<script src="js/main.js"></script>
+<script src="js/config.js?v=2026-10-13a"></script>
+<script src="js/ui.js?v=2026-10-13a"></script>
+<script src="js/theme.js?v=2026-10-13a"></script>
+<script src="js/sync.js?v=2026-10-13a"></script>
+<script src="js/access.js?v=2026-10-13a"></script>
+<script src="js/storage.js?v=2026-10-13a"></script>
+<script src="js/crud.js?v=2026-10-13a"></script>
+<script src="js/init.js?v=2026-10-13a"></script>
+<script src="js/autocomplete.js?v=2026-10-13a"></script>
+<script src="js/navigation.js?v=2026-10-13a"></script>
+<script src="js/search.js?v=2026-10-13a"></script>
+<script src="js/stock.js?v=2026-10-13a"></script>
+<script src="js/orders.js?v=2026-10-13a"></script>
+<script src="js/plan.js?v=2026-10-13a"></script>
+<script src="js/place-filter.js?v=2026-10-13a"></script>
+<script src="js/deeplink.js?v=2026-10-13a"></script>
+<script src="js/inbox.js?v=2026-10-13a"></script>
+<script src="js/scrap-calc.js?v=2026-10-13a"></script>
+<script src="js/income.js?v=2026-10-13a"></script>
+<script src="js/expense.js?v=2026-10-13a"></script>
+<script src="js/remainders.js?v=2026-10-13a"></script>
+<script src="js/scrap-modals.js?v=2026-10-13a"></script>
+<script src="js/selection.js?v=2026-10-13a"></script>
+<script src="js/history.js?v=2026-10-13a"></script>
+<script src="js/export.js?v=2026-10-13a"></script>
+<script src="js/renames.js?v=2026-10-13a"></script>
+<script src="js/lists.js?v=2026-10-13a"></script>
+<script src="js/pwa.js?v=2026-10-13a"></script>
+<script src="js/main.js?v=2026-10-13a"></script>
+<script id="build-check">
+/* Проверка: все ли файлы приложения одной версии (на случай, если на GitHub обновили не всё) */
+(function(){
+  var m=document.querySelector('meta[name="app-build"]'), exp=m&&m.content, stale=[];
+  document.querySelectorAll('script[src^="js/"]').forEach(function(s){
+    var n=s.getAttribute('src').split('?')[0].replace('js/','').replace('.js','');
+    if(!window.__B||window.__B[n]!==exp) stale.push(n+'.js');
+  });
+  if(!stale.length) return;
+  var b=document.createElement('div');
+  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#c62828;color:#fff;font:700 12px/1.4 sans-serif;padding:8px 36px 8px 12px';
+  b.innerHTML='⚠️ Обновление загружено не полностью. Устаревшие файлы: <u>'+stale.join(', ')+'</u>. Загрузите их из последнего архива в репозиторий и обновите страницу (Ctrl+F5).<span style="position:absolute;right:12px;top:6px;cursor:pointer;font-size:16px" onclick="this.parentNode.remove()">✕</span>';
+  document.body.appendChild(b);
+})();
+</script>
 </body>
 </html>

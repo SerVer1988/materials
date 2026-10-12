@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['place-filter']='2026-10-13a';
 // ▸ place-filter.js — раскрывающийся фильтр «Место» для всех разделов: приход, расход, листы, обрезки
 // Каждый раздел задаётся ключом: in / out / stk / rem. Разметка: #fchip-place-<k>, #fchip-place-label-<k>, #place-menu-<k>
 const PLACE_FILTERS={

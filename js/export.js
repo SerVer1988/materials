@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['export']='2026-10-13a';
 // ▸ export.js — Экспорт Excel/JSON, импорт, очистка
 // ══════════════════════════════════════ EXPORT
 function expExcel(){

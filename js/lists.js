@@ -1,3 +1,4 @@
+window.__B=window.__B||{};__B['lists']='2026-10-13a';
 // ▸ lists.js — Редактор справочников: материалы, размеры, места
 // ══════════════════════════════════════ LIST SORT — перетаскивание
 const listOf=key=>key==='mats'?MATS:key==='sizes'?SIZES:PLACES;
