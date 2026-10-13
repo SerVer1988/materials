@@ -118,6 +118,8 @@ function navPlusClick(){
   const onIncome = document.getElementById('sec-income').classList.contains('active');
   const onExpense = document.getElementById('sec-expense').classList.contains('active');
   const onStock = document.getElementById('sec-stock').classList.contains('active');
+  const onPlan = document.getElementById('sec-plan').classList.contains('active');
+  if(onPlan){ toggleAddPanel('add-plan'); return; }
   if(onIncome){ toggleAddPanel('add-income'); return; }
   if(onExpense){ toggleAddPanel('add-expense'); return; }
   if(onStock && stockTab==='rem'){ toggleAddPanel('add-rem'); return; }
@@ -173,12 +175,12 @@ function updatePlusBtn(name){
   // Ищем третий path (цветной)
   if(paths.length >= 3){
     const f=paths[2].style;
-    if(name==='income')      f.fill='var(--plus-income)';
+    if(name==='income'||name==='plan') f.fill='var(--plus-income)';
     else if(name==='expense') f.fill='var(--plus-expense)';
     else if(name==='stock' && stockTab==='rem') f.fill='var(--plus-rem)';
     else f.fill='var(--plus-off)';
   }
-  const plusOff = isStockBalance || name==='orders' || name==='plan';
+  const plusOff = isStockBalance || name==='orders';
   plusWrap.style.opacity = plusOff ? '0.45' : '1';
   plusWrap.style.pointerEvents = plusOff ? 'none' : '';
 }

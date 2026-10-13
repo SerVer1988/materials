@@ -153,6 +153,7 @@ function renderRemByMat(){
   updatePlaceChips();
 
   const container=document.getElementById('rem-by-mat');
+  const bookMap=(typeof scrapBookingsMap==='function')?scrapBookingsMap():{};   // обрезки в брони под полосы из Плана
   const stkQ=(document.getElementById('stk-s')?.value||'').toLowerCase();
 
   // Add dt to allPieces lookup
@@ -206,6 +207,8 @@ function renderRemByMat(){
       const isSel=selSet.has(pieceKey);
       const m2Html=`<span class="piece-m2 pm2-pos">${p.m2.toFixed(3)} м²</span>`;
       const placeTag=`<span class="piece-place">${p.place||''}</span>`;
+      const bk=bookMap[`${p.mat}||${p.w}x${p.l}||${p.place||''}`]||[];
+      const bookTag=bk.map(o=>`<span class="rchip" title="В брони: ${escHtml(o)}">🔒 ${escHtml(splitOrder(o).no)}</span>`).join('');
       const dateTag=p.dt?`<span class="piece-dt">${shortDt(p.dt)}</span>`:'';
       const typeTag=`<span class="piece-type-ico"${p.type==='scrap_add'?' title="Добавлен вручную">✍':'>'}</span>`;
 
@@ -230,6 +233,7 @@ function renderRemByMat(){
         <span class="sel-check">${isSel?'✓':''}</span>
         <span class="piece-left"><span class="piece-sz">${p.w}х${p.l}</span>${dateTag}</span>
         <span class="piece-right">
+          ${bookTag}
           ${placeTag}
           ${typeTag}
           <span class="piece-pcs">${p.qty} шт.</span>

@@ -157,10 +157,10 @@ function addPlanManual(){
     togglePlanAdd(false);
   }
 }
+// Форма заявки — панель «add-plan», открывается кнопкой «＋» внизу (navPlusClick)
 function togglePlanAdd(force){
-  const p=document.getElementById('plan-add-panel');
-  const show=force===undefined?p.style.display==='none':force;
-  p.style.display=show?'block':'none';
+  const p=document.getElementById('add-plan'); if(!p) return;
+  if(force===undefined) toggleAddPanel('add-plan'); else p.classList.toggle('open',!!force);
 }
 
 // Сообщение из макроса (строка «<код>::plan»)
@@ -182,12 +182,29 @@ function planContext(){
   db.income.forEach(r=>{ if(r.order){ const k=`${r.order}||${r.mat}||${r.size}`; recv[k]=(recv[k]||0)+r.qty; } });
   return {stockQ,res,recv};
 }
+// Полоса уже вырезана (есть расход по этому заказу и материалу с размером изделия = полосе)
+function isStripDone(l){
+  if(!(l.stripW>0&&l.stripL>0)) return false;
+  const d={w:l.stripW,l:l.stripL};
+  return db.expense.some(e=>e.order===l.order&&e.mat===l.mat&&e.det&&sameDims(parseSizeStr(e.det),d));
+}
+// Действующие брони обрезков: открытые заказы, полоса ещё не вырезана
+function activeStripBooks(){
+  const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
+  return (db.plan||[]).filter(x=>x.stripBook&&!closed.has(x.order)&&!isStripDone(x));
+}
+// Для раздела «Склад → Обрезки»: ключ «материал||ШxД||место» → [заказы, где обрезок в брони]
+function scrapBookingsMap(){
+  const m={};
+  activeStripBooks().forEach(x=>{ const b=x.stripBook, k=`${x.mat}||${b.w}x${b.l}||${b.place||''}`; (m[k]=m[k]||[]).push(x.order); });
+  return m;
+}
 // Подходящие обрезки под полосу (самый подходящий — первым).
 // Обрезки, уже забронированные под полосы ДРУГИХ строк плана (skipId — текущая строка), не предлагаются
 function findStripScraps(mat,w,l,skipId){
   const out=[], used={};
-  (db.plan||[]).forEach(x=>{
-    if(x.id===skipId||!x.stripBook||x.mat!==mat) return;
+  activeStripBooks().forEach(x=>{
+    if(x.id===skipId||x.mat!==mat) return;
     const k=x.stripBook.w+'x'+x.stripBook.l+'|'+(x.stripBook.place||'');
     used[k]=(used[k]||0)+1;
   });
@@ -210,13 +227,13 @@ function planLineInfo(line,ctx){
   const stock=ctx.stockQ[k]||0, reserved=(ctx.res[k]||[]).reduce((s,x)=>s+x.left,0);
   const free=Math.max(0,stock-reserved);
   const hasStrip=line.stripW>0&&line.stripL>0;
-  const stripDim={w:line.stripW,l:line.stripL};
-  const stripDone=hasStrip&&db.expense.some(e=>e.order===line.order&&e.mat===line.mat&&e.det&&sameDims(parseSizeStr(e.det),stripDim));
+  const stripDone=hasStrip&&isStripDone(line);
   const scraps=hasStrip&&!stripDone?findStripScraps(line.mat,line.stripW,line.stripL,line.id):[];
   const stripBooked=hasStrip&&!stripDone&&!!line.stripBook;
   const canBookStrip=scraps.length>0&&!stripBooked;
   const covered=line.qty>0&&toBuy===0;
-  const status=covered||line.status==='received'?'received':(line.status==='ordered'?'ordered':'buy');
+  let status=covered||line.status==='received'?'received':(line.status==='ordered'?'ordered':'buy');
+  if(line.qty===0&&hasStrip&&(stripDone||stripBooked)) status='received';     // строка только из полосы: обрезок в брони или полоса вырезана
   // «Готово» — всё по строке закрыто и мешать не должно: листы получены/забронированы, полоса вырезана или обрезок забронирован
   const done=status==='received'&&(!hasStrip||stripDone||stripBooked);
   return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done};
@@ -349,6 +366,7 @@ function renderPlan(){
   const ctx=planContext();
   const lines=[...(db.plan||[])].sort((a,b)=>a.id-b.id);
   const infos=new Map(); lines.forEach(l=>infos.set(l.id,planLineInfo(l,ctx)));   // порядок важен: распределение полученных листов
+  const stages=calcOrderStages();
   const orders=[...new Set(lines.map(l=>l.order))]
     .filter(o=>planFilter==='all'||!closed.has(o)).filter(o=>!q||o.toLowerCase().includes(q))
     .sort((a,b)=>b.localeCompare(a,'ru',{numeric:true}));
@@ -368,7 +386,7 @@ function renderPlan(){
       </div>`:'';
     return `<div class="ocard">
       <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
-        <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span> <b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${closed.has(o)?'<span class="ostat closed">заказ закрыт</span>':''}</div>
+        <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span> <b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
         <div class="osum">Строк: <b>${ls.length}</b> · к закупке: <b>${buyTotal} шт</b> <button class="pl-clear" onclick="event.stopPropagation();deletePlanOrder(${oi})">очистить план</button></div>
       </div>
       <div class="obody"${oc?' style="display:none"':''}>${act.map(l=>planRowHtml(l,infos.get(l.id))).join('')}${doneBlock}</div>

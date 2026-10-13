@@ -9,7 +9,9 @@ function saveExpense(){
   const detStr=document.getElementById('out-det').value.trim(); const det=parseSizeStr(detStr);
   const sheetSel=isSheetSelected(); let size='—',w=0,l=0,etype='partial';
   if(sheetSel){const sz=getSizeWL('out-pre');size=document.getElementById('out-pre').value;w=sz.w;l=sz.l;etype='full';}
-  const rec={mat,size,w,l,qty,etype,order,det:detStr,note:document.getElementById('out-note').value.trim()};
+  const brak=!!document.getElementById('out-brak')?.checked;      // «Списать в брак»: лист списан, но в «израсходовано» по заказу не засчитывается
+  const rec={mat,size,w,l,qty,etype,order,det:detStr,note:document.getElementById('out-note').value.trim(),brak};
+  const brakBox=document.getElementById('out-brak'); if(brakBox) brakBox.checked=false;
   if(editMode.expense!==null){
     const idx=db.expense.findIndex(r=>r.id===editMode.expense);
     if(idx>=0){
@@ -79,6 +81,7 @@ function editExpense(id){
   document.getElementById('out-qty').value=r.qty;
   document.getElementById('out-det').value=r.det||'';
   document.getElementById('out-note').value=r.note||'';
+  const bb=document.getElementById('out-brak'); if(bb) bb.checked=!!r.brak;
   setOrderSelect('out-order',r.order||'');
   parseDetSize(); renderOut(); window.scrollTo(0,0);
 }
@@ -120,7 +123,7 @@ function renderOut(){
     return `<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">
       <td style="color:var(--muted);font-size:11px">${total-i}</td>
       <td class="c-dt">${dtCell(r.dt)}</td>
-      <td>${matChip(r.mat)}${ordTag(r.order)}</td>
+      <td>${matChip(r.mat)}${ordTag(r.order)}${r.brak?'<div class="ord-tag" title="Списано в брак">🗑 брак</div>':''}</td>
       <td class="c-sz">${sizeCell}</td>
       <td><span class="badge bout">${r.qty} л.</span></td>
       <td class="c-sz c-det">${sizeStack(normSizeStr(r.det))}</td>
@@ -128,3 +131,12 @@ function renderOut(){
     </tr>`;
   }).join('');
 }
+
+// Отмена редактирования расхода сбрасывает галочку «Списать в брак» (cancelEdit лежит в income.js)
+(function(){
+  const _cancelEdit=window.cancelEdit;
+  window.cancelEdit=function(type){
+    if(type==='expense'){ const b=document.getElementById('out-brak'); if(b) b.checked=false; }
+    return _cancelEdit.apply(this,arguments);
+  };
+})();
