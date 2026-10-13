@@ -20,3 +20,14 @@
 .pl-btns .btn{padding:7px 11px;font-size:12px}
 .pl-btns .pl-del{margin-left:auto}
 .pl-clear{margin-left:6px;border:none;background:none;color:var(--muted);font-size:10px;font-weight:700;text-decoration:underline;cursor:pointer}
+/* ── ПЛАН: добавить в конец css-файла со стилями плана (.pl-row, .ocard) ── */
+.pl-ohead{background:var(--aclt);border-left:4px solid var(--accent);border-radius:var(--rs);padding:9px 11px;-webkit-user-select:none;user-select:none}
+.pl-ohead .otitle{font-size:16px;font-weight:900;color:var(--accent-ink)}
+.pl-ohead .otitle b{font-weight:900}
+.pl-ohead .ocust{color:var(--accent-ink);font-weight:800}
+.pl-arrow{display:inline-block;width:14px;color:var(--muted);font-size:12px}
+.pl-head{cursor:pointer;-webkit-user-select:none;user-select:none}
+.pl-row.collapsed .pl-line,.pl-row.collapsed .pl-btns{display:none}
+.pl-row.done{opacity:.55}
+.pl-done{margin-top:6px;border-top:1px dashed var(--border);padding-top:6px}
+.pl-done-head{font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;padding:4px 0;-webkit-user-select:none;user-select:none}
