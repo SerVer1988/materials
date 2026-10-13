@@ -237,6 +237,7 @@
             <div class="custom-input-wrap" id="out-order-custom"><input type="text" placeholder="9-08-77_Заказчик"></div>
           </div>
           <div class="fg full"><label>Примечание</label><input type="text" id="out-note" placeholder="необязательно"></div>
+          <div class="fg full"><label style="display:flex;align-items:center;gap:9px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px"><input type="checkbox" id="out-brak" style="width:20px;height:20px;flex:none;margin:0"> 🗑 Списать в брак</label></div>
         </div>
         <div id="scrap-preview" style="display:none">✂️ Обрезки будут добавлены: <span id="scrap-preview-text"></span></div>
         <div id="scrap-neg-preview" style="display:none">✂️ Без листа — изделие из обрезков: <span id="scrap-neg-text"></span></div>
@@ -375,14 +376,16 @@
         </div>
       </div>
       <div class="fchips" style="margin-bottom:0">
-        <div class="fchip on" id="pfl-open" onclick="setPlanFilter('open')">🔒 В работе</div>
+        <div class="fchip on" id="pfl-open" onclick="setPlanFilter('open')">🔒 Открытые</div>
         <div class="fchip" id="pfl-all" onclick="setPlanFilter('all')">Все заказы</div>
-        <div class="fchip" style="margin-left:auto" onclick="togglePlanAdd()">➕ Вставить заявку</div>
       </div>
-      <div id="plan-add-panel" class="card" style="display:none;margin-bottom:0">
-        <div class="fg" style="margin-bottom:8px"><label>Заказ</label><input type="text" id="plan-order-inp" placeholder="9-08-77_Заказчик"></div>
-        <div class="fg" style="margin-bottom:8px"><label>Текст заявки</label><textarea id="plan-text" rows="6" placeholder="* ПВХ 3 мм - 1220х2440 мм - 1шт + 1220х456 мм&#10;* Акрил 3 мм (мол.) - 1220х2440 мм - 2шт + 1220х355 мм"></textarea></div>
-        <button class="btn bprim bfull" onclick="addPlanManual()">📋 Добавить в план</button>
+    </div>
+    <!-- Добавить заявку — скрытая панель (кнопка «＋» внизу) -->
+    <div class="add-panel" id="add-plan">
+      <div class="add-panel-body">
+        <div class="fg" style="margin-bottom:9px"><label>Заказ</label><input type="text" id="plan-order-inp" placeholder="9-08-77_Заказчик"></div>
+        <div class="fg" style="margin-bottom:9px"><label>Текст заявки</label><textarea id="plan-text" rows="6" placeholder="* ПВХ 3 мм - 1220х2440 мм - 1шт + 1220х456 мм&#10;* Акрил 3 мм (мол.) - 1220х2440 мм - 2шт + 1220х355 мм"></textarea></div>
+        <button class="btn bprim bbig" onclick="addPlanManual()">📋 Добавить в план</button>
       </div>
     </div>
   </div>
@@ -400,13 +403,9 @@
         </div>
       </div>
       <div class="fchips" style="margin-bottom:0">
-        <div class="fchip on" id="ofl-open" onclick="setOrdersFilter('open')">🔒 В работе</div>
+        <div class="fchip on" id="ofl-open" onclick="setOrdersFilter('open')">🔒 Открытые</div>
         <div class="fchip" id="ofl-closed" onclick="setOrdersFilter('closed')">✅ Закрытые</div>
         <div class="fchip" id="ofl-all" onclick="setOrdersFilter('all')">Все</div>
-      </div>
-      <div class="ord-new">
-        <input type="text" id="ord-new-inp" placeholder="Новый заказ: 9-08-77_Заказчик" onkeydown="if(event.key==='Enter')createOrder()">
-        <button class="btn bprim" onclick="createOrder()">➕ Создать</button>
       </div>
     </div>
   </div>
@@ -645,18 +644,18 @@
 <script src="js/crud.js?v=2026-10-13a"></script>
 <script src="js/init.js?v=2026-10-13a"></script>
 <script src="js/autocomplete.js?v=2026-10-13a"></script>
-<script src="js/navigation.js?v=2026-10-13a"></script>
+<script src="js/navigation.js?v=2026-10-13b"></script>
 <script src="js/search.js?v=2026-10-13a"></script>
 <script src="js/stock.js?v=2026-10-13a"></script>
-<script src="js/orders.js?v=2026-10-13a"></script>
-<script src="js/plan.js?v=2026-10-13a"></script>
+<script src="js/orders.js?v=2026-10-13b"></script>
+<script src="js/plan.js?v=2026-10-13b"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
 <script src="js/inbox.js?v=2026-10-13a"></script>
 <script src="js/scrap-calc.js?v=2026-10-13a"></script>
 <script src="js/income.js?v=2026-10-13a"></script>
-<script src="js/expense.js?v=2026-10-13a"></script>
-<script src="js/remainders.js?v=2026-10-13a"></script>
+<script src="js/expense.js?v=2026-10-13b"></script>
+<script src="js/remainders.js?v=2026-10-13b"></script>
 <script src="js/scrap-modals.js?v=2026-10-13a"></script>
 <script src="js/selection.js?v=2026-10-13a"></script>
 <script src="js/history.js?v=2026-10-13a"></script>
