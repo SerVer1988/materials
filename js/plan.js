@@ -2,11 +2,15 @@ window.__B=window.__B||{};__B['plan']='2026-10-13a';
 // ▸ plan.js — ПЛАН: потребность по заказам (из макроса CorelDRAW или вставкой текста), проверка наличия на складе,
 // бронь из наличия, подбор обрезка под полосу, статусы закупки: закупить → заказано → получено
 // Строка плана: {id, order, mat, size, w, l, qty (целых листов), stripW, stripL (полоса «дорезать», 0 = нет),
-//                status:'buy'|'ordered'|'received', booked (листов, забронировано из наличия), created}
+//                status:'buy'|'ordered'|'received', booked (листов, забронировано из наличия),
+//                stripBook:{w,l,place}|null (забронированный обрезок под полосу), created}
 let planFilter='open';                         // open | all
 const PLAN_SEEN_KEY='lm7_plan_seen';
+const PLAN_UI_KEY='lm7_plan_ui';               // свёрнутость заказов / материалов / блока «Готово» (только на этом устройстве)
 const PLAN_MAX_AGE=3*24*60*60*1000;            // сообщение из макроса ждёт до 3 суток, если приложение было закрыто
 const SZ_RE='(\\d{2,5})\\s*[хxХX×*]\\s*(\\d{2,5})';
+let planUI={}; try{ planUI=JSON.parse(localStorage.getItem(PLAN_UI_KEY)||'{}')||{}; }catch(e){ planUI={}; }
+function savePlanUI(){ try{ localStorage.setItem(PLAN_UI_KEY,JSON.stringify(planUI)); }catch(e){} }
 
 // ── Разбор текста заявки ──
 // «На Заказ №105 требуется:
@@ -106,6 +110,18 @@ function fmtSheet(w,l){
 }
 const sameDims=(a,b)=>a&&b&&((a.w===b.w&&a.l===b.l)||(a.w===b.l&&a.l===b.w));
 
+// Размер полосы для ЗАКУПКИ: сторона, которая не равна ширине листа, округляется вверх до 100 мм (1177 → 1200), не больше длины листа.
+// Только для показа; подбор обрезка и раскладка работают по точным размерам.
+const ceil100=v=>Math.ceil(v/100)*100;
+function stripBuyDims(l){
+  const W=Math.min(l.w,l.l), L=Math.max(l.w,l.l);
+  let a=l.stripW, b=l.stripL;
+  if(a===W&&b!==W) b=Math.min(ceil100(b),L);
+  else if(b===W&&a!==W) a=Math.min(ceil100(a),L);
+  else b=Math.min(ceil100(b),L);
+  return a+'×'+b;
+}
+
 // ── Добавление строк (с проверкой повторов) ──
 function addPlanFromText(order,text,baseId){
   order=String(order||'').trim().replace(/\s+/g,' ');
@@ -166,12 +182,22 @@ function planContext(){
   db.income.forEach(r=>{ if(r.order){ const k=`${r.order}||${r.mat}||${r.size}`; recv[k]=(recv[k]||0)+r.qty; } });
   return {stockQ,res,recv};
 }
-// Подходящие обрезки под полосу (самый подходящий — первым)
-function findStripScraps(mat,w,l){
-  const out=[];
+// Подходящие обрезки под полосу (самый подходящий — первым).
+// Обрезки, уже забронированные под полосы ДРУГИХ строк плана (skipId — текущая строка), не предлагаются
+function findStripScraps(mat,w,l,skipId){
+  const out=[], used={};
+  (db.plan||[]).forEach(x=>{
+    if(x.id===skipId||!x.stripBook||x.mat!==mat) return;
+    const k=x.stripBook.w+'x'+x.stripBook.l+'|'+(x.stripBook.place||'');
+    used[k]=(used[k]||0)+1;
+  });
   db.remainders.forEach(rec=>(rec.pieces||[]).forEach(p=>{
     if(p.mat!==mat||p.type==='scrap_sub'||!(p.qty>0)) return;
-    if((p.w>=w&&p.l>=l)||(p.w>=l&&p.l>=w)) out.push({w:p.w,l:p.l,qty:p.qty,place:p.place||rec.place||''});
+    if(!((p.w>=w&&p.l>=l)||(p.w>=l&&p.l>=w))) return;
+    const place=p.place||rec.place||'', k=p.w+'x'+p.l+'|'+place;
+    const take=Math.min(used[k]||0,p.qty); used[k]=(used[k]||0)-take;
+    const left=p.qty-take;
+    if(left>0) out.push({w:p.w,l:p.l,qty:left,place});
   }));
   return out.sort((a,b)=>a.w*a.l-b.w*b.l);
 }
@@ -186,10 +212,14 @@ function planLineInfo(line,ctx){
   const hasStrip=line.stripW>0&&line.stripL>0;
   const stripDim={w:line.stripW,l:line.stripL};
   const stripDone=hasStrip&&db.expense.some(e=>e.order===line.order&&e.mat===line.mat&&e.det&&sameDims(parseSizeStr(e.det),stripDim));
-  const scraps=hasStrip&&!stripDone?findStripScraps(line.mat,line.stripW,line.stripL):[];
+  const scraps=hasStrip&&!stripDone?findStripScraps(line.mat,line.stripW,line.stripL,line.id):[];
+  const stripBooked=hasStrip&&!stripDone&&!!line.stripBook;
+  const canBookStrip=scraps.length>0&&!stripBooked;
   const covered=line.qty>0&&toBuy===0;
   const status=covered||line.status==='received'?'received':(line.status==='ordered'?'ordered':'buy');
-  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,covered,status};
+  // «Готово» — всё по строке закрыто и мешать не должно: листы получены/забронированы, полоса вырезана или обрезок забронирован
+  const done=status==='received'&&(!hasStrip||stripDone||stripBooked);
+  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done};
 }
 
 // ── Получено → добавить в приход ──
@@ -226,9 +256,18 @@ function bookPlan(id){
   const info=planLineInfo(l,planContext());
   if(info.canBook<=0){ toast('Свободных листов этого материала и размера нет','err'); return; }
   l.booked=(l.booked||0)+info.canBook;
-  save(); renderAll(); toast(`🔒 Забронировано из наличия: ${info.canBook} шт`,'ok');
+  save(); renderAll(); toast(`🔒 В брони: ${info.canBook} шт`,'ok');
 }
 function unbookPlan(id){ const l=planLine(id); if(!l) return; l.booked=0; save(); renderAll(); toast('Бронь снята','ok'); }
+// Бронь именно того обрезка, который показан в строке «подходит обрезок …»
+function bookStrip(id){
+  const l=planLine(id); if(!l) return;
+  const s=findStripScraps(l.mat,l.stripW,l.stripL,l.id)[0];
+  if(!s){ toast('Подходящего обрезка уже нет','err'); renderAll(); return; }
+  l.stripBook={w:s.w,l:s.l,place:s.place};
+  save(); renderAll(); toast(`🔒 Обрезок ${s.w}×${s.l} в брони`,'ok');
+}
+function unbookStrip(id){ const l=planLine(id); if(!l) return; l.stripBook=null; save(); renderAll(); toast('Бронь обрезка снята','ok'); }
 function setPlanStatus(id,st){ const l=planLine(id); if(!l) return; l.status=st; save(); renderAll(); }
 function cutStrip(id){
   const l=planLine(id); if(!l||!l.stripW) return;
@@ -251,9 +290,58 @@ function setPlanFilter(f){
   renderPlan();
 }
 
+// ── Сворачивание ──
+function togglePlanOrder(i){
+  const key=window.__planKeys[i]; if(key===undefined) return;
+  planUI['o:'+key]=!(window.__planCollapsed||{})[key]; savePlanUI(); renderPlan();
+}
+function togglePlanRow(id){ planUI['r:'+id]=!planUI['r:'+id]; savePlanUI(); renderPlan(); }
+function togglePlanDone(i){
+  const key=window.__planKeys[i]; if(key===undefined) return;
+  planUI['d:'+key]=!planUI['d:'+key]; savePlanUI(); renderPlan();
+}
+
 // ── Отрисовка ──
 const fmtFrac=v=>String(Math.round(v*100)/100).replace('.',',');
 const STATUS_TXT={buy:'Закупить',ordered:'Заказано',received:'Получено'};
+function planRowHtml(l,f){
+  const rc=!!planUI['r:'+l.id];
+  const stripTxt=f.hasStrip?` + <span class="pl-strip">${stripBuyDims(l)}</span>`:'';
+  let avail=`На складе свободно: <b>${f.free} шт</b>`;
+  if(f.booked) avail+=` · в брони из наличия <b>${f.booked}</b>`;
+  if(f.received) avail+=` · получено под заказ <b>${f.received}</b>`;
+  avail+=` · <b>к закупке: ${f.toBuy} шт</b>`;
+  let strip='';
+  if(f.hasStrip){
+    if(f.stripDone) strip=`<div class="pl-line ok">✅ Полоса ${l.stripW}×${l.stripL} вырезана</div>`;
+    else if(f.stripBooked){ const b=l.stripBook; strip=`<div class="pl-line ok">🔒 Полоса ${l.stripW}×${l.stripL}: в брони обрезок <b>${b.w}×${b.l}</b>${b.place?` (${escHtml(b.place)})`:''}</div>`; }
+    else if(f.scraps.length){ const s=f.scraps[0]; strip=`<div class="pl-line ok">✂️ Полоса ${l.stripW}×${l.stripL}: подходит обрезок <b>${s.w}×${s.l}</b>${s.place?` (${escHtml(s.place)})`:''}${f.scraps.length>1?` и ещё ${f.scraps.length-1}`:''}</div>`; }
+    else strip=`<div class="pl-line bad">⚠️ Полоса ${l.stripW}×${l.stripL}: подходящего обрезка нет — потребуется отдельный лист</div>`;
+  }
+  const btns=[];
+  if(f.canBook>0) btns.push(`<button class="btn bprim" onclick="bookPlan(${l.id})">🔒 В бронь (${f.canBook})</button>`);
+  if(f.booked) btns.push(`<button class="btn bghost" onclick="unbookPlan(${l.id})">Снять бронь</button>`);
+  if(f.status!=='received'){
+    btns.push(l.status==='ordered'?`<button class="btn bghost" onclick="setPlanStatus(${l.id},'buy')">↩️ В закупку</button>`:`<button class="btn bghost" onclick="setPlanStatus(${l.id},'ordered')">📦 Заказано</button>`);
+    btns.push(`<button class="btn bghost" onclick="openPlanReceive(${l.id})">✅ Получено</button>`);
+  }
+  if(f.hasStrip&&!f.stripDone){
+    if(f.stripBooked){
+      btns.push(`<button class="btn bghost" onclick="unbookStrip(${l.id})">Снять бронь куска</button>`);
+      btns.push(`<button class="btn bghost" onclick="cutStrip(${l.id})">✂️ Дорезать</button>`);
+    } else if(f.canBookStrip) btns.push(`<button class="btn bprim" onclick="bookStrip(${l.id})">🔒 В бронь</button>`);
+    else btns.push(`<button class="btn bghost" onclick="cutStrip(${l.id})">✂️ Дорезать</button>`);
+  }
+  btns.push(`<button class="btn bdng pl-del" onclick="deletePlanLine(${l.id})" title="Удалить строку">🗑</button>`);
+  return `<div class="pl-row${rc?' collapsed':''}${f.done?' done':''}">
+    <div class="pl-head" onclick="togglePlanRow(${l.id})"><span class="pl-arrow">${rc?'▸':'▾'}</span><div class="pl-name">${matChip(l.mat)}</div><span class="pl-st ${f.status}">${STATUS_TXT[f.status]}</span></div>
+    <div class="pl-need"><b>${l.size}</b> мм — <b>${l.qty} шт</b>${stripTxt}</div>
+    ${l.blocks?`<div class="pl-line">Раскладка: ${l.blocks.join(' + ')}${l.frac?` → <b>≈ ${fmtFrac(l.frac)} листа</b>`:''}</div>`:''}
+    ${l.noFit?'<div class="pl-line bad">⚠️ Размер раскладки не помещается ни на один стандартный лист — проверьте</div>':''}
+    <div class="pl-line">${avail}</div>${strip}
+    <div class="pl-btns">${btns.join('')}</div>
+  </div>`;
+}
 function renderPlan(){
   const box=document.getElementById('plan-list'); if(!box) return;
   const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
@@ -264,49 +352,26 @@ function renderPlan(){
   const orders=[...new Set(lines.map(l=>l.order))]
     .filter(o=>planFilter==='all'||!closed.has(o)).filter(o=>!q||o.toLowerCase().includes(q))
     .sort((a,b)=>b.localeCompare(a,'ru',{numeric:true}));
-  window.__planKeys=orders;
+  window.__planKeys=orders; window.__planCollapsed={};
   if(!orders.length){ box.innerHTML='<div class="empty"><div class="ei">📋</div>Плана пока нет.<br>Отправьте заявку из CorelDRAW или нажмите «➕ Вставить заявку»</div>'; return; }
   box.innerHTML=orders.map((o,oi)=>{
     const ls=lines.filter(l=>l.order===o);
     const buyTotal=ls.reduce((s,l)=>s+infos.get(l.id).toBuy,0);
+    const act=ls.filter(l=>!infos.get(l.id).done), done=ls.filter(l=>infos.get(l.id).done);
+    const oc=planUI['o:'+o]!==undefined?!!planUI['o:'+o]:(ls.length>0&&!act.length);   // по умолчанию свёрнут, если всё готово
+    window.__planCollapsed[o]=oc;
+    const dOpen=!!planUI['d:'+o];
     const sp=splitOrder(o);
-    const rows=ls.map(l=>{
-      const f=infos.get(l.id);
-      const stripTxt=f.hasStrip?` + <span class="pl-strip">${l.stripW}×${l.stripL}</span>`:'';
-      let avail=`На складе свободно: <b>${f.free} шт</b>`;
-      if(f.booked) avail+=` · из наличия забронировано <b>${f.booked}</b>`;
-      if(f.received) avail+=` · получено под заказ <b>${f.received}</b>`;
-      avail+=` · <b>к закупке: ${f.toBuy} шт</b>`;
-      let strip='';
-      if(f.hasStrip){
-        if(f.stripDone) strip=`<div class="pl-line ok">✅ Полоса ${l.stripW}×${l.stripL} вырезана</div>`;
-        else if(f.scraps.length){ const s=f.scraps[0]; strip=`<div class="pl-line ok">✂️ Полоса ${l.stripW}×${l.stripL}: подходит обрезок <b>${s.w}×${s.l}</b>${s.place?` (${escHtml(s.place)})`:''}${f.scraps.length>1?` и ещё ${f.scraps.length-1}`:''}</div>`; }
-        else strip=`<div class="pl-line bad">⚠️ Полоса ${l.stripW}×${l.stripL}: подходящего обрезка нет — потребуется отдельный лист</div>`;
-      }
-      const btns=[];
-      if(f.canBook>0) btns.push(`<button class="btn bprim" onclick="bookPlan(${l.id})">🔒 Забронировать из наличия (${f.canBook})</button>`);
-      if(f.booked) btns.push(`<button class="btn bghost" onclick="unbookPlan(${l.id})">Снять бронь</button>`);
-      if(f.status!=='received'){
-        btns.push(l.status==='ordered'?`<button class="btn bghost" onclick="setPlanStatus(${l.id},'buy')">↩️ В закупку</button>`:`<button class="btn bghost" onclick="setPlanStatus(${l.id},'ordered')">📦 Заказано</button>`);
-        btns.push(`<button class="btn bghost" onclick="openPlanReceive(${l.id})">✅ Получено</button>`);
-      }
-      if(f.hasStrip&&!f.stripDone) btns.push(`<button class="btn bghost" onclick="cutStrip(${l.id})">✂️ Дорезать</button>`);
-      btns.push(`<button class="btn bdng pl-del" onclick="deletePlanLine(${l.id})" title="Удалить строку">🗑</button>`);
-      return `<div class="pl-row">
-        <div class="pl-head"><div class="pl-name">${matChip(l.mat)}</div><span class="pl-st ${f.status}">${STATUS_TXT[f.status]}</span></div>
-        <div class="pl-need"><b>${l.size}</b> мм — <b>${l.qty} шт</b>${stripTxt}</div>
-        ${l.blocks?`<div class="pl-line">Раскладка: ${l.blocks.join(' + ')}${l.frac?` → <b>≈ ${fmtFrac(l.frac)} листа</b>`:''}</div>`:''}
-        ${l.noFit?'<div class="pl-line bad">⚠️ Размер раскладки не помещается ни на один стандартный лист — проверьте</div>':''}
-        <div class="pl-line">${avail}</div>${strip}
-        <div class="pl-btns">${btns.join('')}</div>
-      </div>`;
-    }).join('');
+    const doneBlock=done.length?`<div class="pl-done">
+        <div class="pl-done-head" onclick="togglePlanDone(${oi})"><span class="pl-arrow">${dOpen?'▾':'▸'}</span> Готово: <b>${done.length}</b></div>
+        <div class="pl-done-body" style="display:${dOpen?'block':'none'}">${done.map(l=>planRowHtml(l,infos.get(l.id))).join('')}</div>
+      </div>`:'';
     return `<div class="ocard">
-      <div class="ohead" style="cursor:default">
-        <div class="otitle"><b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${closed.has(o)?'<span class="ostat closed">заказ закрыт</span>':''}</div>
-        <div class="osum">Строк: <b>${ls.length}</b> · к закупке: <b>${buyTotal} шт</b> <button class="pl-clear" onclick="deletePlanOrder(${oi})">очистить план</button></div>
+      <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
+        <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span> <b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${closed.has(o)?'<span class="ostat closed">заказ закрыт</span>':''}</div>
+        <div class="osum">Строк: <b>${ls.length}</b> · к закупке: <b>${buyTotal} шт</b> <button class="pl-clear" onclick="event.stopPropagation();deletePlanOrder(${oi})">очистить план</button></div>
       </div>
-      <div class="obody">${rows}</div>
+      <div class="obody"${oc?' style="display:none"':''}>${act.map(l=>planRowHtml(l,infos.get(l.id))).join('')}${doneBlock}</div>
     </div>`;
   }).join('');
 }
