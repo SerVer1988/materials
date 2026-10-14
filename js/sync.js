@@ -16,10 +16,29 @@ function sbErrText(e){
   return m.slice(0,120);
 }
 
+// ── Избранное: у каждой звезды своя отметка «поставил/снял» + время. При слиянии побеждает более позднее действие ──
+// favState: ключ → [1|0, время]. Раньше избранное только объединялось (снятая звезда возвращалась из облака)
+// или заменялось облачной копией (поставленная пропадала).
+let favState={}; try{ favState=JSON.parse(localStorage.getItem('lm7_fav_state')||'{}')||{}; }catch(e){ favState={}; }
+function persistFavState(){ try{ localStorage.setItem('lm7_fav_state',JSON.stringify(favState)); }catch(e){} }
+function setFavorite(key,on){
+  favState[key]=[on?1:0,Date.now()];
+  if(on) favorites.add(key); else favorites.delete(key);
+  persistFavState();
+}
+function mergeFavs(p){
+  favorites.forEach(k=>{ if(!favState[k]) favState[k]=[1,0]; });                    // звёзды из старых версий — без отметки времени
+  const cs=(p&&p.favState)||{};
+  ((p&&p.fav)||[]).forEach(k=>{ if(!cs[k]&&!favState[k]) favState[k]=[1,0]; });
+  Object.keys(cs).forEach(k=>{ if(!favState[k]||cs[k][1]>favState[k][1]) favState[k]=cs[k]; });
+  favorites=new Set(Object.keys(favState).filter(k=>favState[k][0]===1));
+  persistFavState();
+}
+
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -72,7 +91,7 @@ function mergePayload(p){
   if(p.MATS  && p.MATS.length)   MATS   = mergeList(MATS,   p.MATS,   'mats',   p.listTs);
   if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES,  'sizes',  p.listTs);
   if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES, 'places', p.listTs);
-  if(p.fav)  p.fav.forEach(f=>favorites.add(f));
+  mergeFavs(p);
 }
 
 async function sbPush(){

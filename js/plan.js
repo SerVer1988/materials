@@ -82,23 +82,22 @@ function placeBlock(mat,a,b){
   if(!best) tryList(SIZES.map(parseSizeStr).filter(Boolean));   // семейство неизвестно или не влезло — любой лист из справочника
   return best;
 }
-// Раскладки «Материал - 1155х2038 мм» (без количества) → листы: целые листы + полоса «дорезать» шириной во весь лист
+// Раскладки «Материал - 1155х2038 мм» (без количества) → листы.
+// Блок, занимающий ≥75% листа, считается целым листом. Меньший блок остаётся В СВОЁМ РАЗМЕРЕ (300×150 так и пишется,
+// не растягивается до ширины листа): так под него можно найти небольшой обрезок. Каждый малый блок — отдельная строка плана.
 function planFromBlocks(list){
   const groups=new Map(), res=[];
   list.forEach(x=>{
     const pb=placeBlock(x.mat,x.w,x.l);
     if(!pb){ res.push({mat:x.mat,w:x.w,l:x.l,qty:1,sw:0,sl:0,blocks:[x.w+'×'+x.l],noFit:true}); return; }   // не помещается ни на один лист
     const key=x.mat+'||'+pb.sh.w+'x'+pb.sh.l;
-    if(!groups.has(key)) groups.set(key,{mat:x.mat,sh:pb.sh,W:pb.f.W,L:pb.f.L,whole:0,partial:0,blocks:[]});
+    if(!groups.has(key)) groups.set(key,{mat:x.mat,sh:pb.sh,whole:[],small:[]});
     const g=groups.get(key);
-    g.blocks.push(x.w+'×'+x.l);
-    if(pb.f.len/pb.f.L>=PLAN_WHOLE_RATIO) g.whole++; else g.partial+=pb.f.len;
+    if(pb.f.len/pb.f.L>=PLAN_WHOLE_RATIO) g.whole.push(x.w+'×'+x.l); else g.small.push({w:x.w,l:x.l});
   });
   groups.forEach(g=>{
-    let whole=g.whole, rem=g.partial;
-    const extra=Math.floor(rem/g.L); whole+=extra; rem-=extra*g.L;
-    if(rem/g.L>=PLAN_WHOLE_RATIO){ whole++; rem=0; }
-    res.push({mat:g.mat,w:g.sh.w,l:g.sh.l,qty:whole,sw:rem>0?g.W:0,sl:rem>0?Math.round(rem):0,blocks:g.blocks,frac:whole+(rem>0?rem/g.L:0)});
+    if(g.whole.length) res.push({mat:g.mat,w:g.sh.w,l:g.sh.l,qty:g.whole.length,sw:0,sl:0,blocks:g.whole});
+    g.small.forEach(b=>res.push({mat:g.mat,w:g.sh.w,l:g.sh.l,qty:0,sw:b.w,sl:b.l}));
   });
   return res;
 }
@@ -110,16 +109,15 @@ function fmtSheet(w,l){
 }
 const sameDims=(a,b)=>a&&b&&((a.w===b.w&&a.l===b.l)||(a.w===b.l&&a.l===b.w));
 
-// Размер полосы для ЗАКУПКИ: сторона, которая не равна ширине листа, округляется вверх до 100 мм (1177 → 1200), не больше длины листа.
+// Размер полосы для ЗАКУПКИ: если полоса идёт во всю ширину листа, её длина округляется вверх до 100 мм (1177 → 1200), не больше длины листа.
 // Только для показа; подбор обрезка и раскладка работают по точным размерам.
 const ceil100=v=>Math.ceil(v/100)*100;
 function stripBuyDims(l){
   const W=Math.min(l.w,l.l), L=Math.max(l.w,l.l);
   let a=l.stripW, b=l.stripL;
-  if(a===W&&b!==W) b=Math.min(ceil100(b),L);
+  if(a===W&&b!==W) b=Math.min(ceil100(b),L);          // полоса во всю ширину листа — длину округляем вверх
   else if(b===W&&a!==W) a=Math.min(ceil100(a),L);
-  else b=Math.min(ceil100(b),L);
-  return a+'×'+b;
+  return a+'×'+b;                                      // обычный кусок (300×150) — как есть
 }
 
 // ── Добавление строк (с проверкой повторов) ──

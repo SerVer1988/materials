@@ -32,7 +32,7 @@ function toggleFilter(type){
 }
 function toggleFav(mat,size){
   const key=size?`${mat}||${size}`:mat;
-  if(favorites.has(key)) favorites.delete(key); else favorites.add(key);
+  setFavorite(key,!favorites.has(key));     // с отметкой времени — чтобы синхронизация не откатывала звезду
   save(); renderStock();
 }
 

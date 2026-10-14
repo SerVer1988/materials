@@ -209,6 +209,11 @@ function openScrapFindModal(mat, detW, detL, needQty, pendingExpRec){
   needQty = needQty || 1;
   scrapFindSelected = new Set();
 
+  // Обрезок, забронированный в Плане под эту полосу этого заказа (если расход привязан к заказу)
+  const bk = (pendingExpRec && pendingExpRec.order && detW && detL)
+    ? (db.plan||[]).find(x=>x.order===pendingExpRec.order && x.mat===mat && x.stripBook && sameDims({w:x.stripW,l:x.stripL},{w:detW,l:detL}))
+    : null;
+
   // Все обрезки нужного материала
   const allScraps = [];
   db.remainders.forEach(rec=>{
@@ -222,19 +227,24 @@ function openScrapFindModal(mat, detW, detL, needQty, pendingExpRec){
       const remaining = detW&&detL ? calcScraps(p.w, p.l, dW, dL) : [];
       const pieceQty = p.qty || 1;
       const totalFits = fits * pieceQty;
-      allScraps.push({ recId: rec.id, pi, piece: p, remaining, place, m2, dW, dL, fits, pieceQty, totalFits, fits });
+      const booked = !!(bk && p.w===bk.stripBook.w && p.l===bk.stripBook.l && (p.place||rec.place||'')===(bk.stripBook.place||''));
+      allScraps.push({ recId: rec.id, pi, piece: p, remaining, place, m2, dW, dL, fits, pieceQty, totalFits, fits, booked });
     });
   });
 
   // Сортировка: сначала подходящие (fits>0) по наименьшему остатку, потом остальные по м²
-  const fitting = allScraps.filter(m=>m.fits>0).sort((a,b)=>(a.piece.w*a.piece.l)-(b.piece.w*b.piece.l));
+  const fitting = allScraps.filter(m=>m.fits>0).sort((a,b)=>(b.booked?1:0)-(a.booked?1:0) || (a.piece.w*a.piece.l)-(b.piece.w*b.piece.l));   // забронированный — первым
   const notFitting = allScraps.filter(m=>m.fits===0).sort((a,b)=>b.m2-a.m2);
   const matches = [...fitting, ...notFitting];
 
   // Предвыбираем подходящие по плану
   if(fitting.length){
-    const {plan} = buildAllocationPlan(fitting, needQty);
-    plan.forEach(p=>scrapFindSelected.add(p.matchIdx));
+    const bi = matches.findIndex(x=>x.booked && x.fits>0);
+    if(bi>=0 && needQty<=matches[bi].totalFits) scrapFindSelected.add(bi);      // хватает забронированного обрезка — берём его
+    else {
+      const {plan} = buildAllocationPlan(fitting, needQty);
+      plan.forEach(p=>scrapFindSelected.add(p.matchIdx));
+    }
   }
 
   const desc = document.getElementById('scrap-find-desc');
@@ -271,14 +281,15 @@ function _renderScrapFindItems(matches, detW, detL){
     const remText = m.remaining.length
       ? m.remaining.map(r=>`${r.w}×${r.l} (${+(r.w*r.l/1e6).toFixed(3)} м²)`).join(', ')
       : (isFitting ? '🗑️ отход' : '');
-    const bestLabel = i===0&&isFitting ? `<span style="background:var(--glt);color:var(--green);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:6px">★ лучший</span>` : '';
+    const bookLabel = m.booked ? `<span style="background:var(--aclt);color:var(--accent-ink);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:6px">🔒 в брони</span>` : '';
+    const bestLabel = i===0&&isFitting&&!m.booked ? `<span style="background:var(--glt);color:var(--green);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:6px">★ лучший</span>` : '';
     const sepLabel = !isFitting && (i===0||matches[i-1].fits>0)
       ? `<div style="font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.07em;padding:10px 0 6px">ДРУГИЕ ОБРЕЗКИ ЭТОГО МАТЕРИАЛА</div>` : '';
     return `${sepLabel}<div class="scrap-find-item${isChecked?' selected':''}" id="sfi-${i}" onclick="toggleScrapFindItem(${i})" style="${!isFitting?'opacity:.65':''}">
       <div class="sfi-head">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1">
           <input type="checkbox" id="sfi-chk-${i}" ${isChecked?'checked':''} onchange="onScrapFindChk(${i},this.checked)" onclick="event.stopPropagation()" style="min-width:18px">
-          <span class="sfi-size">${m.piece.w}×${m.piece.l} мм${bestLabel}</span>
+          <span class="sfi-size">${m.piece.w}×${m.piece.l} мм${bookLabel}${bestLabel}</span>
         </label>
         <span style="display:flex;align-items:center;gap:6px">
           ${detArea?`<span style="font-size:11px;font-weight:800;color:${matchPct>=80?'var(--green)':matchPct>=50?'var(--accent)':'var(--muted)'}">${matchPct}%</span>`:''}

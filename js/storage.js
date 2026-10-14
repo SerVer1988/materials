@@ -60,7 +60,7 @@ function applyPayload(p){
   if(p.MATS && p.MATS.length)   MATS=p.MATS;
   if(p.SIZES && p.SIZES.length)  SIZES=p.SIZES;
   if(p.PLACES && p.PLACES.length) PLACES=p.PLACES;
-  if(p.fav) favorites=new Set(p.fav);
+  if(p.fav||p.favState) mergeFavs(p);
 }
 
 function load(){
