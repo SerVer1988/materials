@@ -25,7 +25,9 @@ function saveExpense(){
         const newDet = parseSizeStr(rec.det);
         if(rec.etype==='full' && newDet){
           // Пересчитываем обрезки из нового размера и нового qty
-          const rawPieces = calcScraps(rec.w, rec.l, newDet.w, newDet.l);
+          const cl = linkedScrap.calc ? !!linkedScrap.calc.cutLong : undefined;   // выбор «по длинной стороне» сохранён в записи обрезков
+          if(linkedScrap.calc) linkedScrap.calc = {...linkedScrap.calc, shW:rec.w, shL:rec.l, dw:newDet.w, dl:newDet.l, qty:rec.qty, mat:rec.mat};
+          const rawPieces = calcScraps(rec.w, rec.l, newDet.w, newDet.l, cl);
           if(rawPieces.length){
             linkedScrap.pieces = rawPieces.map(p=>({mat:rec.mat, w:p.w, l:p.l, qty:rec.qty, type:'scrap_add', place: linkedScrap.pieces[0]?.place||''}));
             linkedScrap.totalM2 = +linkedScrap.pieces.reduce((s,p)=>s+p.w*p.l*p.qty/1e6,0).toFixed(4);
@@ -46,7 +48,7 @@ function saveExpense(){
   rec.id=Date.now(); rec.dt=now();
   let newScrapRecId=null;
   if(etype==='full'&&det){
-    const rawPieces = calcScraps(w, l, det.w, det.l);
+    const rawPieces = calcScraps(w, l, det.w, det.l, false);   // по умолчанию разрез по короткой стороне; в окне остатков можно включить «по длинной"
     if(rawPieces.length){
       // qty обрезков = qty листов
       const pieces = rawPieces.map(p=>({mat, w:p.w, l:p.l, qty, type:'scrap_add', place:''}));
@@ -54,6 +56,7 @@ function saveExpense(){
       db.remainders.push({
         id: newScrapRecId, dt: now(), pieces,
         expenseId: rec.id, // связь с записью расхода
+        calc: {shW:w, shL:l, dw:det.w, dl:det.l, qty, mat, cutLong:false},   // исходные данные реза — для пересчёта в окне остатков
         totalM2: +pieces.reduce((s,p)=>s+p.w*p.l*qty/1e6,0).toFixed(4),
         totalPcs: pieces.length * qty, place:''
       });

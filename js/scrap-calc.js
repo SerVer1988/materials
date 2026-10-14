@@ -16,9 +16,12 @@ function squareness(w, l){
   return Math.min(w, l) / Math.max(w, l);
 }
 
-const KERF=10; // мм — ширина пропила (вычитается из остатка)
+const KERF=5; // мм — ширина пропила (вычитается из остатка)
 
-function calcScraps(shW, shL, detW, detL){
+// cutLong: true  — разрез по длинной стороне листа (остаётся полоса на всю длину листа);
+//          false — разрез по короткой стороне (остаётся полоса на всю ширину листа);
+//          не задан — автоматически, где остатки «квадратнее» (подбор обрезка под изделие).
+function calcScraps(shW, shL, detW, detL, cutLong){
   // Уменьшаем лист на пропил перед расчётом обрезков
   const effW = detW + KERF; // эффективно занятая ширина (деталь + пропил)
   const effL = detL + KERF; // эффективно занятая высота (деталь + пропил)
@@ -55,6 +58,12 @@ function calcScraps(shW, shL, detW, detL){
   const validA = validPieces(A1, A2);
   const validB = validPieces(B1, B2);
 
+  if(typeof cutLong === 'boolean'){
+    // B — полоса на всю длину (shL), A — на всю ширину (shW); «длинная» — та сторона листа, что больше
+    const longIsL = shL >= shW;
+    return (cutLong ? longIsL : !longIsL) ? validB : validA;
+  }
+
   const sqA = avgSquareness(validA);
   const sqB = avgSquareness(validB);
 
@@ -87,7 +96,7 @@ function parseDetSize(){
   const qty=parseInt(document.getElementById('out-qty').value)||1;
   if(isSheetSelected()){
     const sh=getSizeWL('out-pre');
-    const pieces=calcScraps(sh.w, sh.l, det.w, det.l);
+    const pieces=calcScraps(sh.w, sh.l, det.w, det.l, false);   // по умолчанию — разрез по короткой стороне (длинная включается в окне остатков)
     if(pieces.length){
       const totalM2PerSheet=pieces.reduce((s,p)=>s+p.w*p.l/1e6,0);
       const totalM2=totalM2PerSheet*qty;

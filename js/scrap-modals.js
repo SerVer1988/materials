@@ -19,10 +19,22 @@ function openScrapModal(recId){
     save: true
   }));
 
-  // Рендерим список кусков
+  renderScrapPiecesList();
+
+  // Галочка «Разрез по длинной стороне» — только для обрезков от целого листа (есть данные расчёта)
+  const row = document.getElementById('scrap-cutlong-row');
+  if(row) row.style.display = rec.calc ? '' : 'none';
+  const cl = document.getElementById('scrap-cutlong');
+  if(cl) cl.checked = !!(rec.calc && rec.calc.cutLong);
+
+  document.getElementById('scrap-place-modal').classList.add('show');
+}
+
+// Список кусков в окне «Остатки после реза» (из pendingScrapPieces)
+function renderScrapPiecesList(){
   const list = document.getElementById('scrap-pieces-list');
   list.innerHTML = pendingScrapPieces.map((p,i)=>{
-    const placeOpts = PLACES.map(pl=>`<option value="${pl}">${pl}</option>`).join('');
+    const placeOpts = PLACES.map(pl=>`<option value="${pl}"${pl===p.place?' selected':''}>${pl}</option>`).join('');
     const m2 = +(p.w*p.l*(p.qty||1)/1e6).toFixed(4);
     return `
     <div class="scrap-piece-item" id="spi-${i}" style="margin-bottom:12px;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs)">
@@ -54,8 +66,23 @@ function openScrapModal(recId){
       </div>
     </div>`;
   }).join('');
+}
 
-  document.getElementById('scrap-place-modal').classList.add('show');
+// Галочка «Разрез по длинной стороне»: пересчитать остатки от листа заново
+function onScrapCutLong(){
+  const rec = db.remainders.find(r=>r.id===pendingScrapRecId);
+  if(!rec || !rec.calc) return;
+  const c = rec.calc, on = !!document.getElementById('scrap-cutlong').checked;
+  const raw = calcScraps(c.shW, c.shL, c.dw, c.dl, on);
+  const prev = pendingScrapPieces;
+  pendingScrapPieces = raw.map((p,i)=>({
+    idx: i, mat: c.mat||'', w: p.w, l: p.l, qty: c.qty||1,
+    m2: +(p.w*p.l*(c.qty||1)/1e6).toFixed(4),
+    place: (prev[i] && prev[i].place) || PLACES[0] || '',
+    save: true
+  }));
+  renderScrapPiecesList();
+  if(!raw.length) toast('При таком резе остатки меньше 300 мм — это отход','info');
 }
 
 function toggleScrapPiece(i){
@@ -83,13 +110,14 @@ function saveScrapPlaces(){
         const w = wEl ? (parseInt(wEl.value)||p.w) : p.w;
         const l = lEl ? (parseInt(lEl.value)||p.l) : p.l;
         return {
-          mat: rec.pieces[p.idx]?.mat||p.mat||'',
+          mat: p.mat||rec.pieces[p.idx]?.mat||'',
           w, l, qty: p.qty||1,
           type: 'scrap_add',
           place: p.place
         };
       });
       rec.place = toSave[0].place;
+      if(rec.calc) rec.calc.cutLong = !!document.getElementById('scrap-cutlong')?.checked;
       rec.totalM2 = +rec.pieces.reduce((s,p)=>s+p.w*p.l*(p.qty||1)/1e6,0).toFixed(4);
       rec.totalPcs = rec.pieces.reduce((s,p)=>s+(p.qty||1),0);
     }
