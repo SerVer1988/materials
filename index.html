@@ -42,6 +42,13 @@
 <link rel="stylesheet" href="css/orders.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/plan.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/responsive.css?v=2026-10-13a">
+<style>
+/* Форма по «＋»: .sec-top не прокручивался и обрезал форму под нижней панелью.
+   Пока панель открыта — .sec-top занимает весь раздел, прокручивается и имеет запас под панель навигации. */
+.sec-top:has(.add-panel.open){flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
+.sec:has(.add-panel.open) .sec-body{display:none}
+.add-panel-body{padding-bottom:0 !important}
+</style>
 </head>
 <body>
 
@@ -641,17 +648,17 @@
 <script src="js/config.js?v=2026-10-13a"></script>
 <script src="js/ui.js?v=2026-10-13a"></script>
 <script src="js/theme.js?v=2026-10-13a"></script>
-<script src="js/sync.js?v=2026-10-13a"></script>
+<script src="js/sync.js?v=2026-10-13b"></script>
 <script src="js/access.js?v=2026-10-13a"></script>
-<script src="js/storage.js?v=2026-10-13a"></script>
+<script src="js/storage.js?v=2026-10-13b"></script>
 <script src="js/crud.js?v=2026-10-13a"></script>
 <script src="js/init.js?v=2026-10-13a"></script>
 <script src="js/autocomplete.js?v=2026-10-13a"></script>
 <script src="js/navigation.js?v=2026-10-13b"></script>
 <script src="js/search.js?v=2026-10-13a"></script>
-<script src="js/stock.js?v=2026-10-13a"></script>
+<script src="js/stock.js?v=2026-10-13b"></script>
 <script src="js/orders.js?v=2026-10-13b"></script>
-<script src="js/plan.js?v=2026-10-13b"></script>
+<script src="js/plan.js?v=2026-10-13c"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
 <script src="js/inbox.js?v=2026-10-13a"></script>
@@ -659,7 +666,7 @@
 <script src="js/income.js?v=2026-10-13a"></script>
 <script src="js/expense.js?v=2026-10-13b"></script>
 <script src="js/remainders.js?v=2026-10-13b"></script>
-<script src="js/scrap-modals.js?v=2026-10-13b"></script>
+<script src="js/scrap-modals.js?v=2026-10-13c"></script>
 <script src="js/selection.js?v=2026-10-13a"></script>
 <script src="js/history.js?v=2026-10-13a"></script>
 <script src="js/export.js?v=2026-10-13a"></script>
