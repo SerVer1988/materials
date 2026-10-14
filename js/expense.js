@@ -18,27 +18,53 @@ function saveExpense(){
       const oldRec = db.expense[idx];
       db.expense[idx]={...oldRec,...rec};
       if(order) ensureOrder(order);
-      // Пересчитываем связанный обрезок (если есть)
+      // ── Обрезки от этого листа ──
+      // Пересчёт только если изменилась геометрия (размер листа/изделия, кол-во, тип). Правка заказа, примечания, брака обрезки не трогает,
+      // а ручные правки в окне «Остатки после реза» не затираются.
       const expId = oldRec.id;
       const linkedScrap = db.remainders.find(r=>r.id===expId+1 || r.expenseId===expId);
-      if(linkedScrap){
-        const newDet = parseSizeStr(rec.det);
-        if(rec.etype==='full' && newDet){
-          // Пересчитываем обрезки из нового размера и нового qty
-          const cl = linkedScrap.calc ? !!linkedScrap.calc.cutLong : undefined;   // выбор «по длинной стороне» сохранён в записи обрезков
-          if(linkedScrap.calc) linkedScrap.calc = {...linkedScrap.calc, shW:rec.w, shL:rec.l, dw:newDet.w, dl:newDet.l, qty:rec.qty, mat:rec.mat};
-          const rawPieces = calcScraps(rec.w, rec.l, newDet.w, newDet.l, cl);
-          if(rawPieces.length){
-            linkedScrap.pieces = rawPieces.map(p=>({mat:rec.mat, w:p.w, l:p.l, qty:rec.qty, type:'scrap_add', place: linkedScrap.pieces[0]?.place||''}));
-            linkedScrap.totalM2 = +linkedScrap.pieces.reduce((s,p)=>s+p.w*p.l*p.qty/1e6,0).toFixed(4);
-            linkedScrap.totalPcs = linkedScrap.pieces.length * rec.qty;
+      const newDet = parseSizeStr(rec.det), oldDet = parseSizeStr(oldRec.det);
+      const geomChanged = oldRec.w!==rec.w || oldRec.l!==rec.l || oldRec.qty!==rec.qty || oldRec.etype!==rec.etype
+        || !oldDet!==!newDet || (oldDet&&newDet&&(oldDet.w!==newDet.w||oldDet.l!==newDet.l));
+      if(geomChanged){
+        if(linkedScrap){
+          // Обрезок уже пошёл в дело (есть списание кусков с такими размерами) — автоматически не пересчитываем, чтобы не сломать учёт
+          const used = db.remainders.some(r=>r.id!==linkedScrap.id && (r.pieces||[]).some(p=>p.type==='scrap_sub' && p.mat===oldRec.mat && linkedScrap.pieces.some(o=>o.w===p.w && o.l===p.l)));
+          if(used){
+            setTimeout(()=>toast('⚠️ Обрезки от этого листа уже использованы — поправьте их вручную на вкладке «Обрезки»','err'),700);
+          } else if(rec.etype==='full' && newDet){
+            const cl = linkedScrap.calc ? !!linkedScrap.calc.cutLong : undefined;   // выбор «по длинной стороне» сохранён в записи обрезков
+            if(linkedScrap.calc) linkedScrap.calc = {...linkedScrap.calc, shW:rec.w, shL:rec.l, dw:newDet.w, dl:newDet.l, qty:rec.qty, mat:rec.mat};
+            const rawPieces = calcScraps(rec.w, rec.l, newDet.w, newDet.l, cl);
+            if(rawPieces.length){
+              const prev = linkedScrap.pieces;
+              // место хранения сохраняем по каждому куску (раньше всем ставилось место первого)
+              linkedScrap.pieces = rawPieces.map((p,i)=>({mat:rec.mat, w:p.w, l:p.l, qty:rec.qty, type:'scrap_add', place:(prev[i]?.place ?? prev[0]?.place ?? '')}));
+              linkedScrap.totalM2 = +linkedScrap.pieces.reduce((s,p)=>s+p.w*p.l*p.qty/1e6,0).toFixed(4);
+              linkedScrap.totalPcs = linkedScrap.pieces.length * rec.qty;
+            } else {
+              db.remainders = softDelete(db.remainders, linkedScrap.id);      // обрезков нет (деталь слишком большая)
+            }
           } else {
-            // Обрезков нет (деталь слишком большая) — удаляем
-            db.remainders = softDelete(db.remainders, linkedScrap.id);
+            db.remainders = softDelete(db.remainders, linkedScrap.id);        // стал «из обрезка» или изделие убрали
           }
-        } else {
-          // Тип изменился на partial или нет изделия — удаляем автообрезок
-          db.remainders = softDelete(db.remainders, linkedScrap.id);
+        } else if(rec.etype==='full' && newDet){
+          // Обрезка не было, а теперь есть изделие: создаём — но только если раньше обрезков и не ожидалось
+          // (если вы удалили обрезок вручную, он не воскресает)
+          const oldHad = oldRec.etype==='full' && oldDet && calcScraps(oldRec.w, oldRec.l, oldDet.w, oldDet.l, false).length>0;
+          if(!oldHad){
+            const rawPieces = calcScraps(rec.w, rec.l, newDet.w, newDet.l, false);
+            if(rawPieces.length){
+              const pieces = rawPieces.map(p=>({mat:rec.mat, w:p.w, l:p.l, qty:rec.qty, type:'scrap_add', place:''}));
+              const newId = Date.now();
+              db.remainders.push({
+                id:newId, dt:now(), pieces, expenseId:expId,
+                calc:{shW:rec.w, shL:rec.l, dw:newDet.w, dl:newDet.l, qty:rec.qty, mat:rec.mat, cutLong:false},
+                totalM2:+pieces.reduce((s,p)=>s+p.w*p.l*rec.qty/1e6,0).toFixed(4), totalPcs:pieces.length*rec.qty, place:''
+              });
+              setTimeout(()=>openScrapModal(newId),500);      // подтвердить размеры и место хранения
+            }
+          }
         }
       }
     }
