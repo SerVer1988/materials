@@ -48,6 +48,13 @@
 .sec-top:has(.add-panel.open){flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
 .sec:has(.add-panel.open) .sec-body{display:none}
 .add-panel-body{padding-bottom:0 !important}
+/* Ревизия на складе: панель под строкой «материал + размер» */
+.stkrow.rev-able{cursor:pointer}
+.stkrow.rev-open{background:var(--card2);border-radius:var(--rs)}
+.revpanel{grid-column:1/-1;flex:0 0 100%;width:100%;margin-top:8px;padding:10px;border:1px dashed var(--border);border-radius:var(--rs);background:var(--card);cursor:default}
+.rev-info{font-size:12px;color:var(--muted);margin-bottom:8px}
+.rev-row{display:flex;gap:8px;align-items:center}
+.rev-row input{flex:1;min-width:0;text-align:center;font-size:17px;font-weight:800}
 </style>
 </head>
 <body>
@@ -656,7 +663,7 @@
 <script src="js/autocomplete.js?v=2026-10-13a"></script>
 <script src="js/navigation.js?v=2026-10-13b"></script>
 <script src="js/search.js?v=2026-10-13a"></script>
-<script src="js/stock.js?v=2026-10-13b"></script>
+<script src="js/stock.js?v=2026-10-13c"></script>
 <script src="js/orders.js?v=2026-10-13b"></script>
 <script src="js/plan.js?v=2026-10-13d"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
