@@ -75,3 +75,6 @@
 
 /* пять кнопок в нижнем меню: на узких экранах чуть меньше значки */
 @media(max-width:360px){.bnav-inner .nbtn .ni-wrap{width:44px!important;height:44px!important}.bnav-inner .nbtn svg{width:36px;height:36px}}
+.sec-body{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+.add-panel-body{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+.modal{max-height:92vh;overflow-y:auto}
