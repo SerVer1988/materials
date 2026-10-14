@@ -152,7 +152,7 @@ function renderOut(){
     return `<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">
       <td style="color:var(--muted);font-size:11px">${total-i}</td>
       <td class="c-dt">${dtCell(r.dt)}</td>
-      <td>${matChip(r.mat)}${ordTag(r.order)}${r.brak?'<div class="ord-tag" title="Списано в брак">🗑 брак</div>':''}</td>
+      <td>${matChip(r.mat)}${ordTag(r.order)}${r.brak?'<div class="ord-tag" title="Списано в брак">🗑 брак</div>':''}${r.rev?'<div class="ord-tag" title="Запись ревизии">⚖️ ревизия</div>':''}</td>
       <td class="c-sz">${sizeCell}</td>
       <td><span class="badge bout">${r.qty} л.</span></td>
       <td class="c-sz c-det">${sizeStack(normSizeStr(r.det))}</td>
