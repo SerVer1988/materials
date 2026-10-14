@@ -47,6 +47,7 @@ function calcStockDetailed(){
   return res;
 }
 function renderStock(){
+  const _revKeep=document.getElementById('rev-inp')?.value;      // не терять введённое число при перерисовке
   updatePlaceChips();
   const q=(document.getElementById('stk-s')?.value||'').toLowerCase();
   const by=calcStockDetailed(); const grid=document.getElementById('stk-grid');
@@ -73,8 +74,10 @@ function renderStock(){
       const rs=reserves[favKey]||[];
       const free=Math.max(0,s.qty-rs.reduce((t,x)=>t+x.left,0));
       const resRow=rs.length?`<div class="stkres">${rs.map(x=>`<span class="rchip" title="${escHtml(x.order)}">🔒 ${escHtml(x.order)} · ${x.left} шт</span>`).join('')}<span class="rfree">свободно ${free}</span></div>`:'';
+      const revOpen=(revKey===favKey);
+      const revPanel=revOpen?revPanelHtml(mat,s):'';
       return `
-      <div class="stkrow">
+      <div class="stkrow rev-able${revOpen?' rev-open':''}" data-k="${escHtml(favKey)}" onclick="toggleRev(this.dataset.k)">
         ${i===0
           ? `<span class="stkmat-inline">${mat}</span>`
           : `<span class="stkmat-inline" style="color:var(--muted);font-weight:600;font-size:11px;opacity:.45">${mat}</span>`}
@@ -84,10 +87,67 @@ function renderStock(){
           <span class="res ${s.qty===0?'zero':s.qty<=2?'low':''}">${s.qty}шт</span>
         </span>
         <button class="star-btn" onclick="event.stopPropagation();toggleFav('${mat.replace(/'/g,"\\'")}','${s.size.replace(/'/g,"\\'")}')">${starSvg(isFavRow)}</button>
-        ${resRow}
+        ${resRow}${revPanel}
       </div>`;
     }).join('');
     return `<div class="stkcard ${anyFav?'fav':''}">${rows}</div>`;
   }).filter(Boolean).join('');
   if(!grid.innerHTML) grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';
+  const _ri=document.getElementById('rev-inp');
+  if(_ri){ if(_revKeep!==undefined&&_revKeep!=='') _ri.value=_revKeep; if(revJustOpened){ revJustOpened=false; _ri.focus(); _ri.select(); } }
+}
+
+// ══════════════════════════════════════ РЕВИЗИЯ
+// Тап по строке «материал + размер» открывает панель: ввести фактическое количество → «Применить».
+// Расхождение записывается в Учёт: больше факта в программе — расход «Ревизия», меньше — приход «Ревизия» (rev:true).
+// Склад по-прежнему считается только из прихода и расхода.
+let revKey=null, revJustOpened=false;
+function toggleRev(key){
+  revKey=(revKey===key)?null:key; revJustOpened=!!revKey;
+  renderStock();
+}
+function revLast(mat,size){
+  let best=null;
+  [...db.income,...db.expense].forEach(r=>{ if(r.rev&&r.mat===mat&&r.size===size&&(!best||r.id>best.id)) best=r; });
+  return best;
+}
+function revPanelHtml(mat,s){
+  const key=`${mat}||${s.size}`;
+  const rs=(calcReserves()[key]||[]).reduce((t,x)=>t+x.left,0);
+  const last=revLast(mat,s.size);
+  return `<div class="revpanel" onclick="event.stopPropagation()">
+    <div class="rev-info">В программе: <b>${s.qty} шт</b>${rs?` · в брони под заказы: <b>${rs}</b>`:''}${last?` · последняя ревизия: ${escHtml(String(last.dt).split(' ')[0])}`:''}</div>
+    <div class="rev-row">
+      <button class="btn bdng bsm" onclick="revZero()">Обнулить</button>
+      <input type="number" id="rev-inp" inputmode="numeric" min="0" step="1" value="${s.qty}" placeholder="Факт, шт">
+      <button class="btn bprim bsm" onclick="revApply()">Применить</button>
+    </div>
+  </div>`;
+}
+function revZero(){ const i=document.getElementById('rev-inp'); if(i){ i.value=0; revApply(); } }
+function revApply(){
+  if(!revKey) return;
+  const [mat,size]=revKey.split('||');
+  const fact=parseInt(document.getElementById('rev-inp')?.value,10);
+  if(isNaN(fact)||fact<0){ toast('Введите количество: 0 или больше','err'); return; }
+  const row=(calcStockDetailed()[mat]||[]).find(x=>x.size===size);
+  const cur=row?row.qty:0, diff=fact-cur;
+  if(diff===0){ toast('Количество совпадает — менять нечего','info'); revKey=null; renderStock(); return; }
+  const rs=(calcReserves()[revKey]||[]).reduce((t,x)=>t+x.left,0);
+  let txt=`${mat} · ${size}\nВ программе: ${cur} шт → по факту: ${fact} шт\n`+(diff>0?`В Учёт запишется приход +${diff} («Ревизия»).`:`В Учёт запишется расход −${-diff} («Ревизия»).`);
+  if(fact<rs) txt+=`\n⚠️ В брони под заказы ${rs} шт — больше, чем по факту.`;
+  askDialog(txt,'Применить','Отмена','bprim',()=>revCommit(mat,size,diff,fact),null);
+}
+function revCommit(mat,size,diff,fact){
+  const sz=parseSizeStr(size)||{w:0,l:0};
+  const rec={id:Date.now(),dt:now(),mat,size,w:sz.w,l:sz.l,qty:Math.abs(diff),order:'',rev:true,note:`Ревизия: ${fact} листов`};
+  if(diff>0){
+    // место — как у последнего прихода этого материала и размера, иначе первое из списка
+    const lastIn=[...db.income].reverse().find(r=>r.mat===mat&&r.size===size&&r.place);
+    db.income.push({...rec,place:lastIn?lastIn.place:(PLACES[0]||'')});
+  } else {
+    db.expense.push({...rec,etype:'full',det:''});
+  }
+  revKey=null; save(); renderAll();
+  toast(`⚖️ Ревизия записана: ${mat} ${size} — ${fact} шт`,'ok');
 }
