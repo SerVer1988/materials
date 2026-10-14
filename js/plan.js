@@ -219,22 +219,27 @@ function findStripScraps(mat,w,l,skipId){
 function planLineInfo(line,ctx){
   const k=`${line.mat}||${line.size}`, rk=`${line.order}||${k}`;
   const booked=line.booked||0;
-  const take=Math.min(Math.max(0,line.qty-booked),ctx.recv[rk]||0);
-  ctx.recv[rk]=(ctx.recv[rk]||0)-take;
-  const received=take, toBuy=Math.max(0,line.qty-booked-received);
-  const stock=ctx.stockQ[k]||0, reserved=(ctx.res[k]||[]).reduce((s,x)=>s+x.left,0);
-  const free=Math.max(0,stock-reserved);
   const hasStrip=line.stripW>0&&line.stripL>0;
   const stripDone=hasStrip&&isStripDone(line);
   const scraps=hasStrip&&!stripDone?findStripScraps(line.mat,line.stripW,line.stripL,line.id):[];
   const stripBooked=hasStrip&&!stripDone&&!!line.stripBook;
   const canBookStrip=scraps.length>0&&!stripBooked;
-  const covered=line.qty>0&&toBuy===0;
+  // Строка только из полосы (0 шт + 495×1138): если подходящего обрезка нет — на неё нужен целый лист.
+  // Он попадает в «к закупке», а при «Получено» оформляется в приход. Если лист уже пришёл или забронирован из наличия — потребность сохраняется.
+  const recvAvail=ctx.recv[rk]||0;
+  const needSheet=line.qty===0&&hasStrip&&!stripDone&&!stripBooked&&(scraps.length===0||recvAvail>0||booked>0);
+  const qtyEff=line.qty+(needSheet?1:0);
+  const take=Math.min(Math.max(0,qtyEff-booked),recvAvail);
+  ctx.recv[rk]=recvAvail-take;
+  const received=take, toBuy=Math.max(0,qtyEff-booked-received);
+  const stock=ctx.stockQ[k]||0, reserved=(ctx.res[k]||[]).reduce((s,x)=>s+x.left,0);
+  const free=Math.max(0,stock-reserved);
+  const covered=qtyEff>0&&toBuy===0;
   let status=covered||line.status==='received'?'received':(line.status==='ordered'?'ordered':'buy');
   if(line.qty===0&&hasStrip&&(stripDone||stripBooked)) status='received';     // строка только из полосы: обрезок в брони или полоса вырезана
   // «Готово» — всё по строке закрыто и мешать не должно: листы получены/забронированы, полоса вырезана или обрезок забронирован
   const done=status==='received'&&(!hasStrip||stripDone||stripBooked);
-  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done};
+  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done,needSheet};
 }
 
 // ── Получено → добавить в приход ──
@@ -325,6 +330,7 @@ function planRowHtml(l,f){
   let avail=`На складе свободно: <b>${f.free} шт</b>`;
   if(f.booked) avail+=` · в брони из наличия <b>${f.booked}</b>`;
   if(f.received) avail+=` · получено под заказ <b>${f.received}</b>`;
+  if(f.needSheet) avail+=` · на полосу нужен целый лист`;
   avail+=` · <b>к закупке: ${f.toBuy} шт</b>`;
   let strip='';
   if(f.hasStrip){
