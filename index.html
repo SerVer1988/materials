@@ -569,6 +569,9 @@
     <p style="color:var(--muted);font-size:12px;margin-bottom:14px;line-height:1.5">
       Проверьте и при необходимости скорректируйте размеры, укажите место хранения
     </p>
+    <div id="scrap-cutlong-row" style="display:none;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:14px;font-weight:700"><input type="checkbox" id="scrap-cutlong" style="width:20px;height:20px;flex:none;margin:0" onchange="onScrapCutLong()"> Разрез по длинной стороне</label>
+    </div>
     <div id="scrap-pieces-list"></div>
     <button class="btn bprim bfull" onclick="saveScrapPlaces()" style="margin-top:10px;margin-bottom:9px">✅ Сохранить обрезки</button>
     <button class="btn bghost bfull" onclick="closeScrapModal()">Пропустить всё</button>
@@ -652,11 +655,11 @@
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
 <script src="js/inbox.js?v=2026-10-13a"></script>
-<script src="js/scrap-calc.js?v=2026-10-13a"></script>
+<script src="js/scrap-calc.js?v=2026-10-13b"></script>
 <script src="js/income.js?v=2026-10-13a"></script>
 <script src="js/expense.js?v=2026-10-13b"></script>
 <script src="js/remainders.js?v=2026-10-13b"></script>
-<script src="js/scrap-modals.js?v=2026-10-13a"></script>
+<script src="js/scrap-modals.js?v=2026-10-13b"></script>
 <script src="js/selection.js?v=2026-10-13a"></script>
 <script src="js/history.js?v=2026-10-13a"></script>
 <script src="js/export.js?v=2026-10-13a"></script>
