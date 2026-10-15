@@ -178,13 +178,16 @@ function planContext(){
   Object.keys(by).forEach(m=>by[m].forEach(s=>{ stockQ[`${m}||${s.size}`]=s.qty; }));
   const res=calcReserves(), recv={};
   db.income.forEach(r=>{ if(r.order){ const k=`${r.order}||${r.mat}||${r.size}`; recv[k]=(recv[k]||0)+r.qty; } });
-  return {stockQ,res,recv};
+  // Листы, списанные в БРАК под заказ: по заказу они снова нужны (замена) — строка Плана возвращается в «к закупке»
+  const brak={};
+  db.expense.forEach(r=>{ if(r.brak&&r.order&&(r.etype==='full'||!r.etype)){ const k=`${r.order}||${r.mat}||${r.size}`; brak[k]=(brak[k]||0)+r.qty; } });
+  return {stockQ,res,recv,brak};
 }
 // Полоса уже вырезана (есть расход по этому заказу и материалу с размером изделия = полосе)
 function isStripDone(l){
   if(!(l.stripW>0&&l.stripL>0)) return false;
   const d={w:l.stripW,l:l.stripL};
-  return db.expense.some(e=>e.order===l.order&&e.mat===l.mat&&e.det&&sameDims(parseSizeStr(e.det),d));
+  return db.expense.some(e=>!e.brak&&e.order===l.order&&e.mat===l.mat&&e.det&&sameDims(parseSizeStr(e.det),d));
 }
 // Действующие брони обрезков: открытые заказы, полоса ещё не вырезана
 function activeStripBooks(){
@@ -228,18 +231,20 @@ function planLineInfo(line,ctx){
   // Он попадает в «к закупке», а при «Получено» оформляется в приход. Если лист уже пришёл или забронирован из наличия — потребность сохраняется.
   const recvAvail=ctx.recv[rk]||0;
   const needSheet=line.qty===0&&hasStrip&&!stripDone&&!stripBooked&&(scraps.length===0||recvAvail>0||booked>0);
-  const qtyEff=line.qty+(needSheet?1:0);
+  const brakQty=(ctx.brak&&ctx.brak[rk])||0;                  // брак под этот заказ: нужна замена (учитывается первой подходящей строкой)
+  if(brakQty) ctx.brak[rk]=0;
+  const qtyEff=line.qty+brakQty+(needSheet?1:0);
   const take=Math.min(Math.max(0,qtyEff-booked),recvAvail);
   ctx.recv[rk]=recvAvail-take;
   const received=take, toBuy=Math.max(0,qtyEff-booked-received);
   const stock=ctx.stockQ[k]||0, reserved=(ctx.res[k]||[]).reduce((s,x)=>s+x.left,0);
   const free=Math.max(0,stock-reserved);
   const covered=qtyEff>0&&toBuy===0;
-  let status=covered||line.status==='received'?'received':(line.status==='ordered'?'ordered':'buy');
+  let status=covered||(line.status==='received'&&toBuy===0)?'received':(line.status==='ordered'?'ordered':'buy');
   if(line.qty===0&&hasStrip&&(stripDone||stripBooked)) status='received';     // строка только из полосы: обрезок в брони или полоса вырезана
   // «Готово» — всё по строке закрыто и мешать не должно: листы получены/забронированы, полоса вырезана или обрезок забронирован
   const done=status==='received'&&(!hasStrip||stripDone||stripBooked);
-  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done,needSheet};
+  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done,needSheet,brakQty};
 }
 
 // ── Получено → добавить в приход ──
@@ -331,6 +336,7 @@ function planRowHtml(l,f){
   if(f.booked) avail+=` · в брони из наличия <b>${f.booked}</b>`;
   if(f.received) avail+=` · получено под заказ <b>${f.received}</b>`;
   if(f.needSheet) avail+=` · на полосу нужен целый лист`;
+  if(f.brakQty) avail+=` · брак: <b>${f.brakQty}</b> (нужна замена)`;
   avail+=` · <b>к закупке: ${f.toBuy} шт</b>`;
   let strip='';
   if(f.hasStrip){
