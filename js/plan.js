@@ -121,7 +121,9 @@ function stripBuyDims(l){
 }
 
 // ── Добавление строк (с проверкой повторов) ──
-function addPlanFromText(order,text,baseId){
+// auto=true — заявка из CorelDRAW: без вопросов. Если заказа нет — создаётся новый со всеми строками;
+// если есть — добавляются только строки, которых в заказе ещё нет (материал + лист + размер полосы). Повторная отправка дублей не даёт.
+function addPlanFromText(order,text,baseId,auto){
   order=String(order||'').trim().replace(/\s+/g,' ');
   if(!order){ const m=String(text).match(/Заказ\s*№?\s*([^\s:,]+)/i); order=m?m[1]:''; }
   if(!order){ toast('Укажите заказ','err'); return false; }
@@ -132,13 +134,21 @@ function addPlanFromText(order,text,baseId){
   let lines=parsed.map((p,i)=>({id:base+i,order,mat:canonMat(p.mat),size:fmtSheet(p.w,p.l),w:p.w,l:p.l,qty:p.qty,stripW:p.sw,stripL:p.sl,blocks:p.blocks||null,frac:p.frac||null,noFit:!!p.noFit,status:'buy',booked:0,created:now()}));
   lines=lines.filter(l=>!db.plan.some(x=>x.id===l.id));          // уже добавлено (с другого устройства)
   if(!lines.length) return false;
+  const isNewOrder=!db.plan.some(x=>x.order===order)&&!ordersList().some(o=>o.key===order);
+  if(auto){
+    const lineKey=l=>[l.mat,l.w+'x'+l.l,l.stripW||0,l.stripL||0].join('|');
+    const have=new Set(db.plan.filter(x=>x.order===order).map(lineKey));
+    lines=lines.filter(l=>{ const k=lineKey(l); if(have.has(k)) return false; have.add(k); return true; });
+    if(!lines.length){ toast(`Заказ ${order}: все материалы уже в плане`,'info'); return false; }
+  }
   const repeats=lines.filter(l=>db.plan.some(x=>x.order===order&&x.mat===l.mat));
   const commit=list=>{
     if(!list.length){ toast('Повторы пропущены, новых строк нет','info'); return; }
     list.forEach(l=>db.plan.push(l)); ensureOrder(order);
-    save(); renderAll();
-    toast(`📋 В план добавлено строк: ${list.length} (заказ ${order})`,'ok');
+    save(); fillOrderSelects(); renderAll();
+    toast(auto?(isNewOrder?`🆕 Новый заказ ${order}: строк ${list.length}`:`➕ В заказ ${order} добавлено строк: ${list.length}`):`📋 В план добавлено строк: ${list.length} (заказ ${order})`,'ok');
   };
+  if(auto){ commit(lines); return true; }
   if(repeats.length){
     const desc=repeats.map(l=>`• ${l.mat} — ${l.size} — ${l.qty} шт`+(l.stripW?` + ${l.stripW}×${l.stripL}`:'')).join('\n');
     askDialog(`По заказу ${order} эти материалы уже есть в плане:\n${desc}\n\nВсё равно добавить?`,'Всё равно добавить','Пропустить повторы','bprim',
@@ -169,7 +179,7 @@ function handleInboxPlan(p){
   if(isNaN(age)||age>PLAN_MAX_AGE) return;
   const baseId=(parseInt(String(p.id).replace(/\D/g,'').slice(-12),10)||0)*100;  // одинаковые id на всех устройствах → нет дублей
   go('plan',document.getElementById('nbtn-plan'));
-  addPlanFromText(p.order||'',p.text||'',baseId||undefined);
+  addPlanFromText(p.order||'',p.text||'',baseId||undefined,true);
 }
 
 // ── Расчёт по строке ──
