@@ -178,12 +178,11 @@ function planContext(){
   Object.keys(by).forEach(m=>by[m].forEach(s=>{ stockQ[`${m}||${s.size}`]=s.qty; }));
   const res=calcReserves(), recv={};
   db.income.forEach(r=>{ if(r.order){ const k=`${r.order}||${r.mat}||${r.size}`; recv[k]=(recv[k]||0)+r.qty; } });
-  // Листы, списанные в БРАК под заказ: по заказу они снова нужны (замена) — строка Плана возвращается в «к закупке»
-  const brak={};
-  db.expense.forEach(r=>{ if(r.brak&&r.order&&(r.etype==='full'||!r.etype)){ const k=`${r.order}||${r.mat}||${r.size}`; brak[k]=(brak[k]||0)+r.qty; } });
-  return {stockQ,res,recv,brak};
+  return {stockQ,res,recv};
 }
-// Полоса уже вырезана (есть расход по этому заказу и материалу с размером изделия = полосе)
+// Строки Плана (кроме автосозданных из брака, если запись брака удалена или снята)
+function planAll(){ return (db.plan||[]).filter(x=>!x.fromBrak||db.expense.some(e=>e.id===x.fromBrak&&e.brak)); }
+// Полоса уже вырезана (есть расход по этому заказу и материалу с размером изделия = полосе). Брак не в счёт — деталь надо резать заново.
 function isStripDone(l){
   if(!(l.stripW>0&&l.stripL>0)) return false;
   const d={w:l.stripW,l:l.stripL};
@@ -192,7 +191,7 @@ function isStripDone(l){
 // Действующие брони обрезков: открытые заказы, полоса ещё не вырезана
 function activeStripBooks(){
   const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
-  return (db.plan||[]).filter(x=>x.stripBook&&!closed.has(x.order)&&!isStripDone(x));
+  return planAll().filter(x=>x.stripBook&&!closed.has(x.order)&&!isStripDone(x));
 }
 // Для раздела «Склад → Обрезки»: ключ «материал||ШxД||место» → [заказы, где обрезок в брони]
 function scrapBookingsMap(){
@@ -231,9 +230,7 @@ function planLineInfo(line,ctx){
   // Он попадает в «к закупке», а при «Получено» оформляется в приход. Если лист уже пришёл или забронирован из наличия — потребность сохраняется.
   const recvAvail=ctx.recv[rk]||0;
   const needSheet=line.qty===0&&hasStrip&&!stripDone&&!stripBooked&&(scraps.length===0||recvAvail>0||booked>0);
-  const brakQty=(ctx.brak&&ctx.brak[rk])||0;                  // брак под этот заказ: нужна замена (учитывается первой подходящей строкой)
-  if(brakQty) ctx.brak[rk]=0;
-  const qtyEff=line.qty+brakQty+(needSheet?1:0);
+  const qtyEff=line.qty+(needSheet?1:0);
   const take=Math.min(Math.max(0,qtyEff-booked),recvAvail);
   ctx.recv[rk]=recvAvail-take;
   const received=take, toBuy=Math.max(0,qtyEff-booked-received);
@@ -244,7 +241,7 @@ function planLineInfo(line,ctx){
   if(line.qty===0&&hasStrip&&(stripDone||stripBooked)) status='received';     // строка только из полосы: обрезок в брони или полоса вырезана
   // «Готово» — всё по строке закрыто и мешать не должно: листы получены/забронированы, полоса вырезана или обрезок забронирован
   const done=status==='received'&&(!hasStrip||stripDone||stripBooked);
-  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done,needSheet,brakQty};
+  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done,needSheet};
 }
 
 // ── Получено → добавить в приход ──
@@ -336,7 +333,6 @@ function planRowHtml(l,f){
   if(f.booked) avail+=` · в брони из наличия <b>${f.booked}</b>`;
   if(f.received) avail+=` · получено под заказ <b>${f.received}</b>`;
   if(f.needSheet) avail+=` · на полосу нужен целый лист`;
-  if(f.brakQty) avail+=` · брак: <b>${f.brakQty}</b> (нужна замена)`;
   avail+=` · <b>к закупке: ${f.toBuy} шт</b>`;
   let strip='';
   if(f.hasStrip){
@@ -374,7 +370,7 @@ function renderPlan(){
   const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
   const q=(document.getElementById('plan-s')?.value||'').trim().toLowerCase();
   const ctx=planContext();
-  const lines=[...(db.plan||[])].sort((a,b)=>a.id-b.id);
+  const lines=planAll().sort((a,b)=>a.id-b.id);
   const infos=new Map(); lines.forEach(l=>infos.set(l.id,planLineInfo(l,ctx)));   // порядок важен: распределение полученных листов
   const stages=calcOrderStages();
   const orders=[...new Set(lines.map(l=>l.order))]

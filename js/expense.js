@@ -17,6 +17,7 @@ function saveExpense(){
     if(idx>=0){
       const oldRec = db.expense[idx];
       db.expense[idx]={...oldRec,...rec};
+      syncBrakPlan(db.expense[idx]);                       // брак поставили/сняли — строка возврата детали в Плане
       if(order) ensureOrder(order);
       // ── Обрезки от этого листа ──
       // Пересчёт только если изменилась геометрия (размер листа/изделия, кол-во, тип). Правка заказа, примечания, брака обрезки не трогает,
@@ -97,6 +98,27 @@ function saveExpense(){
   _commitExpense(rec);
   toast('📤 Расход записан','ok');
   if(newScrapRecId) setTimeout(()=>openScrapModal(newScrapRecId),400);
+}
+// Брак детали: материал списан как обычно, а сама деталь возвращается в заказ — в Плане появляется строка на повторную вырезку
+// (точный размер детали; под него сначала ищется обрезок, иначе нужен лист). Если по заказу уже есть строка на эту деталь —
+// она сама вернётся в работу (брак не считается вырезанной деталью), дубль не создаётся. Брак снят/запись удалена — строка исчезает.
+function syncBrakPlan(rec){
+  if(!db.plan) db.plan=[];
+  const det=parseSizeStr(rec.det);
+  const want=!!(rec.brak&&rec.order&&det);
+  const auto=db.plan.find(x=>x.fromBrak===rec.id);
+  if(!want){ if(auto) db.plan=softDelete(db.plan,auto.id); return; }
+  const exists=db.plan.some(x=>x!==auto&&x.order===rec.order&&x.mat===rec.mat&&x.stripW>0&&sameDims({w:x.stripW,l:x.stripL},det));
+  if(exists){ if(auto) db.plan=softDelete(db.plan,auto.id); return; }
+  let w=rec.w, l=rec.l;
+  if(!(w>0&&l>0)){                                           // расход «из обрезка» — лист подбираем по размеру детали
+    const pb=placeBlock(rec.mat,det.w,det.l);
+    if(pb){ w=pb.sh.w; l=pb.sh.l; } else { const s=SIZES.map(parseSizeStr).filter(Boolean)[0]||{w:1220,l:2440}; w=s.w; l=s.l; }
+  }
+  const fields={order:rec.order,mat:rec.mat,size:fmtSheet(w,l),w,l,qty:0,stripW:det.w,stripL:det.l};
+  if(auto) Object.assign(auto,fields);
+  else db.plan.push({id:Date.now()+1,...fields,blocks:null,frac:null,noFit:false,status:'buy',booked:0,created:now(),fromBrak:rec.id});
+  ensureOrder(rec.order);
 }
 function editExpense(id){
   const r=db.expense.find(x=>x.id===id); if(!r) return;

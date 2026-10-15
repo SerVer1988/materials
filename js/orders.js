@@ -1,7 +1,8 @@
 window.__B=window.__B||{};__B['orders']='2026-10-13a';
 // ▸ orders.js — Заказы: бронь листов под заказ (vs запас), раздел «Заказы», закрытие заказа
 // Заказ — строка вида «9-08-77_Талан» (номер_заказчик). В приходе и расходе хранится в поле order.
-// Бронь = листы, пришедшие «под заказ», минус листы, уже израсходованные на этот заказ (и списанные в брак). Закрытый заказ бронь не держит.
+// Бронь = листы, пришедшие «под заказ», минус листы, уже израсходованные на этот заказ. Закрытый заказ бронь не держит.
+// Брак: списывается только испорченная ДЕТАЛЬ (материал списан как обычно); деталь возвращается в заказ — в Плане появляется строка на повторную вырезку.
 // Единый статус заказа (считается сам, руками меняется только «Закрыт»): План → Заказано → Получено → В работе → Закрыт
 let ordersFilter='open';      // open | closed | all
 const ordersOpen=new Set();   // раскрытые карточки
@@ -67,7 +68,7 @@ const ORDER_STAGE={plan:['info','План'],ordered:['info','Заказано'],
 const stageTag=st=>{ const s=ORDER_STAGE[st]||ORDER_STAGE.plan; return `<span class="ostat ${s[0]}">${s[1]}</span>`; };
 function calcOrderStages(){
   const out=new Map(), ctx=planContext(), by=new Map();
-  [...(db.plan||[])].sort((a,b)=>a.id-b.id).forEach(l=>{
+  planAll().sort((a,b)=>a.id-b.id).forEach(l=>{
     const f=planLineInfo(l,ctx);
     if(!by.has(l.order)) by.set(l.order,[]);
     by.get(l.order).push(f);
@@ -94,18 +95,19 @@ function calcOrderStages(){
 // ── Расчёт по заказам ──
 function calcOrderData(){
   const res=new Map();
-  const get=key=>{ if(!res.has(key)) res.set(key,{pos:new Map(),detFull:0,detScrap:0,expCount:0}); return res.get(key); };
-  const pos=(o,mat,size,w,l)=>{ const k=`${mat}||${size}`; if(!o.pos.has(k)) o.pos.set(k,{mat,size,w:w||0,l:l||0,got:0,used:0,brak:0}); return o.pos.get(k); };
+  const get=key=>{ if(!res.has(key)) res.set(key,{pos:new Map(),detFull:0,detScrap:0,expCount:0,brakM2:0,brakCount:0}); return res.get(key); };
+  const pos=(o,mat,size,w,l)=>{ const k=`${mat}||${size}`; if(!o.pos.has(k)) o.pos.set(k,{mat,size,w:w||0,l:l||0,got:0,used:0}); return o.pos.get(k); };
   db.income.forEach(r=>{ if(r.order) pos(get(r.order),r.mat,r.size,r.w,r.l).got+=r.qty; });
-  (db.plan||[]).forEach(l=>{ if(l.booked>0) pos(get(l.order),l.mat,l.size,l.w,l.l).got+=l.booked; });   // забронировано из наличия (раздел ПЛАН)
+  planAll().forEach(l=>{ if(l.booked>0) pos(get(l.order),l.mat,l.size,l.w,l.l).got+=l.booked; });   // забронировано из наличия (раздел ПЛАН)
   db.expense.forEach(r=>{
     if(!r.order) return;
     const o=get(r.order); o.expCount++;
     const full=(r.etype==='full'||!r.etype);
-    if(r.brak){ if(full) pos(o,r.mat,r.size,r.w,r.l).brak+=r.qty; return; }   // брак: лист ушёл, но «израсходовано» по заказу не засчитывается
     const dd=parseSizeStr(r.det||'');
     const a=dd?dd.w*dd.l*r.qty/1e6:0;
-    if(full){ pos(o,r.mat,r.size,r.w,r.l).used+=r.qty; o.detFull+=a; } else o.detScrap+=a;
+    if(full) pos(o,r.mat,r.size,r.w,r.l).used+=r.qty;            // материал списан в любом случае
+    if(r.brak){ o.brakM2+=a; o.brakCount+=r.qty; }                // деталь испорчена — в «изделия» не идёт, вернулась в заказ
+    else if(full) o.detFull+=a; else o.detScrap+=a;
   });
   return res;
 }
@@ -114,13 +116,13 @@ function calcReserves(){
   const data=calcOrderData(), open=new Set(ordersList().filter(o=>o.status==='open').map(o=>o.key)), out={};
   data.forEach((o,key)=>{
     if(!open.has(key)) return;
-    o.pos.forEach((p,k)=>{ const left=p.got-p.used-p.brak; if(left>0){ (out[k]=out[k]||[]).push({order:key,left}); } });
+    o.pos.forEach((p,k)=>{ const left=p.got-p.used; if(left>0){ (out[k]=out[k]||[]).push({order:key,left}); } });
   });
   return out;
 }
 function orderPosBalance(key,mat,size){
   const o=calcOrderData().get(key); const p=o&&o.pos.get(`${mat}||${size}`);
-  return p?p.got-p.used-p.brak:0;
+  return p?p.got-p.used:0;
 }
 function orderShortageHint(rec){
   if(!rec.order || !(rec.etype==='full'||!rec.etype)) return;
@@ -182,15 +184,15 @@ function createOrder(key){
 }
 function closeOrder(i){
   const key=window.__ordKeys[i]; const o=calcOrderData().get(key);
-  const left=o?[...o.pos.values()].reduce((s,p)=>s+Math.max(0,p.got-p.used-p.brak),0):0;
+  const left=o?[...o.pos.values()].reduce((s,p)=>s+Math.max(0,p.got-p.used),0):0;
   confirm2(`Закрыть заказ ${key}?`+(left?` Неизрасходованная бронь (${left} шт.) вернётся в запас.`:''),()=>{ setOrderStatus(key,'closed'); toast('🔒 Заказ закрыт','ok'); });
 }
 function reopenOrder(i){ setOrderStatus(window.__ordKeys[i],'open'); toast('Заказ открыт снова','ok'); }
 
 function orderTotals(o){
-  let got=0,used=0,brak=0,gotM2=0,usedM2=0,brakM2=0;
-  o.pos.forEach(p=>{ got+=p.got; used+=p.used; brak+=p.brak||0; gotM2+=p.got*p.w*p.l/1e6; usedM2+=p.used*p.w*p.l/1e6; brakM2+=(p.brak||0)*p.w*p.l/1e6; });
-  return {got,used,brak,diff:got-used-brak,gotM2,usedM2,brakM2,diffM2:gotM2-usedM2-brakM2};
+  let got=0,used=0,gotM2=0,usedM2=0;
+  o.pos.forEach(p=>{ got+=p.got; used+=p.used; gotM2+=p.got*p.w*p.l/1e6; usedM2+=p.used*p.w*p.l/1e6; });
+  return {got,used,diff:got-used,gotM2,usedM2,diffM2:gotM2-usedM2};
 }
 function diffLabel(diff,status,unit){
   if(diff===0) return `<span class="ostat ok">ровно</span>`;
@@ -213,7 +215,7 @@ function renderOrders(){
     ords.forEach(o=>{ const t=orderTotals(data.get(o.key)||{pos:new Map()}); gg+=t.got; gu+=t.used; });
     html+=`<div class="ogroup"><span>${escHtml(cust)}</span><span class="ogroup-sum">${ords.length} зак. · листов ${gu} из ${gg}</span></div>`;
     ords.forEach(o=>{
-      const d=data.get(o.key)||{pos:new Map(),detFull:0,detScrap:0,expCount:0};
+      const d=data.get(o.key)||{pos:new Map(),detFull:0,detScrap:0,expCount:0,brakM2:0,brakCount:0};
       const t=orderTotals(d), idx=keys.length; keys.push(o.key);
       const open=ordersOpen.has(o.key);
       const status=stageTag(stages.get(o.key));
@@ -222,12 +224,13 @@ function renderOrders(){
         const rows=[...d.pos.values()].sort((a,b)=>a.mat.localeCompare(b.mat,'ru')).map(p=>`
           <div class="opos">
             <div class="opos-name">${escHtml(p.mat)} <span class="opos-sz">${escHtml(p.size)}</span></div>
-            <div class="opos-nums"><span>заказано <b>${p.got}</b></span><span>израсходовано <b>${p.used}</b></span>${p.brak?`<span>брак <b>${p.brak}</b></span>`:''}${diffLabel(p.got-p.used-p.brak,o.status,n=>n+' шт.')}</div>
+            <div class="opos-nums"><span>заказано <b>${p.got}</b></span><span>израсходовано <b>${p.used}</b></span>${diffLabel(p.got-p.used,o.status,n=>n+' шт.')}</div>
           </div>`).join('')||'<div class="opos-empty">Под этот заказ листы ещё не приходили</div>';
         const detTotal=d.detFull+d.detScrap, waste=t.usedM2-d.detFull;
         body=`<div class="obody">${rows}
           <div class="oarea">
-            <div>Площадь: заказано <b>${m2fmt(t.gotM2)} м²</b> · израсходовано <b>${m2fmt(t.usedM2)} м²</b>${t.brakM2>0?` · брак <b>${m2fmt(t.brakM2)} м²</b>`:''} ${diffLabel(Math.round(t.diffM2*100)/100,o.status,n=>m2fmt(n)+' м²')}</div>
+            <div>Площадь: заказано <b>${m2fmt(t.gotM2)} м²</b> · израсходовано <b>${m2fmt(t.usedM2)} м²</b> ${diffLabel(Math.round(t.diffM2*100)/100,o.status,n=>m2fmt(n)+' м²')}</div>
+            ${d.brakCount?`<div>🗑 Брак деталей: <b>${d.brakCount}</b> шт · ${m2fmt(d.brakM2)} м² — вернулись в заказ (строка в Плане)</div>`:''}
             <div>Изделия: <b>${m2fmt(detTotal)} м²</b> (из листов ${m2fmt(d.detFull)} · из обрезков ${m2fmt(d.detScrap)})${d.detFull>0&&t.usedM2>0?` · в обрезки/отходы листов ≈ <b>${m2fmt(Math.max(0,waste))} м²</b>`:''}</div>
           </div>
           <div class="oactions">${o.status==='closed'?`<button class="btn bghost" onclick="reopenOrder(${idx})">↩️ Открыть снова</button>`:`<button class="btn bprim" onclick="closeOrder(${idx})">✅ Закрыть заказ</button>`}<button class="btn bdng odel" onclick="deleteOrder(${idx})" title="Удалить заказ">🗑 Удалить</button></div>
@@ -236,7 +239,7 @@ function renderOrders(){
       html+=`<div class="ocard ${o.status==='closed'?'is-closed':''}">
         <div class="ohead" onclick="toggleOrderCard(${idx})">
           <div class="otitle"><b>${escHtml(o.no)}</b>${o.customer?` <span class="ocust">${escHtml(o.customer)}</span>`:''} ${status}</div>
-          <div class="osum">листов: заказано <b>${t.got}</b> · израсходовано <b>${t.used}</b>${t.brak?` · брак <b>${t.brak}</b>`:''} ${diffLabel(t.diff,o.status,n=>n+' шт.')}</div>
+          <div class="osum">листов: заказано <b>${t.got}</b> · израсходовано <b>${t.used}</b>${d.brakCount?` · брак деталей <b>${d.brakCount}</b>`:''} ${diffLabel(t.diff,o.status,n=>n+' шт.')}</div>
           <span class="ochev">${open?'▲':'▼'}</span>
         </div>${body}</div>`;
     });

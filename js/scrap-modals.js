@@ -327,6 +327,7 @@ function _commitExpense(rec){
   db.expense.push(rec);
   if(rec.order) ensureOrder(rec.order);
   lastOutMat = rec.mat;
+  if(typeof syncBrakPlan==='function') syncBrakPlan(rec);     // брак детали → строка возврата в Плане
   save(); renderAll();
   document.getElementById('out-mat').value='';
   ['out-det','out-note'].forEach(id=>document.getElementById(id).value='');
