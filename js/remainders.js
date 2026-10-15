@@ -231,9 +231,8 @@ function renderRemByMat(){
           id="pr-${p.recId}-${p.pi}"
           data-recid="${p.recId}" data-pi="${p.pi}">
         <span class="sel-check">${isSel?'✓':''}</span>
-        <span class="piece-left"><span class="piece-sz">${p.w}х${p.l}</span>${dateTag}</span>
+        <span class="piece-left"><span class="piece-sz">${p.w}х${p.l}</span>${dateTag}${bookTag?`<span class="piece-book">${bookTag}</span>`:''}</span>
         <span class="piece-right">
-          ${bookTag}
           ${placeTag}
           ${typeTag}
           <span class="piece-pcs">${p.qty} шт.</span>
