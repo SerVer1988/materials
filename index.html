@@ -251,7 +251,8 @@
             <div class="custom-input-wrap" id="out-order-custom"><input type="text" placeholder="9-08-77_Заказчик"></div>
           </div>
           <div class="fg full"><label>Примечание</label><input type="text" id="out-note" placeholder="необязательно"></div>
-          <div class="fg full"><label style="display:flex;align-items:center;gap:9px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px"><input type="checkbox" id="out-brak" style="width:20px;height:20px;flex:none;margin:0"> 🗑 Списать в брак</label></div>
+          <div class="fg full"><label style="display:flex;align-items:center;gap:9px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px"><input type="checkbox" id="out-brak" style="width:20px;height:20px;flex:none;margin:0"> 🗑 Списать в брак</label>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35">Испорчена только эта деталь: лист или обрезок списывается как обычно, а деталь возвращается в заказ (в Плане появится строка на повторную вырезку). Для обычной резки не отмечайте.</div></div>
         </div>
         <div id="scrap-preview" style="display:none">✂️ Обрезки будут добавлены: <span id="scrap-preview-text"></span></div>
         <div id="scrap-neg-preview" style="display:none">✂️ Без листа — изделие из обрезков: <span id="scrap-neg-text"></span></div>
@@ -664,16 +665,16 @@
 <script src="js/navigation.js?v=2026-10-13b"></script>
 <script src="js/search.js?v=2026-10-13a"></script>
 <script src="js/stock.js?v=2026-10-13c"></script>
-<script src="js/orders.js?v=2026-10-13b"></script>
-<script src="js/plan.js?v=2026-10-13e"></script>
+<script src="js/orders.js?v=2026-10-13c"></script>
+<script src="js/plan.js?v=2026-10-13f"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
 <script src="js/inbox.js?v=2026-10-13a"></script>
 <script src="js/scrap-calc.js?v=2026-10-13b"></script>
 <script src="js/income.js?v=2026-10-13b"></script>
-<script src="js/expense.js?v=2026-10-13d"></script>
+<script src="js/expense.js?v=2026-10-13e"></script>
 <script src="js/remainders.js?v=2026-10-13b"></script>
-<script src="js/scrap-modals.js?v=2026-10-13c"></script>
+<script src="js/scrap-modals.js?v=2026-10-13d"></script>
 <script src="js/selection.js?v=2026-10-13a"></script>
 <script src="js/history.js?v=2026-10-13a"></script>
 <script src="js/export.js?v=2026-10-13a"></script>
