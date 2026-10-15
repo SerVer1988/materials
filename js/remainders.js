@@ -237,8 +237,8 @@ function renderRemByMat(){
           ${typeTag}
           <span class="piece-pcs">${p.qty} шт.</span>
           ${m2Html}
-          <button class="piece-del-btn" onclick="event.stopPropagation();deletePiece(${p.recId},${p.pi})">✕</button>
         </span>
+        <button class="piece-del-btn" title="Удалить обрезок" onclick="event.stopPropagation();deletePiece(${p.recId},${p.pi})" style="display:flex!important;visibility:visible!important;flex:none;align-items:center;justify-content:center;width:28px;height:28px;margin-left:6px;background:var(--rlt);color:var(--red);border:none;border-radius:5px;font-size:13px;font-weight:800;cursor:pointer">✕</button>
       </div>${editForm}`;
     }).join('');
 
