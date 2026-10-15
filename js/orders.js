@@ -95,7 +95,7 @@ function calcOrderStages(){
 // ── Расчёт по заказам ──
 function calcOrderData(){
   const res=new Map();
-  const get=key=>{ if(!res.has(key)) res.set(key,{pos:new Map(),detFull:0,detScrap:0,expCount:0,brakM2:0,brakCount:0}); return res.get(key); };
+  const get=key=>{ if(!res.has(key)) res.set(key,{pos:new Map(),cuts:new Map(),detFull:0,detScrap:0,expCount:0,brakM2:0,brakCount:0}); return res.get(key); };
   const pos=(o,mat,size,w,l)=>{ const k=`${mat}||${size}`; if(!o.pos.has(k)) o.pos.set(k,{mat,size,w:w||0,l:l||0,got:0,used:0}); return o.pos.get(k); };
   db.income.forEach(r=>{ if(r.order) pos(get(r.order),r.mat,r.size,r.w,r.l).got+=r.qty; });
   planAll().forEach(l=>{ if(l.booked>0) pos(get(l.order),l.mat,l.size,l.w,l.l).got+=l.booked; });   // забронировано из наличия (раздел ПЛАН)
@@ -106,6 +106,11 @@ function calcOrderData(){
     const dd=parseSizeStr(r.det||'');
     const a=dd?dd.w*dd.l*r.qty/1e6:0;
     if(full) pos(o,r.mat,r.size,r.w,r.l).used+=r.qty;            // материал списан в любом случае
+    // Вырезанные детали по материалам (в т.ч. из обрезков — для них нет позиции «листов»)
+    if(!o.cuts.has(r.mat)) o.cuts.set(r.mat,{mat:r.mat,items:[],m2:0});
+    const cu=o.cuts.get(r.mat);
+    cu.items.push({det:(r.det?normSizeStr(r.det):'—'),qty:r.qty,scrap:!full,brak:!!r.brak,src:r.sourceScrap||''});
+    if(!r.brak) cu.m2+=a;
     if(r.brak){ o.brakM2+=a; o.brakCount+=r.qty; }                // деталь испорчена — в «изделия» не идёт, вернулась в заказ
     else if(full) o.detFull+=a; else o.detScrap+=a;
   });
@@ -199,6 +204,16 @@ function diffLabel(diff,status,unit){
   if(status==='closed') return diff>0?`<span class="ostat ok">экономия ${unit(diff)}</span>`:`<span class="ostat bad">недостача ${unit(-diff)}</span>`;
   return diff>0?`<span class="ostat info">в брони ${unit(diff)}</span>`:`<span class="ostat bad">перерасход ${unit(-diff)}</span>`;
 }
+// Блок «Вырезано»: детали по материалам, включая вырезанные из обрезков
+function orderCutsHtml(d){
+  if(!d.cuts||!d.cuts.size) return '';
+  const blocks=[...d.cuts.values()].sort((a,b)=>a.mat.localeCompare(b.mat,'ru')).map(c=>`
+    <div class="opos">
+      <div class="opos-name">${escHtml(c.mat)} <span class="opos-sz">вырезано ${m2fmt(c.m2)} м²</span></div>
+      <div class="opos-nums" style="flex-wrap:wrap;gap:4px 12px">${c.items.map(it=>`<span>${it.brak?'🗑 ':''}${it.scrap?'✂️':'▭'} <b>${escHtml(it.det)}</b>${it.qty>1?' ×'+it.qty:''}${it.src?` <span style="color:var(--muted);font-size:11px">из ${escHtml(normSizeStr(it.src))}</span>`:''}</span>`).join('')}</div>
+    </div>`).join('');
+  return `<div class="ctitle" style="margin:10px 0 4px">Вырезано <span style="font-weight:600;text-transform:none;letter-spacing:0">(✂️ из обрезка · ▭ из листа · 🗑 брак)</span></div>${blocks}`;
+}
 function renderOrders(){
   const box=document.getElementById('orders-list'); if(!box) return;
   const q=(document.getElementById('ord-s')?.value||'').trim().toLowerCase();
@@ -215,7 +230,8 @@ function renderOrders(){
     ords.forEach(o=>{ const t=orderTotals(data.get(o.key)||{pos:new Map()}); gg+=t.got; gu+=t.used; });
     html+=`<div class="ogroup"><span>${escHtml(cust)}</span><span class="ogroup-sum">${ords.length} зак. · листов ${gu} из ${gg}</span></div>`;
     ords.forEach(o=>{
-      const d=data.get(o.key)||{pos:new Map(),detFull:0,detScrap:0,expCount:0,brakM2:0,brakCount:0};
+      const d=data.get(o.key)||{pos:new Map(),cuts:new Map(),detFull:0,detScrap:0,expCount:0,brakM2:0,brakCount:0};
+      let nCut=0; d.cuts.forEach(c=>c.items.forEach(it=>{ if(!it.brak) nCut+=it.qty; }));
       const t=orderTotals(d), idx=keys.length; keys.push(o.key);
       const open=ordersOpen.has(o.key);
       const status=stageTag(stages.get(o.key));
@@ -225,9 +241,10 @@ function renderOrders(){
           <div class="opos">
             <div class="opos-name">${escHtml(p.mat)} <span class="opos-sz">${escHtml(p.size)}</span></div>
             <div class="opos-nums"><span>заказано <b>${p.got}</b></span><span>израсходовано <b>${p.used}</b></span>${diffLabel(p.got-p.used,o.status,n=>n+' шт.')}</div>
-          </div>`).join('')||'<div class="opos-empty">Под этот заказ листы ещё не приходили</div>';
+          </div>`).join('');
+        const cutsH=orderCutsHtml(d);
         const detTotal=d.detFull+d.detScrap, waste=t.usedM2-d.detFull;
-        body=`<div class="obody">${rows}
+        body=`<div class="obody">${(rows||cutsH)?rows+cutsH:'<div class="opos-empty">По этому заказу движений пока нет</div>'}
           <div class="oarea">
             <div>Площадь: заказано <b>${m2fmt(t.gotM2)} м²</b> · израсходовано <b>${m2fmt(t.usedM2)} м²</b> ${diffLabel(Math.round(t.diffM2*100)/100,o.status,n=>m2fmt(n)+' м²')}</div>
             ${d.brakCount?`<div>🗑 Брак деталей: <b>${d.brakCount}</b> шт · ${m2fmt(d.brakM2)} м² — вернулись в заказ (строка в Плане)</div>`:''}
@@ -239,7 +256,7 @@ function renderOrders(){
       html+=`<div class="ocard ${o.status==='closed'?'is-closed':''}">
         <div class="ohead" onclick="toggleOrderCard(${idx})">
           <div class="otitle"><b>${escHtml(o.no)}</b>${o.customer?` <span class="ocust">${escHtml(o.customer)}</span>`:''} ${status}</div>
-          <div class="osum">листов: заказано <b>${t.got}</b> · израсходовано <b>${t.used}</b>${d.brakCount?` · брак деталей <b>${d.brakCount}</b>`:''} ${diffLabel(t.diff,o.status,n=>n+' шт.')}</div>
+          <div class="osum">листов: заказано <b>${t.got}</b> · израсходовано <b>${t.used}</b>${nCut?` · вырезано деталей <b>${nCut}</b>`:''}${d.brakCount?` · брак <b>${d.brakCount}</b>`:''} ${diffLabel(t.diff,o.status,n=>n+' шт.')}</div>
           <span class="ochev">${open?'▲':'▼'}</span>
         </div>${body}</div>`;
     });
