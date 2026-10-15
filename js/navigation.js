@@ -1,13 +1,13 @@
 window.__B=window.__B||{};__B['navigation']='2026-10-13a';
 // ▸ navigation.js — Навигация: свайпы между страницами, вкладки, плюс-кнопка, панели
 // ══════════════════════════════════════ SWIPE NAVIGATION
-// Порядок страниц: План → Приход → Расход → Листы → Обрезки → Заказы → Настройки (свайп в другую сторону — в обратном порядке)
+// Порядок страниц: Ревизия → Приход → Расход → Листы → Обрезки → Заказы → Настройки (свайп в другую сторону — в обратном порядке)
 (function(){
   function pageIdx(){
     const active=document.querySelector('.sec.active');
     if(!active) return 0;
     const id=active.id.replace('sec-','');
-    if(id==='plan') return 0;
+    if(id==='rev') return 0;
     if(id==='income') return 1;
     if(id==='expense') return 2;
     if(id==='stock') return (typeof stockTab!=='undefined' && stockTab==='rem') ? 4 : 3;
@@ -19,7 +19,7 @@ window.__B=window.__B||{};__B['navigation']='2026-10-13a';
     if(i<0||i>6||i===pageIdx()) return;
     const uchetBtn=document.getElementById('nbtn-uchet');
     const stockBtn=document.getElementById('nbtn-stock');
-    if(i===0) go('plan',document.getElementById('nbtn-plan'));
+    if(i===0) go('rev',document.getElementById('nbtn-plan'));
     else if(i===1) go('income',uchetBtn);
     else if(i===2) go('expense',uchetBtn);
     else if(i===3||i===4){
@@ -77,8 +77,8 @@ const PILL_ICONS = {
 };
 function setHdrTabName(name){
   // Учёт = приход+расход (иконка калькулятора), Склад = листы+обрезки (иконка склада)
-  const PILL_NAMES = {plan:'ПЛАН', income:'УЧЁТ', expense:'УЧЁТ', stock:'СКЛАД', orders:'ЗАКАЗЫ', more:'НАСТРОЙКИ'};
-  const PILL_ICON_KEY = {plan:'plan', income:'uchet', expense:'uchet', stock:'stock', orders:'orders', more:'more'};
+  const PILL_NAMES = {plan:'ПЛАН', rev:'РЕВИЗИЯ', income:'УЧЁТ', expense:'УЧЁТ', stock:'СКЛАД', orders:'ЗАКАЗЫ', more:'НАСТРОЙКИ'};
+  const PILL_ICON_KEY = {plan:'plan', rev:'plan', income:'uchet', expense:'uchet', stock:'stock', orders:'orders', more:'more'};
   const el = document.getElementById('hdr-pill-text');
   if(el) el.textContent = PILL_NAMES[name] || name.toUpperCase();
   const ic = document.getElementById('hdr-pill-icon');
@@ -156,6 +156,7 @@ function go(name,btn){
   if(name==='stock'){renderStock();renderRemByMat();}
   if(name==='orders'){renderOrders();}
   if(name==='plan'){renderPlan();}
+  if(name==='rev'){renderRevision();}
   if(name==='more'){renderHist();['mats','sizes','places'].forEach(k=>renderListEditor(k));}
 }
 
@@ -180,7 +181,7 @@ function updatePlusBtn(name){
     else if(name==='stock' && stockTab==='rem') f.fill='var(--plus-rem)';
     else f.fill='var(--plus-off)';
   }
-  const plusOff = isStockBalance || name==='orders';
+  const plusOff = isStockBalance || name==='orders' || name==='rev';
   plusWrap.style.opacity = plusOff ? '0.45' : '1';
   plusWrap.style.pointerEvents = plusOff ? 'none' : '';
 }
