@@ -27,7 +27,7 @@
 .piece-sz{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;text-align:left;}
 
 /* RIGHT GROUP: all other data — right-aligned, no wrap */
-.piece-right{display:grid;grid-template-columns:76px 14px 38px 64px;column-gap:6px;align-items:center;margin-left:auto;flex-shrink:0;}
+.piece-right{display:grid;grid-template-columns:76px 14px 38px 64px 26px;column-gap:6px;align-items:center;margin-left:auto;flex-shrink:0;}
 
 .piece-place{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--card2);color:var(--muted);border:1px solid var(--border);white-space:nowrap}
 .piece-type{font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;white-space:nowrap}
@@ -37,7 +37,7 @@
 .piece-m2{font-size:13px;font-weight:800;white-space:nowrap;min-width:64px;text-align:right;display:inline-block}
 .pm2-pos{color:var(--blue)}
 .pm2-neg{color:var(--red)}
-.piece-del-btn{background:var(--rlt);color:var(--red);border:none;border-radius:5px;width:26px;height:26px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.piece-del-btn{background:var(--rlt);color:var(--red);border:none;border-radius:5px;width:26px;height:26px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 /* Inline edit form — rendered as sibling after piece-row */
 .piece-edit-form{display:none;flex-direction:column;gap:7px;background:var(--card2);border:1px solid var(--edit);border-radius:var(--r);padding:10px;margin:4px 0 6px}
