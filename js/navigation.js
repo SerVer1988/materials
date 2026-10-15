@@ -1,7 +1,7 @@
 window.__B=window.__B||{};__B['navigation']='2026-10-13a';
 // ▸ navigation.js — Навигация: свайпы между страницами, вкладки, плюс-кнопка, панели
 // ══════════════════════════════════════ SWIPE NAVIGATION
-// Порядок страниц: Ревизия → Приход → Расход → Листы → Обрезки → Заказы → Настройки (свайп в другую сторону — в обратном порядке)
+// Порядок страниц: Ревизия → Приход → Расход → Листы → Обрезки → Итоги → Настройки (свайп в другую сторону — в обратном порядке)
 (function(){
   function pageIdx(){
     const active=document.querySelector('.sec.active');
@@ -11,7 +11,7 @@ window.__B=window.__B||{};__B['navigation']='2026-10-13a';
     if(id==='income') return 1;
     if(id==='expense') return 2;
     if(id==='stock') return (typeof stockTab!=='undefined' && stockTab==='rem') ? 4 : 3;
-    if(id==='orders') return 5;
+    if(id==='stats') return 5;
     if(id==='more') return 6;
     return 1;
   }
@@ -28,7 +28,7 @@ window.__B=window.__B||{};__B['navigation']='2026-10-13a';
       const tabs=document.querySelectorAll('#sec-stock .itab');
       setStockTab(tabs[i===3?0:1], i===3?'balance':'rem');
     }
-    else if(i===5) go('orders',document.getElementById('nbtn-orders'));
+    else if(i===5) go('stats',document.getElementById('nbtn-orders'));
     else if(i===6) goMore(document.getElementById('hdr-more-btn'));
   }
   // касание внутри горизонтально прокручиваемого блока — это его скролл, а не смена страницы
@@ -77,8 +77,8 @@ const PILL_ICONS = {
 };
 function setHdrTabName(name){
   // Учёт = приход+расход (иконка калькулятора), Склад = листы+обрезки (иконка склада)
-  const PILL_NAMES = {plan:'ПЛАН', rev:'РЕВИЗИЯ', income:'УЧЁТ', expense:'УЧЁТ', stock:'СКЛАД', orders:'ЗАКАЗЫ', more:'НАСТРОЙКИ'};
-  const PILL_ICON_KEY = {plan:'plan', rev:'plan', income:'uchet', expense:'uchet', stock:'stock', orders:'orders', more:'more'};
+  const PILL_NAMES = {plan:'ПЛАН', rev:'РЕВИЗИЯ', stats:'ИТОГИ', income:'УЧЁТ', expense:'УЧЁТ', stock:'СКЛАД', orders:'ЗАКАЗЫ', more:'НАСТРОЙКИ'};
+  const PILL_ICON_KEY = {plan:'plan', rev:'plan', stats:'orders', income:'uchet', expense:'uchet', stock:'stock', orders:'orders', more:'more'};
   const el = document.getElementById('hdr-pill-text');
   if(el) el.textContent = PILL_NAMES[name] || name.toUpperCase();
   const ic = document.getElementById('hdr-pill-icon');
@@ -157,6 +157,7 @@ function go(name,btn){
   if(name==='orders'){renderOrders();}
   if(name==='plan'){renderPlan();}
   if(name==='rev'){renderRevision();}
+  if(name==='stats'){renderStats();}
   if(name==='more'){renderHist();['mats','sizes','places'].forEach(k=>renderListEditor(k));}
 }
 
@@ -181,7 +182,7 @@ function updatePlusBtn(name){
     else if(name==='stock' && stockTab==='rem') f.fill='var(--plus-rem)';
     else f.fill='var(--plus-off)';
   }
-  const plusOff = isStockBalance || name==='orders' || name==='rev';
+  const plusOff = isStockBalance || name==='orders' || name==='rev' || name==='stats';
   plusWrap.style.opacity = plusOff ? '0.45' : '1';
   plusWrap.style.pointerEvents = plusOff ? 'none' : '';
 }
