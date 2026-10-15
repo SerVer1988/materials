@@ -55,6 +55,35 @@
 .rev-info{font-size:12px;color:var(--muted);margin-bottom:8px}
 .rev-row{display:flex;gap:8px;align-items:center}
 .rev-row input{flex:1;min-width:0;text-align:center;font-size:17px;font-weight:800}
+/* Ревизия: таблица «в программе / по факту / разница», как лист Excel */
+.rv-mat{margin:12px 0 2px}
+.rv-head,.revrow{display:grid;grid-template-columns:1fr 64px 84px 50px;gap:8px;align-items:center}
+.rv-head{font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;padding:2px 0 4px}
+.rv-head span:not(:first-child){text-align:center}
+.revrow{padding:6px 0;border-bottom:1px solid var(--border)}
+.rv-sz{font-size:14px;font-weight:800;color:var(--text)}
+.rv-last{display:block;font-size:10px;font-weight:600;color:var(--muted)}
+.rv-qty{text-align:center;font-size:15px;font-weight:800;color:var(--muted)}
+.revrow input{text-align:center;font-size:16px;font-weight:800;padding:8px 4px}
+.rv-diff{text-align:center;font-size:14px;font-weight:800}
+.rv-diff.pos{color:var(--green)}.rv-diff.neg{color:var(--red)}.rv-ok{color:var(--green)}
+.rev-add-row{display:flex;gap:6px}.rev-add-row select{flex:1;min-width:0}
+/* Итоги (как лист «Аналитика» в Excel) */
+.st-months{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.st-months .fchip{flex:none}
+.st-wrap{overflow-x:auto}
+.st-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:0}
+.st-tbl th{font-size:10px;font-weight:800;color:var(--muted);text-align:right;padding:5px 4px;border-bottom:1px solid var(--border);white-space:nowrap}
+.st-tbl td{padding:6px 4px;border-bottom:1px solid var(--border);text-align:right;font-weight:700}
+.st-tbl th:first-child,.st-tbl td:first-child{text-align:left}
+.st-tbl td.st-n{text-align:left;font-weight:600;color:var(--text)}
+.st-tbl th.st-cur,.st-tbl td.st-cur{background:var(--aclt)}
+.st-key td.st-n{white-space:nowrap}
+.st-empty{color:var(--muted);font-size:13px;padding:6px 0}
+.st-now{display:flex;gap:10px}
+.st-now>div{flex:1;background:var(--card2);border-radius:var(--rs);padding:10px;font-size:13px;color:var(--muted)}
+.st-now b{font-size:20px;color:var(--text)}.st-now span{display:block;font-weight:800;color:var(--blue)}
+.st-note{font-size:11px;color:var(--muted);padding:4px 2px 10px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -407,6 +436,42 @@
   <div class="sec-body"><div id="plan-list"></div></div>
 </div>
 
+<div class="sec" id="sec-rev">
+  <div class="sec-top">
+    <div class="sec-hdr" style="flex-direction:column;gap:6px;align-items:stretch;margin-bottom:6px">
+      <div class="search-bar-wrap" style="flex-shrink:0">
+        <div class="search-bar-inner">
+          <svg class="search-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
+          <input type="text" id="rev-s" placeholder="Поиск по материалу..." autocomplete="off" oninput="renderRevision()">
+        </div>
+      </div>
+      <div class="fchips" style="margin-bottom:0">
+        <div class="fchip" id="rvf-zero" onclick="revToggleZero()">Нулевые</div>
+        <div class="fchip" id="rvf-add" onclick="revToggleAdd()">➕ Позиция</div>
+        <div class="fchip" onclick="revReset()">Сбросить</div>
+        <button class="btn bprim bsm" id="rev-apply-btn" style="margin-left:auto" onclick="revApplyAll()">⚖️ Применить</button>
+      </div>
+      <div id="rev-add" style="display:none">
+        <div class="rev-add-row">
+          <select id="rev-add-mat"></select>
+          <select id="rev-add-size"></select>
+          <button class="btn bghost bsm" onclick="revAddPos()">Добавить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-body"><div id="rev-list"></div></div>
+</div>
+
+<div class="sec" id="sec-stats">
+  <div class="sec-top">
+    <div class="sec-hdr" style="flex-direction:column;gap:6px;align-items:stretch;margin-bottom:6px">
+      <div class="fchips st-months" id="stats-months" style="margin-bottom:0"></div>
+    </div>
+  </div>
+  <div class="sec-body"><div id="stats-list"></div></div>
+</div>
+
 <!-- ══ ЗАКАЗЫ ══ -->
 <div class="sec" id="sec-orders">
   <div class="sec-top">
@@ -610,7 +675,7 @@
 
 <nav class="bnav">
   <div class="bnav-inner">
-    <button class="nbtn nbtn-side" id="nbtn-plan" onclick="go('plan',this)">
+    <button class="nbtn nbtn-side" id="nbtn-plan" onclick="go('rev',this)">
       <div class="ni-wrap" style="width:52px;height:52px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7" width="40" height="40"><circle class="pl-b" cx="3.5" cy="3.5" r="3.45"/><g class="pl-g" fill="none" stroke-width=".36" stroke-linecap="round" stroke-linejoin="round"><rect x="1.9" y="1.7" width="3.2" height="3.6" rx=".5"/><path d="M2.9 3.05h1.8M2.9 3.95h1.8M2.9 4.85h1.1"/><circle cx="2.55" cy="3.05" r=".03"/><circle cx="2.55" cy="3.95" r=".03"/><circle cx="2.55" cy="4.85" r=".03"/></g></svg></div>
     </button>
     <button class="nbtn nbtn-side active" id="nbtn-uchet" onclick="goUchet(this)">
@@ -622,7 +687,7 @@
     <button class="nbtn nbtn-side" id="nbtn-stock" onclick="go('stock',this)">
       <div class="ni-wrap" style="width:52px;height:52px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.9 6.9" width="40" height="40" style="fill-rule:evenodd"><circle class="ni-g" cx="3.45" cy="3.45" r="2.95"/><path class="ni-b" d="M3.5 0c0.67,0 1.43,0.25 1.96,0.65 0.33,0.25 0.6,0.51 0.83,0.86 0.61,0.92 0.77,2.02 0.41,3.07 -0.16,0.46 -0.5,1.02 -0.86,1.35 -0.04,0.03 -0.07,0.06 -0.1,0.08 -0.04,0.04 -0.08,0.08 -0.13,0.12 -0.67,0.52 -1.36,0.77 -2.21,0.77 -0.48,0 -0.93,-0.13 -1.37,-0.31 -0.36,-0.15 -0.75,-0.44 -1.02,-0.71 -1.19,-1.19 -1.33,-3.04 -0.37,-4.41 0.66,-0.96 1.72,-1.47 2.87,-1.47zm-1.22 5.3l2.33 0 0 -1.75 -2.33 0 0 1.75zm-0.87 -2.64l0 2.51c0,0.06 0.07,0.13 0.13,0.13l0.46 0 0 -1.87c0,-0.05 0.02,-0.1 0.04,-0.13 0.03,-0.03 0.07,-0.04 0.13,-0.04l2.57 0c0.11,0 0.17,0.06 0.17,0.17l0 1.87 0.45 0c0.06,0 0.13,-0.07 0.13,-0.13l0 -2.51c0,-0.09 -0.24,-0.23 -0.35,-0.3l-1.15 -0.8c-0.07,-0.05 -0.47,-0.34 -0.52,-0.34 -0.08,0 -0.09,0.02 -0.17,0.07 -0.04,0.03 -0.09,0.06 -0.13,0.09 -0.08,0.06 -0.17,0.12 -0.26,0.18l-1.4 0.97c-0.04,0.03 -0.09,0.07 -0.09,0.12zm1.89 -0.29c0,0.22 0.29,0.22 0.29,0 0,-0.07 -0.06,-0.13 -0.16,-0.13 -0.06,0 -0.13,0.07 -0.13,0.13zm-0.29 0.02c0,-0.44 0.61,-0.63 0.83,-0.18 0.05,0.11 0.05,0.24 0,0.35 -0.22,0.44 -0.83,0.26 -0.83,-0.18zm-0.26 2.18l1.4 0c0.23,0 0.23,0.29 0,0.29l-1.42 0c-0.19,0 -0.22,-0.29 0.02,-0.29zm0 -0.58l1.4 0c0.23,0 0.23,0.29 0,0.29l-1.42 0c-0.19,0 -0.22,-0.29 0.02,-0.29z"/></svg></div>
     </button>
-    <button class="nbtn nbtn-side" id="nbtn-orders" onclick="go('orders',this)">
+    <button class="nbtn nbtn-side" id="nbtn-orders" onclick="go('stats',this)">
       <div class="ni-wrap" style="width:52px;height:52px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7" width="40" height="40"><circle class="oi-b" cx="3.5" cy="3.5" r="3.45"/><g class="oi-g" fill="none" stroke-width=".36" stroke-linecap="round" stroke-linejoin="round"><rect x="1.95" y="1.5" width="3.1" height="4" rx=".45"/><path d="M2.85 1.5V1.2h1.3v.3M2.8 3h1.4M2.8 3.9h1.4M2.8 4.7h.9"/></g></svg></div>
     </button>
   </div>
@@ -662,9 +727,11 @@
 <script src="js/crud.js?v=2026-10-13a"></script>
 <script src="js/init.js?v=2026-10-13a"></script>
 <script src="js/autocomplete.js?v=2026-10-13a"></script>
-<script src="js/navigation.js?v=2026-10-13b"></script>
+<script src="js/navigation.js?v=2026-10-13d"></script>
 <script src="js/search.js?v=2026-10-13a"></script>
 <script src="js/stock.js?v=2026-10-13c"></script>
+<script src="js/revision.js?v=2026-10-13a"></script>
+<script src="js/stats.js?v=2026-10-13a"></script>
 <script src="js/orders.js?v=2026-10-13d"></script>
 <script src="js/plan.js?v=2026-10-13g"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
