@@ -115,6 +115,9 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 .po-nums{display:flex;gap:10px;font-size:12px;color:var(--muted);align-items:center;flex-wrap:wrap}
 .po-nums b{color:var(--text)}
 .po-d{font-weight:800;font-size:12px;color:var(--blue)}.po-d.ok{color:var(--green)}.po-d.bad{color:var(--red)}
+/* Размеры по материалам */
+.ms-opt{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:14px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer}
+.ms-note{font-size:11px;color:var(--muted);margin-top:6px}
 </style>
 </head>
 <body>
@@ -489,7 +492,7 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
       </div>
       <div id="rev-add" style="display:none">
         <div class="rev-add-row">
-          <select id="rev-add-mat"></select>
+          <select id="rev-add-mat" onchange="revAddFilter()"></select>
           <select id="rev-add-size"></select>
           <button class="btn bghost bsm" onclick="revAddPos()">Добавить</button>
         </div>
@@ -558,6 +561,15 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
     <div class="ctitle">Менеджеры</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Номер — первая цифра номера заказа (9-10-53 → менеджер 9). Имена видны в таблице расхода и в «Итогах».</div>
     <div id="mgr-list"></div>
+  </div>
+
+  <!-- Размеры листов по материалам -->
+  <div class="card">
+    <div class="ctitle">Размеры листов по материалам</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Отметьте размеры материала — в Приходе и Расходе при вводе этого материала будут показаны только они.</div>
+    <select id="ms-mat" onchange="renderMatSizes()" style="margin-bottom:8px"></select>
+    <div id="ms-sizes"></div>
+    <div class="brow"><button class="btn bghost bsm" onclick="msReset()">По умолчанию</button></div>
   </div>
 
   <!-- История — сворачиваемая -->
@@ -764,7 +776,7 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 <script src="js/config.js?v=2026-10-13a"></script>
 <script src="js/ui.js?v=2026-10-13a"></script>
 <script src="js/theme.js?v=2026-10-13a"></script>
-<script src="js/sync.js?v=2026-10-13c"></script>
+<script src="js/sync.js?v=2026-10-13d"></script>
 <script src="js/access.js?v=2026-10-13a"></script>
 <script src="js/storage.js?v=2026-10-13b"></script>
 <script src="js/crud.js?v=2026-10-13a"></script>
@@ -773,11 +785,12 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 <script src="js/navigation.js?v=2026-10-13e"></script>
 <script src="js/search.js?v=2026-10-13a"></script>
 <script src="js/stock.js?v=2026-10-13c"></script>
-<script src="js/revision.js?v=2026-10-13a"></script>
+<script src="js/revision.js?v=2026-10-13b"></script>
 <script src="js/stats.js?v=2026-10-13e"></script>
 <script src="js/names.js?v=2026-10-13a"></script>
 <script src="js/managers.js?v=2026-10-13a"></script>
 <script src="js/columns.js?v=2026-10-13a"></script>
+<script src="js/matsizes.js?v=2026-10-13a"></script>
 <script src="js/orders.js?v=2026-10-13d"></script>
 <script src="js/plan.js?v=2026-10-13k"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
