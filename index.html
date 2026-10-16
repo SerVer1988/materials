@@ -556,22 +556,6 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
     </div>
   </div>
 
-  <!-- Менеджеры: номер из номера заказа (9-10-53 → 9) → имя -->
-  <div class="card">
-    <div class="ctitle">Менеджеры</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Номер — первая цифра номера заказа (9-10-53 → менеджер 9). Имена видны в таблице расхода и в «Итогах».</div>
-    <div id="mgr-list"></div>
-  </div>
-
-  <!-- Размеры листов по материалам -->
-  <div class="card">
-    <div class="ctitle">Размеры листов по материалам</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Отметьте размеры материала — в Приходе и Расходе при вводе этого материала будут показаны только они.</div>
-    <select id="ms-mat" onchange="renderMatSizes()" style="margin-bottom:8px"></select>
-    <div id="ms-sizes"></div>
-    <div class="brow"><button class="btn bghost bsm" onclick="msReset()">По умолчанию</button></div>
-  </div>
-
   <!-- История — сворачиваемая -->
   <div class="ccard" id="cc-hist">
     <div class="ccard-head" onclick="toggleCard('cc-hist')">
@@ -594,6 +578,19 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
         <table><thead><tr><th>Тип</th><th>Дата</th><th>Материал</th><th>Размер</th><th>Кол-во</th><th>Место</th><th>Детали</th></tr></thead>
         <tbody id="hist-tbody"></tbody></table>
       </div>
+    </div>
+  </div>
+
+  <!-- Менеджеры -->
+  <div class="ccard" id="cc-mgr">
+    <div class="ccard-head" onclick="toggleCard('cc-mgr')">
+      <div class="ccard-title">👥 Менеджеры</div>
+      <span class="ccard-arrow">▼</span>
+    </div>
+    <div class="ccard-body">
+      
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Номер — первая цифра номера заказа (9-10-53 → менеджер 9). Имена видны в таблице расхода и в «Итогах».</div>
+    <div id="mgr-list"></div>
     </div>
   </div>
 
@@ -624,6 +621,21 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
         <button class="custom-add-btn" onclick="listAdd('sizes')">+ Добавить</button>
       </div>
       <div class="list-items" id="list-sizes"></div>
+    </div>
+  </div>
+
+  <!-- Размеры по материалам -->
+  <div class="ccard" id="cc-ms">
+    <div class="ccard-head" onclick="toggleCard('cc-ms')">
+      <div class="ccard-title">📐 Размеры по материалам</div>
+      <span class="ccard-arrow">▼</span>
+    </div>
+    <div class="ccard-body">
+      
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Отметьте размеры материала — в Приходе и Расходе при вводе этого материала будут показаны только они.</div>
+    <select id="ms-mat" onchange="renderMatSizes()" style="margin-bottom:8px"></select>
+    <div id="ms-sizes"></div>
+    <div class="brow"><button class="btn bghost bsm" onclick="msReset()">По умолчанию</button></div>
     </div>
   </div>
 
@@ -660,8 +672,13 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
   </div>
 
   <!-- Резервная копия -->
-  <div class="card">
-    <div class="ctitle">Резервная копия и синхронизация</div>
+  <div class="ccard" id="cc-backup">
+    <div class="ccard-head" onclick="toggleCard('cc-backup')">
+      <div class="ccard-title">☁️ Резервная копия и синхронизация</div>
+      <span class="ccard-arrow">▼</span>
+    </div>
+    <div class="ccard-body">
+      <div>
     <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.6">
       ☁️ Данные автоматически сохраняются в облако (Supabase) при каждом изменении и загружаются при открытии приложения.
     </div>
@@ -676,9 +693,11 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
     <input type="file" id="imp-f" accept=".json" style="display:none" onchange="doImport(event)">
   </div>
 
-  <div class="card" style="border-color:var(--rlt)">
+  <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px">
     <div class="ctitle" style="color:var(--red)">⚠️ Опасная зона</div>
     <button class="btn bdng bfull" onclick="clrAll()">🗑️ Удалить все данные</button>
+  </div>
+    </div>
   </div>
   </div><!-- /sec-body -->
 </div>
@@ -776,9 +795,9 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 <script src="js/config.js?v=2026-10-13a"></script>
 <script src="js/ui.js?v=2026-10-13a"></script>
 <script src="js/theme.js?v=2026-10-13a"></script>
-<script src="js/sync.js?v=2026-10-13d"></script>
+<script src="js/sync.js?v=2026-10-13e"></script>
 <script src="js/access.js?v=2026-10-13a"></script>
-<script src="js/storage.js?v=2026-10-13b"></script>
+<script src="js/storage.js?v=2026-10-13c"></script>
 <script src="js/crud.js?v=2026-10-13a"></script>
 <script src="js/init.js?v=2026-10-13a"></script>
 <script src="js/autocomplete.js?v=2026-10-13a"></script>
