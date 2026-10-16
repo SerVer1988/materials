@@ -27,7 +27,7 @@ function renderRevision(){
   // списки для добавления позиции
   const ms=document.getElementById('rev-add-mat'), ss=document.getElementById('rev-add-size');
   if(ms&&!ms.options.length) MATS.forEach(m=>ms.appendChild(new Option(m,m)));
-  if(ss&&!ss.options.length) SIZES.forEach(s=>ss.appendChild(new Option(s,s)));
+  if(ss&&!ss.options.length){ SIZES.forEach(s=>ss.appendChild(new Option(s,s))); revAddFilter(); }
   document.getElementById('rev-add')?.style&&(document.getElementById('rev-add').style.display=revAddOpen?'block':'none');
   document.getElementById('rvf-add')?.classList.toggle('on',revAddOpen);
   document.getElementById('rvf-zero')?.classList.toggle('on',revShowZero);
@@ -81,6 +81,7 @@ function revInput(el){
 function revToggleZero(){ revShowZero=!revShowZero; renderRevision(); }
 function revToggleAdd(){ revAddOpen=!revAddOpen; renderRevision(); }
 function revReset(){ Object.keys(revFacts).forEach(k=>delete revFacts[k]); renderRevision(); }
+function revAddFilter(){ if(typeof msFillSelect==='function') msFillSelect(document.getElementById('rev-add-size'),document.getElementById('rev-add-mat').value,false); }
 function revAddPos(){
   const m=document.getElementById('rev-add-mat').value, s=document.getElementById('rev-add-size').value;
   if(!m||!s) return;
