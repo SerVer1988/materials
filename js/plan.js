@@ -188,7 +188,21 @@ function planContext(){
   Object.keys(by).forEach(m=>by[m].forEach(s=>{ stockQ[`${m}||${s.size}`]=s.qty; }));
   const res=calcReserves(), recv={};
   db.income.forEach(r=>{ if(r.order){ const k=`${r.order}||${r.mat}||${r.size}`; recv[k]=(recv[k]||0)+r.qty; } });
-  return {stockQ,res,recv};
+  // Полосы без подходящего обрезка одного материала и листа делят листы между собой (по площади, до 75% листа);
+  // «владелец» листа — первая полоса в каждой группе. Так «ПВХ 3 мм» со всех заказов складывается в минимум листов.
+  const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
+  const grp={}, sheetOwner=new Set();
+  planAll().sort((a,b)=>a.id-b.id).forEach(l=>{
+    if(closed.has(l.order)||!(l.stripW>0&&l.stripL>0)||l.stripBook||isStripDone(l)) return;
+    if(findStripScraps(l.mat,l.stripW,l.stripL,l.id).length) return;
+    const k=l.mat+'||'+l.size; (grp[k]=grp[k]||[]).push(l);
+  });
+  Object.keys(grp).forEach(k=>{
+    const ls=grp[k], sh=parseSizeStr(ls[0].size), cap=(sh?sh.w*sh.l:1220*2440)*0.75;
+    let run=cap+1;
+    ls.forEach(l=>{ const a=l.stripW*l.stripL; if(run+a>cap){ sheetOwner.add(l.id); run=0; } run+=a; });
+  });
+  return {stockQ,res,recv,sheetOwner};
 }
 // Строки Плана (кроме автосозданных из брака, если запись брака удалена или снята)
 function planAll(){ return (db.plan||[]).filter(x=>!x.fromBrak||db.expense.some(e=>e.id===x.fromBrak&&e.brak)); }
@@ -239,7 +253,9 @@ function planLineInfo(line,ctx){
   // Строка только из полосы (0 шт + 495×1138): если подходящего обрезка нет — на неё нужен целый лист.
   // Он попадает в «к закупке», а при «Получено» оформляется в приход. Если лист уже пришёл или забронирован из наличия — потребность сохраняется.
   const recvAvail=ctx.recv[rk]||0;
-  const needSheet=line.qty===0&&hasStrip&&!stripDone&&!stripBooked&&(scraps.length===0||recvAvail>0||booked>0);
+  const owner=ctx.sheetOwner?ctx.sheetOwner.has(line.id):scraps.length===0;
+  const needSheet=hasStrip&&!stripDone&&!stripBooked&&((scraps.length===0&&owner)||(line.qty===0&&(recvAvail>0||booked>0)));
+  const sharesSheet=hasStrip&&!stripDone&&!stripBooked&&scraps.length===0&&!owner&&!needSheet;
   const qtyEff=line.qty+(needSheet?1:0);
   const take=Math.min(Math.max(0,qtyEff-booked),recvAvail);
   ctx.recv[rk]=recvAvail-take;
@@ -251,11 +267,11 @@ function planLineInfo(line,ctx){
   if(line.qty===0&&hasStrip&&(stripDone||stripBooked)) status='received';     // строка только из полосы: обрезок в брони или полоса вырезана
   // «Готово» — всё по строке закрыто и мешать не должно: листы получены/забронированы, полоса вырезана или обрезок забронирован
   const done=status==='received'&&(!hasStrip||stripDone||stripBooked);
-  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done,needSheet};
+  return {booked,received,toBuy,free,canBook:Math.min(free,toBuy),hasStrip,stripDone,scraps,stripBooked,canBookStrip,covered,status,done,needSheet,sharesSheet};
 }
 
 // ── Получено → добавить в приход ──
-let planRecvId=null;
+let planRecvId=null, planRecvGroup=null;
 function openPlanReceive(id){
   const l=planLine(id); if(!l) return;
   const f=planLineInfo(l,planContext());
@@ -267,8 +283,9 @@ function openPlanReceive(id){
   sel.innerHTML=PLACES.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('')+'<option value="">— не указано —</option>';
   document.getElementById('plan-recv-modal').classList.add('show');
 }
-function closePlanRecv(){ document.getElementById('plan-recv-modal').classList.remove('show'); planRecvId=null; }
+function closePlanRecv(){ document.getElementById('plan-recv-modal').classList.remove('show'); planRecvId=null; planRecvGroup=null; }
 function confirmPlanReceive(){
+  if(planRecvGroup) return confirmGroupReceive();
   const l=planLine(planRecvId); if(!l) return;
   const qty=parseInt(document.getElementById('plan-recv-qty').value,10);
   if(!qty||qty<1){ toast('Укажите количество листов','err'); return; }
@@ -343,6 +360,7 @@ function planRowHtml(l,f){
   if(f.booked) avail+=` · в брони из наличия <b>${f.booked}</b>`;
   if(f.received) avail+=` · получено под заказ <b>${f.received}</b>`;
   if(f.needSheet) avail+=` · на полосу нужен целый лист`;
+  if(f.sharesSheet) avail+=` · полоса — из общего листа с другими полосами`;
   avail+=` · <b>к закупке: ${f.toBuy} шт</b>`;
   let strip='';
   if(f.hasStrip){
@@ -375,7 +393,7 @@ function planRowHtml(l,f){
     <div class="pl-btns">${btns.join('')}</div>
   </div>`;
 }
-function renderPlan(){
+function renderPlanOrders(){
   const box=document.getElementById('plan-list'); if(!box) return;
   const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
   const q=(document.getElementById('plan-s')?.value||'').trim().toLowerCase();
@@ -384,12 +402,14 @@ function renderPlan(){
   const infos=new Map(); lines.forEach(l=>infos.set(l.id,planLineInfo(l,ctx)));   // порядок важен: распределение полученных листов
   const stages=calcOrderStages();
   const orders=[...new Set(lines.map(l=>l.order))]
-    .filter(o=>planFilter==='all'||!closed.has(o)).filter(o=>!q||o.toLowerCase().includes(q))
+    .filter(o=>planFilter==='all'||!closed.has(o))
+    .filter(o=>!q||o.toLowerCase().includes(q)||lines.some(l=>l.order===o&&l.mat.toLowerCase().includes(q)))
+    .filter(o=>!planMat||lines.some(l=>l.order===o&&l.mat===planMat))
     .sort((a,b)=>b.localeCompare(a,'ru',{numeric:true}));
   window.__planKeys=orders; window.__planCollapsed={};
   if(!orders.length){ box.innerHTML='<div class="empty"><div class="ei">📋</div>Плана пока нет.<br>Отправьте заявку из CorelDRAW или нажмите «➕ Вставить заявку»</div>'; return; }
   box.innerHTML=orders.map((o,oi)=>{
-    const ls=lines.filter(l=>l.order===o);
+    const ls=lines.filter(l=>l.order===o&&(!planMat||l.mat===planMat));
     const buyTotal=ls.reduce((s,l)=>s+infos.get(l.id).toBuy,0);
     const act=ls.filter(l=>!infos.get(l.id).done), done=ls.filter(l=>infos.get(l.id).done);
     const oc=planUI['o:'+o]!==undefined?!!planUI['o:'+o]:(ls.length>0&&!act.length);   // по умолчанию свёрнут, если всё готово
@@ -408,4 +428,114 @@ function renderPlan(){
       <div class="obody"${oc?' style="display:none"':''}>${act.map(l=>planRowHtml(l,infos.get(l.id))).join('')}${doneBlock}</div>
     </div>`;
   }).join('');
+}
+
+// ══════════════════════ ЗАКУПКА: материалы со всех заказов вместе ══════════════════════
+let planView='buy', planMat='';
+function setPlanView(v){ planView=v; renderPlan(); }
+function setPlanMat(m){ planMat=(planMat===m)?'':m; renderPlan(); }
+
+// Группы «материал + лист»: сколько нужно со всех открытых заказов, сколько есть свободно, сколько купить
+function planGroupsData(){
+  const ctx=planContext(), lines=planAll().sort((a,b)=>a.id-b.id);
+  const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
+  const infos=new Map(); lines.forEach(l=>infos.set(l.id,planLineInfo(l,ctx)));
+  const groups=new Map(), matNeed=new Map(), matLines=new Map();
+  lines.forEach(l=>{
+    if(closed.has(l.order)) return;
+    const f=infos.get(l.id), k=l.mat+'||'+l.size;
+    if(!f.done) matLines.set(l.mat,(matLines.get(l.mat)||0)+1);
+    if(!groups.has(k)) groups.set(k,{key:k,mat:l.mat,size:l.size,need:0,free:f.free,stock:ctx.stockQ[k]||0,orders:new Map(),lines:[],ordered:0,strips:0});
+    const g=groups.get(k); g.lines.push(l);
+    if(f.toBuy>0){ g.need+=f.toBuy; g.orders.set(l.order,(g.orders.get(l.order)||0)+f.toBuy); if(l.status==='ordered') g.ordered+=f.toBuy; matNeed.set(l.mat,(matNeed.get(l.mat)||0)+f.toBuy); }
+    if(f.needSheet||f.sharesSheet) g.strips++;
+  });
+  groups.forEach(g=>{ g.cover=Math.min(g.free,g.need); g.buy=g.need-g.cover; g.wait=Math.min(g.ordered,g.buy); g.toOrder=g.buy-g.wait; });
+  return {groups,infos,matNeed,matLines};
+}
+function planMatChips(counts,unit){
+  const el=document.getElementById('plan-mats'); if(!el) return;
+  const mats=[...counts.keys()].filter(m=>counts.get(m)>0).sort((a,b)=>a.localeCompare(b,'ru'));
+  if(planMat&&!mats.includes(planMat)) planMat='';
+  el.innerHTML=mats.length?`<div class="fchip${planMat?'':' on'}" onclick="setPlanMat('')">Все</div>`+mats.map(m=>`<div class="fchip${m===planMat?' on':''}" data-m="${escHtml(m)}" onclick="setPlanMat(this.dataset.m)">${escHtml(m)} · ${counts.get(m)}</div>`).join(''):'';
+}
+function planOrderShort(o){ const sp=splitOrder(o); return escHtml(sp.no)+(sp.customer?' '+escHtml(sp.customer.length>16?sp.customer.slice(0,15)+'…':sp.customer):''); }
+
+function renderPlan(){
+  const buy=planView==='buy';
+  document.getElementById('pv-buy')?.classList.toggle('on',buy);
+  document.getElementById('pv-ord')?.classList.toggle('on',!buy);
+  const fw=document.getElementById('pfl-wrap'); if(fw) fw.style.display=buy?'none':'flex';
+  const si=document.getElementById('plan-s'); if(si) si.placeholder=buy?'Поиск: материал или заказ…':'Поиск: заказ или материал…';
+  if(buy) renderPlanBuy(); else { renderPlanOrders(); const G=planGroupsData(); planMatChips(G.matLines); }
+}
+function renderPlanBuy(){
+  const box=document.getElementById('plan-list'); if(!box) return;
+  const q=(document.getElementById('plan-s')?.value||'').trim().toLowerCase();
+  const G=planGroupsData();
+  planMatChips(G.matNeed);
+  let gs=[...G.groups.values()].filter(g=>g.need>0)
+    .filter(g=>!planMat||g.mat===planMat)
+    .filter(g=>!q||g.mat.toLowerCase().includes(q)||[...g.orders.keys()].some(o=>o.toLowerCase().includes(q)));
+  gs.sort((a,b)=>(b.toOrder>0)-(a.toOrder>0)||a.mat.localeCompare(b.mat,'ru'));
+  window.__planGroupKeys=gs.map(g=>g.key);
+  if(!gs.length){ box.innerHTML='<div class="empty"><div class="ei">🎉</div>Закупать нечего: всё есть в наличии или уже заказано.<br>Заявки появляются из CorelDRAW или кнопкой «＋».</div>'; return; }
+  const tot=gs.reduce((s,g)=>({o:s.o+g.toOrder,w:s.w+g.wait,c:s.c+g.cover}),{o:0,w:0,c:0});
+  const ords=new Set(); gs.forEach(g=>g.orders.forEach((n,o)=>ords.add(o)));
+  const sum=`<div class="pg-sum"><b>${tot.o}</b> л. к закупке${tot.w?` · ждём ${tot.w}`:''}${tot.c?` · из наличия ${tot.c}`:''} <span class="pg-sub">· ${gs.length} поз. · ${ords.size} заказ.</span></div>`;
+  box.innerHTML=sum+gs.map((g,i)=>{
+    const badge=g.toOrder>0?`<div class="pg-badge buy">Купить ${g.toOrder}</div>`:(g.wait>0?`<div class="pg-badge wait">Ждём ${g.wait}</div>`:`<div class="pg-badge ok">Есть в наличии</div>`);
+    const ords=[...g.orders.entries()].map(([o,n])=>`${planOrderShort(o)} ×${n}`).join(' · ');
+    const btns=[];
+    if(g.toOrder>0) btns.push(`<button class="btn bghost bsm" onclick="orderGroup(${i})">📦 Заказано (${g.toOrder})</button>`);
+    if(g.buy>0) btns.push(`<button class="btn bghost bsm" onclick="receiveGroup(${i})">✅ Получено</button>`);
+    if(g.cover>0) btns.push(`<button class="btn bprim bsm" onclick="bookGroup(${i})">🔒 В бронь (${g.cover})</button>`);
+    return `<div class="pg">
+      <div class="pg-top"><div class="pg-mat">${matChip(g.mat)}<span class="pg-sz">${escHtml(g.size)}</span></div>${badge}</div>
+      <div class="pg-line">Нужно <b>${g.need}</b> · в наличии свободно <b>${g.free}</b>${g.cover?` → из наличия <b>${g.cover}</b>`:''}${g.strips?` · полос: ${g.strips}`:''}</div>
+      <div class="pg-ord">${ords}</div>
+      <div class="pg-btns">${btns.join('')}</div>
+    </div>`;
+  }).join('');
+}
+function planGroupByIdx(i){ const key=(window.__planGroupKeys||[])[i]; if(!key) return null; const G=planGroupsData(); return {G,g:G.groups.get(key)}; }
+// «Заказано»: строки, которые не закрываются наличием, помечаются заказанными
+function orderGroup(i){
+  const r=planGroupByIdx(i); if(!r||!r.g) return;
+  let cover=r.g.cover;
+  r.g.lines.forEach(l=>{ const t=r.G.infos.get(l.id).toBuy; if(t<=0) return; const use=Math.min(cover,t); cover-=use; if(t-use>0&&l.status!=='ordered') l.status='ordered'; });
+  save(); renderAll(); renderPlan(); toast('📦 Отмечено как заказано','ok');
+}
+// «Получено»: приход в запас (без заказа), затем сам бронируется под строки, которым нужен материал
+function receiveGroup(i){
+  const r=planGroupByIdx(i); if(!r||!r.g) return;
+  planRecvId=null; planRecvGroup={key:r.g.key,mat:r.g.mat,size:r.g.size};
+  document.getElementById('plan-recv-info').textContent=`${r.g.mat} — ${r.g.size} мм · в запас, затем в бронь под заказы`;
+  document.getElementById('plan-recv-qty').value=Math.max(1,r.g.buy);
+  const sel=document.getElementById('plan-recv-place');
+  sel.innerHTML=PLACES.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('')+'<option value="">— не указано —</option>';
+  document.getElementById('plan-recv-modal').classList.add('show');
+}
+function confirmGroupReceive(){
+  const gr=planRecvGroup; if(!gr) return;
+  const qty=parseInt(document.getElementById('plan-recv-qty').value,10);
+  if(!qty||qty<1){ toast('Укажите количество листов','err'); return; }
+  const place=document.getElementById('plan-recv-place').value, sz=parseSizeStr(gr.size)||{w:0,l:0};
+  if(!MATS.includes(gr.mat)){ MATS.push(gr.mat); releaseRename('mats',gr.mat); }
+  if(!SIZES.includes(gr.size)) SIZES.push(gr.size);
+  db.income.push({id:Date.now(),dt:now(),mat:gr.mat,size:gr.size,w:sz.w,l:sz.l,qty,place,order:'',note:'Из плана закупок'});
+  closePlanRecv();
+  // теперь материал свободен на складе — сразу бронируем под строки плана
+  const G=planGroupsData(), g=G.groups.get(gr.key); if(g) planAutoBook(g,G.infos);
+  save(); fillAllSelects(); renderAll(); renderPlan();
+  toast(`📥 Получено ${qty} л. ${gr.mat} — в наличии и в брони под заказы`,'ok');
+}
+function planAutoBook(g,infos){
+  let avail=g.free;
+  g.lines.forEach(l=>{ const f=infos.get(l.id); if(avail<=0||f.toBuy<=0) return; const t=Math.min(avail,f.toBuy); l.booked=(l.booked||0)+t; avail-=t; });
+}
+function bookGroup(i){
+  const r=planGroupByIdx(i); if(!r||!r.g) return;
+  planAutoBook(r.g,r.G.infos); save(); renderAll(); renderPlan();
+  toast(`🔒 В брони: ${r.g.cover} л.`,'ok');
 }

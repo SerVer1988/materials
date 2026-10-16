@@ -7,7 +7,7 @@ window.__B=window.__B||{};__B['navigation']='2026-10-13a';
     const active=document.querySelector('.sec.active');
     if(!active) return 0;
     const id=active.id.replace('sec-','');
-    if(id==='rev') return 0;
+    if(id==='plan') return 0;
     if(id==='income') return 1;
     if(id==='expense') return 2;
     if(id==='stock') return (typeof stockTab!=='undefined' && stockTab==='rem') ? 4 : 3;
@@ -19,7 +19,7 @@ window.__B=window.__B||{};__B['navigation']='2026-10-13a';
     if(i<0||i>6||i===pageIdx()) return;
     const uchetBtn=document.getElementById('nbtn-uchet');
     const stockBtn=document.getElementById('nbtn-stock');
-    if(i===0) go('rev',document.getElementById('nbtn-plan'));
+    if(i===0) go('plan',document.getElementById('nbtn-plan'));
     else if(i===1) go('income',uchetBtn);
     else if(i===2) go('expense',uchetBtn);
     else if(i===3||i===4){
