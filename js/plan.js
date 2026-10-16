@@ -102,7 +102,7 @@ function planFromBlocks(list){
   return res;
 }
 const normName=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
-function canonMat(name){ const n=normName(name); return MATS.find(m=>normName(m)===n)||String(name).replace(/\s+/g,' ').trim(); }
+function canonMat(name){ const n=normName(name); return MATS.find(m=>normName(m)===n)||normMaterial(String(name).replace(/\s+/g,' ').trim()); }
 function fmtSheet(w,l){
   const hit=SIZES.find(s=>{ const p=parseSizeStr(s); return p&&p.w===w&&p.l===l; });
   return hit||`${w}х${l}`;

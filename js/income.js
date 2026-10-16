@@ -1,7 +1,8 @@
 window.__B=window.__B||{};__B['income']='2026-10-13a';
 // ▸ income.js — Приход
 function saveIncome(){
-  const mat=(document.getElementById('in-mat').value||'').trim();
+  const mat=normMaterial((document.getElementById('in-mat').value||'').trim());      // «акрил 3мм» → «Акрил 3 мм (мол.)»
+  document.getElementById('in-mat').value=mat;
   const size=document.getElementById('in-pre').value;
   const placeVal=document.getElementById('in-place').value; const qty=parseInt(document.getElementById('in-qty').value);
   if(!mat||!size||size===CUSTOM_VAL||!qty||qty<1){toast('Заполните все поля','err');return;}

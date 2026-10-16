@@ -2,7 +2,7 @@ window.__B=window.__B||{};__B['expense']='2026-10-13a';
 // ▸ expense.js — Расход
 // ══════════════════════════════════════ EXPENSE
 function saveExpense(){
-  const mat=(document.getElementById('out-mat').value||'').trim(); const qty=parseInt(document.getElementById('out-qty').value);
+  const mat=normMaterial((document.getElementById('out-mat').value||'').trim()); const qty=parseInt(document.getElementById('out-qty').value);
   if(!mat||!qty||qty<1){toast('Заполните все поля','err');return;}
   const order=readOrderField('out-order'); if(order===null){toast('Введите заказ: номер_заказчик','err');return;}
   if(!MATS.includes(mat)){MATS.push(mat);releaseRename('mats',mat);save();}
