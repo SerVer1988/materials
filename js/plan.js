@@ -209,8 +209,8 @@ function planAll(){ return (db.plan||[]).filter(x=>!x.fromBrak||db.expense.some(
 // Полоса уже вырезана (есть расход по этому заказу и материалу с размером изделия = полосе). Брак не в счёт — деталь надо резать заново.
 function isStripDone(l){
   if(!(l.stripW>0&&l.stripL>0)) return false;
-  const d={w:l.stripW,l:l.stripL};
-  return db.expense.some(e=>!e.brak&&e.order===l.order&&e.mat===l.mat&&e.det&&sameDims(parseSizeStr(e.det),d));
+  const d={w:l.stripW,l:l.stripL}, pk=[...new Set(planAll().map(x=>x.order))];
+  return db.expense.some(e=>!e.brak&&e.det&&e.mat===l.mat&&e.order&&sameDims(parseSizeStr(e.det),d)&&(e.order===l.order||planOrderFor(e.order,pk)===l.order));
 }
 // Действующие брони обрезков: открытые заказы, полоса ещё не вырезана
 function activeStripBooks(){
@@ -433,10 +433,10 @@ function poDiffHtml(need,spent,closed){
 }
 function planCloseOrder(i){
   const key=(window.__planKeys||[])[i]; if(key===undefined) return;
-  confirm2(`Закрыть заказ ${key}? Итог (экономия или перерасход) попадёт в «Итоги».`,()=>{ setOrderStatus(key,'closed'); renderPlan(); toast('🔒 Заказ закрыт','ok'); });
+  confirm2(`Закрыть заказ ${key}? Итог (экономия или перерасход) попадёт в «Итоги».`,()=>{ setOrderStatus(key,'closed'); (db.orders||[]).filter(o=>o.key===key).forEach(o=>{ o.auto=false; o.autoOff=false; }); save(); renderPlan(); toast('🔒 Заказ закрыт','ok'); });
   document.getElementById('ov-yes').textContent='Да, закрыть';
 }
-function planReopenOrder(i){ const key=(window.__planKeys||[])[i]; if(key===undefined) return; setOrderStatus(key,'open'); renderPlan(); toast('Заказ открыт снова','ok'); }
+function planReopenOrder(i){ const key=(window.__planKeys||[])[i]; if(key===undefined) return; setOrderStatus(key,'open'); (db.orders||[]).filter(o=>o.key===key).forEach(o=>{ o.auto=false; o.autoOff=true; }); save(); renderPlan(); toast('Заказ открыт снова (автозакрытие для него выключено)','ok'); }
 
 function renderPlanOrders(){
   const box=document.getElementById('plan-list'); if(!box) return;
@@ -579,3 +579,43 @@ function bookGroup(i){
   planAutoBook(r.g,r.G.infos); save(); renderAll(); renderPlan();
   toast(`🔒 В брони: ${r.g.cover} л.`,'ok');
 }
+
+// ══════════════════════ АВТОЗАКРЫТИЕ ЗАКАЗА ══════════════════════
+// Заказ закрывается сам, когда вырезано всё из плана: листов (по материалу, любого размера) не меньше, чем в плане,
+// и у каждой полосы есть вырезка (не брак). Это же срабатывает после брака в обратную сторону: автозакрытый заказ
+// снова открывается, если появилась строка на повторную вырезку. Закрытый вручную заказ автоматом не открывается,
+// а открытый вручную — автоматом не закрывается (флаг autoOff).
+function isOrderCut(key,planKeys){
+  const lines=planAll().filter(l=>l.order===key); if(!lines.length) return false;
+  const need={}; lines.forEach(l=>{ if(l.qty>0) need[l.mat]=(need[l.mat]||0)+l.qty; });
+  const used={};
+  db.expense.forEach(r=>{
+    if(r.brak||r.rev||!r.order||!(r.etype==='full'||!r.etype)) return;
+    if(planOrderFor(r.order,planKeys)!==key) return;
+    used[r.mat]=(used[r.mat]||0)+(r.qty||0);
+  });
+  for(const m in need) if((used[m]||0)<need[m]) return false;
+  return lines.every(l=>!(l.stripW>0&&l.stripL>0)||isStripDone(l));
+}
+function autoCloseOrders(){
+  if(!db.orders) db.orders=[];
+  const keys=[...new Set(planAll().map(l=>l.order))], closedNow=[];
+  keys.forEach(key=>{
+    const recs=db.orders.filter(o=>o.key===key);
+    const cur=recs.length?recs.reduce((a,b)=>((b.ts||b.id||0)>=(a.ts||a.id||0)?b:a)):null;
+    const status=cur?cur.status:'open', done=isOrderCut(key,keys), ts=Date.now();
+    if(status!=='closed'&&done&&!(cur&&cur.autoOff)){
+      if(recs.length) recs.forEach(o=>{ o.status='closed'; o.ts=ts; o.closedAt=now(); o.auto=true; });
+      else db.orders.push({id:ts,key,status:'closed',ts,created:now(),closedAt:now(),auto:true});
+      closedNow.push(key);
+    } else if(status==='closed'&&cur&&cur.auto&&!done){
+      recs.forEach(o=>{ o.status='open'; o.ts=ts; o.closedAt=''; });
+    }
+  });
+  if(closedNow.length) setTimeout(()=>toast(`🔒 Заказ ${closedNow.map(k=>splitOrder(k).no).join(', ')} закрыт автоматически: всё вырезано`,'ok'),600);
+}
+// при каждом сохранении проверяем заказы (после загрузки всех скриптов)
+window.addEventListener('load',()=>{
+  const _save=window.save; if(typeof _save!=='function') return;
+  window.save=function(){ try{ autoCloseOrders(); }catch(e){ console.warn('autoClose',e); } return _save.apply(this,arguments); };
+});
