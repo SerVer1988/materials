@@ -31,6 +31,7 @@ function saveLocal(){
 
 // ══════════════════════════════════════ STORAGE
 function save(){
+  if(typeof trackListChanges==='function') trackListChanges();     // удалили/добавили материал, размер, место — запоминаем
   // 1. Сразу в localStorage (мгновенно)
   localStorage.setItem('lm7',JSON.stringify(db));
   localStorage.setItem('lm7_fav',JSON.stringify([...favorites]));

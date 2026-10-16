@@ -35,10 +35,38 @@ function mergeFavs(p){
   persistFavState();
 }
 
+// ── Справочники (материалы, размеры, места): удалённое не возвращается из облака ──
+// listState[kind][название] = [1|0, время] — «есть» / «удалено». Список раньше только объединялся с облачным, поэтому удалённое возвращалось.
+// Удаления и добавления вы делаете в настройках, а мы замечаем их при сохранении, сравнивая списки с прошлым снимком.
+let listState={mats:{},sizes:{},places:{}}, listSnap=null;
+try{ listState=Object.assign({mats:{},sizes:{},places:{}},JSON.parse(localStorage.getItem('lm7_list_state')||'{}')); }catch(e){}
+try{ listSnap=JSON.parse(localStorage.getItem('lm7_list_snap')||'null'); }catch(e){ listSnap=null; }
+function persistListState(){ try{ localStorage.setItem('lm7_list_state',JSON.stringify(listState)); localStorage.setItem('lm7_list_snap',JSON.stringify(listSnap)); }catch(e){} }
+function listsNow(){ return {mats:MATS,sizes:SIZES,places:PLACES}; }
+function refreshListSnap(){ const c=listsNow(); listSnap={mats:[...c.mats],sizes:[...c.sizes],places:[...c.places]}; persistListState(); }
+function trackListChanges(){
+  if(!listSnap){ refreshListSnap(); return; }
+  const c=listsNow(), ts=Date.now();
+  ['mats','sizes','places'].forEach(k=>{
+    const nowSet=new Set(c[k]), was=new Set(listSnap[k]||[]);
+    was.forEach(x=>{ if(!nowSet.has(x)) listState[k][x]=[0,ts]; });
+    nowSet.forEach(x=>{ if(!was.has(x)) listState[k][x]=[1,ts]; });
+  });
+  refreshListSnap();
+}
+function mergeListState(p){
+  const cs=(p&&p.listState)||{};
+  ['mats','sizes','places'].forEach(k=>{
+    const c=cs[k]||{}; if(!listState[k]) listState[k]={};
+    Object.keys(c).forEach(x=>{ if(!listState[k][x]||(c[x][1]||0)>(listState[k][x][1]||0)) listState[k][x]=c[x]; });
+  });
+}
+const applyListState=(kind,list)=>list.filter(x=>!(listState[kind]&&listState[kind][x]&&listState[kind][x][0]===0));
+
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, managers:(typeof managers!=='undefined'?managers:{}), matSizes:(typeof matSizes!=='undefined'?matSizes:{}), deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, managers:(typeof managers!=='undefined'?managers:{}), matSizes:(typeof matSizes!=='undefined'?matSizes:{}), listState, deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -88,9 +116,12 @@ function mergePayload(p){
     });
     db.remainders = db.remainders.filter(r=>!deletedIds.has(r.id));
   }
+  mergeListState(p);
   if(p.MATS  && p.MATS.length)   MATS   = mergeList(MATS,   p.MATS,   'mats',   p.listTs);
   if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES,  'sizes',  p.listTs);
   if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES, 'places', p.listTs);
+  MATS=applyListState('mats',MATS); SIZES=applyListState('sizes',SIZES); PLACES=applyListState('places',PLACES);
+  refreshListSnap();                 // слияние с облаком — не действие пользователя, в удаления не попадает
   mergeFavs(p);
   if(typeof mergeManagers==='function') mergeManagers(p);
   if(typeof mergeMatSizes==='function') mergeMatSizes(p);
