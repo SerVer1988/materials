@@ -101,6 +101,14 @@
 .pg-sum b{font-size:22px;color:var(--red)}
 .pg-sub{color:var(--muted);font-weight:600;font-size:12px}
 #pfl-wrap{align-items:center}
+/* Колонки таблиц и менеджеры */
+.col-cfg{cursor:pointer;font-size:15px;padding:0 4px;color:var(--accent-ink)}
+.cols-pop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.cols-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;width:100%;max-width:340px;max-height:80vh;overflow:auto}
+.cols-opt{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:14px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer}
+table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-width:110px}
+.mgr-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.mgr-n{width:26px;height:26px;border-radius:50%;background:var(--aclt);color:var(--accent-ink);font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
 </style>
 </head>
 <body>
@@ -233,7 +241,7 @@
   <div class="sec-body">
     <div class="card" style="padding:0;overflow:hidden">
       <div class="twrap" style="border:none;border-radius:0">
-        <table class="acct"><thead><tr><th>#</th><th>Дата</th><th>Материал</th><th>Размер</th><th>Кол-во</th><th>Место</th><th></th></tr></thead>
+        <table class="acct"><thead id="in-thead"></thead>
         <tbody id="in-tbody"></tbody></table>
       </div>
     </div>
@@ -317,7 +325,7 @@
   <div class="sec-body">
     <div class="card" style="padding:0;overflow:hidden">
       <div class="twrap" style="border:none;border-radius:0">
-        <table class="acct"><thead><tr><th>#</th><th>Дата</th><th>Материал</th><th>Размер</th><th>Кол-во</th><th>Изделие</th><th></th></tr></thead>
+        <table class="acct"><thead id="out-thead"></thead>
         <tbody id="out-tbody"></tbody></table>
       </div>
     </div>
@@ -539,6 +547,13 @@
     </div>
   </div>
 
+  <!-- Менеджеры: номер из номера заказа (9-10-53 → 9) → имя -->
+  <div class="card">
+    <div class="ctitle">Менеджеры</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Номер — первая цифра номера заказа (9-10-53 → менеджер 9). Имена видны в таблице расхода и в «Итогах».</div>
+    <div id="mgr-list"></div>
+  </div>
+
   <!-- История — сворачиваемая -->
   <div class="ccard" id="cc-hist">
     <div class="ccard-head" onclick="toggleCard('cc-hist')">
@@ -743,7 +758,7 @@
 <script src="js/config.js?v=2026-10-13a"></script>
 <script src="js/ui.js?v=2026-10-13a"></script>
 <script src="js/theme.js?v=2026-10-13a"></script>
-<script src="js/sync.js?v=2026-10-13b"></script>
+<script src="js/sync.js?v=2026-10-13c"></script>
 <script src="js/access.js?v=2026-10-13a"></script>
 <script src="js/storage.js?v=2026-10-13b"></script>
 <script src="js/crud.js?v=2026-10-13a"></script>
@@ -753,16 +768,18 @@
 <script src="js/search.js?v=2026-10-13a"></script>
 <script src="js/stock.js?v=2026-10-13c"></script>
 <script src="js/revision.js?v=2026-10-13a"></script>
-<script src="js/stats.js?v=2026-10-13b"></script>
+<script src="js/stats.js?v=2026-10-13c"></script>
 <script src="js/names.js?v=2026-10-13a"></script>
+<script src="js/managers.js?v=2026-10-13a"></script>
+<script src="js/columns.js?v=2026-10-13a"></script>
 <script src="js/orders.js?v=2026-10-13d"></script>
 <script src="js/plan.js?v=2026-10-13i"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
 <script src="js/inbox.js?v=2026-10-13a"></script>
 <script src="js/scrap-calc.js?v=2026-10-13b"></script>
-<script src="js/income.js?v=2026-10-13c"></script>
-<script src="js/expense.js?v=2026-10-13f"></script>
+<script src="js/income.js?v=2026-10-13d"></script>
+<script src="js/expense.js?v=2026-10-13g"></script>
 <script src="js/remainders.js?v=2026-10-13d"></script>
 <script src="js/scrap-modals.js?v=2026-10-13d"></script>
 <script src="js/selection.js?v=2026-10-13a"></script>
