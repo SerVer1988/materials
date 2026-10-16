@@ -38,7 +38,7 @@ function mergeFavs(p){
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, managers:(typeof managers!=='undefined'?managers:{}), deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -92,6 +92,7 @@ function mergePayload(p){
   if(p.SIZES && p.SIZES.length)  SIZES  = mergeList(SIZES,  p.SIZES,  'sizes',  p.listTs);
   if(p.PLACES&& p.PLACES.length) PLACES = mergeList(PLACES, p.PLACES, 'places', p.listTs);
   mergeFavs(p);
+  if(typeof mergeManagers==='function') mergeManagers(p);
 }
 
 async function sbPush(){

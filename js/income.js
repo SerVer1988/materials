@@ -78,15 +78,8 @@ function renderIn(){
   if(inPlaceFilter) rows=rows.filter(r=>(r.place||'')=== inPlaceFilter);
   if(sq) rows=rows.filter(r=>r.mat&&r.mat.toLowerCase().includes(sq));
   rows=rows.slice(0,60);
-  if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>';return;}
+  const cols=colsFor('in'); colsHead('in');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="${cols.length+1}"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>`;return;}
   const total=db.income.filter(r=>!inPlaceFilter||(r.place||'')=== inPlaceFilter).length;
-  tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.income===r.id?'is-editing':''}" onclick="editIncome(${r.id})">
-    <td style="color:var(--muted);font-size:11px">${total-i}</td>
-    <td class="c-dt">${dtCell(r.dt)}</td>
-    <td>${matChip(r.mat)}${ordTag(r.order)}${r.rev?'<div class="ord-tag" title="Запись ревизии">⚖️ ревизия</div>':''}</td>
-    <td class="c-sz">${sizeStack(r.size)}</td>
-    <td><span class="badge bin">${r.qty} л.</span></td>
-    <td><span class="place-badge">${r.place||'—'}</span></td>
-    <td><button class="dbtn" onclick="event.stopPropagation();del('income',${r.id})">✕</button></td>
-  </tr>`).join('');
+  tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.income===r.id?'is-editing':''}" onclick="editIncome(${r.id})">${cols.map(c=>incCell(c,r,i,total,cols)).join('')}<td><button class="dbtn" onclick="event.stopPropagation();del('income',${r.id})">✕</button></td></tr>`).join('');
 }

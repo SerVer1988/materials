@@ -47,7 +47,7 @@ function calcStats(){
     m.detM2+=dA; if(!full) m.scrapM2+=dA;
     bump(m.cust,inf.cust,inf.cust,dA,inf.no);
     bump(m.cat,inf.cat,statCap(inf.cat),dA,inf.no);
-    bump(m.mgr,inf.mgr,inf.mgr,dA,inf.no);
+    bump(m.mgr,inf.mgr,(typeof managerLabel==='function'?managerLabel(inf.mgr):inf.mgr),dA,inf.no);
     bump(m.mat,r.mat,r.mat,dA,inf.no,full?q:0);
   });
   return months;

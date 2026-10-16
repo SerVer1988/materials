@@ -159,28 +159,9 @@ function renderOut(){
   updatePlaceChips();
   const total=rows.length;
   rows=rows.slice(0,60);
-  if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>';return;}
-  tb.innerHTML=rows.map((r,i)=>{
-    let sizeCell;
-    if(r.etype==='full'&&r.size&&r.size!=='—'){
-      sizeCell=sizeStack(r.size);
-    } else if(r.sourceScrap){
-      sizeCell=`<span style="color:var(--blue)">${sizeStack(r.sourceScrap)}</span>`;
-    } else if(r.det){
-      sizeCell=`<span style="font-size:11px;color:var(--muted)">обрезок</span>`;
-    } else {
-      sizeCell=`<span style="font-size:12px;color:var(--muted)">—</span>`;
-    }
-    return `<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">
-      <td style="color:var(--muted);font-size:11px">${total-i}</td>
-      <td class="c-dt">${dtCell(r.dt)}</td>
-      <td>${matChip(r.mat)}${ordTag(r.order)}${r.brak?'<div class="ord-tag" title="Списано в брак">🗑 брак</div>':''}${r.rev?'<div class="ord-tag" title="Запись ревизии">⚖️ ревизия</div>':''}</td>
-      <td class="c-sz">${sizeCell}</td>
-      <td><span class="badge bout">${r.qty} л.</span></td>
-      <td class="c-sz c-det">${sizeStack(normSizeStr(r.det))}</td>
-      <td><button class="dbtn" onclick="event.stopPropagation();del('expense',${r.id})">✕</button></td>
-    </tr>`;
-  }).join('');
+  const cols=colsFor('out'); colsHead('out');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="${cols.length+1}"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>`;return;}
+  tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">${cols.map(c=>outCell(c,r,i,total,cols)).join('')}<td><button class="dbtn" onclick="event.stopPropagation();del('expense',${r.id})">✕</button></td></tr>`).join('');
 }
 
 // Отмена редактирования расхода сбрасывает галочку «Списать в брак» (cancelEdit лежит в income.js)
