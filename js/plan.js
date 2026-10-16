@@ -393,39 +393,79 @@ function planRowHtml(l,f){
     <div class="pl-btns">${btns.join('')}</div>
   </div>`;
 }
+// ══════════════════════ ПО ЗАКАЗАМ: только площади (нужно / потрачено), без закупки ══════════════════════
+// Нужно, м² = сумма по строкам плана заказа (листы × площадь листа + площадь полос). Потрачено, м² = по расходу заказа:
+// целый лист — площадь листа, расход «из обрезка» — площадь изделия. Строки возврата брака в «нужно» не входят —
+// повторная вырезка как раз и даёт перерасход.
+// Какому заказу плана принадлежит ключ из расхода: точный ключ; короткий «номер_заказчик» (префикс полного ключа); иначе по номеру, если он один
+function planOrderFor(key,planKeys){
+  if(!key) return null;
+  if(planKeys.includes(key)) return key;
+  const pre=planKeys.filter(k=>k.startsWith(key+'_'));
+  if(pre.length===1) return pre[0];
+  const no=splitOrder(key).no.toLowerCase();
+  const same=planKeys.filter(k=>splitOrder(k).no.toLowerCase()===no);
+  return same.length===1?same[0]:null;
+}
+function calcOrderBalance(){
+  const res=new Map();
+  const get=(o,m)=>{ if(!res.has(o)) res.set(o,new Map()); const mm=res.get(o); if(!mm.has(m)) mm.set(m,{mat:m,need:0,spent:0}); return mm.get(m); };
+  planAll().forEach(l=>{
+    if(l.fromBrak) return;
+    get(l.order,l.mat).need+=((l.qty||0)*l.w*l.l+(l.stripW>0&&l.stripL>0?l.stripW*l.stripL:0))/1e6;
+  });
+  db.expense.forEach(r=>{
+    if(!r.order||r.rev) return;
+    const ok=planOrderFor(r.order,[...res.keys()]); if(!ok) return;                   // только заказы, которые есть в плане
+    const q=r.qty||0, full=(r.etype==='full'||!r.etype);
+    let a=0;
+    if(full){ const s=(r.w>0&&r.l>0)?{w:r.w,l:r.l}:parseSizeStr(r.size||''); a=s?s.w*s.l*q/1e6:0; }
+    else { const d=parseSizeStr(r.det||''); a=d?d.w*d.l*q/1e6:0; }
+    get(ok,r.mat).spent+=a;
+  });
+  return res;
+}
+function poDiffHtml(need,spent,closed){
+  const d=Math.round((need-spent)*100)/100;
+  if(Math.abs(d)<0.005) return `<span class="po-d ok">впритык</span>`;
+  if(d>0) return closed?`<span class="po-d ok">экономия ${f2(d)} м²</span>`:`<span class="po-d">осталось ${f2(d)} м²</span>`;
+  return `<span class="po-d bad">перерасход ${f2(-d)} м²</span>`;
+}
+function planCloseOrder(i){
+  const key=(window.__planKeys||[])[i]; if(key===undefined) return;
+  confirm2(`Закрыть заказ ${key}? Итог (экономия или перерасход) попадёт в «Итоги».`,()=>{ setOrderStatus(key,'closed'); renderPlan(); toast('🔒 Заказ закрыт','ok'); });
+  document.getElementById('ov-yes').textContent='Да, закрыть';
+}
+function planReopenOrder(i){ const key=(window.__planKeys||[])[i]; if(key===undefined) return; setOrderStatus(key,'open'); renderPlan(); toast('Заказ открыт снова','ok'); }
+
 function renderPlanOrders(){
   const box=document.getElementById('plan-list'); if(!box) return;
-  const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
   const q=(document.getElementById('plan-s')?.value||'').trim().toLowerCase();
-  const ctx=planContext();
-  const lines=planAll().sort((a,b)=>a.id-b.id);
-  const infos=new Map(); lines.forEach(l=>infos.set(l.id,planLineInfo(l,ctx)));   // порядок важен: распределение полученных листов
-  const stages=calcOrderStages();
-  const orders=[...new Set(lines.map(l=>l.order))]
+  const bal=calcOrderBalance(), stages=calcOrderStages();
+  const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
+  const keys=[...bal.keys()]
     .filter(o=>planFilter==='all'||!closed.has(o))
-    .filter(o=>!q||o.toLowerCase().includes(q)||lines.some(l=>l.order===o&&l.mat.toLowerCase().includes(q)))
-    .filter(o=>!planMat||lines.some(l=>l.order===o&&l.mat===planMat))
+    .filter(o=>!q||o.toLowerCase().includes(q)||[...bal.get(o).keys()].some(m=>m.toLowerCase().includes(q)))
+    .filter(o=>!planMat||bal.get(o).has(planMat))
     .sort((a,b)=>b.localeCompare(a,'ru',{numeric:true}));
-  window.__planKeys=orders; window.__planCollapsed={};
-  if(!orders.length){ box.innerHTML='<div class="empty"><div class="ei">📋</div>Плана пока нет.<br>Отправьте заявку из CorelDRAW или нажмите «➕ Вставить заявку»</div>'; return; }
-  box.innerHTML=orders.map((o,oi)=>{
-    const ls=lines.filter(l=>l.order===o&&(!planMat||l.mat===planMat));
-    const buyTotal=ls.reduce((s,l)=>s+infos.get(l.id).toBuy,0);
-    const act=ls.filter(l=>!infos.get(l.id).done), done=ls.filter(l=>infos.get(l.id).done);
-    const oc=planUI['o:'+o]!==undefined?!!planUI['o:'+o]:(ls.length>0&&!act.length);   // по умолчанию свёрнут, если всё готово
+  window.__planKeys=keys; window.__planCollapsed={};
+  if(!keys.length){ box.innerHTML='<div class="empty"><div class="ei">📋</div>Заказов в плане нет.<br>Заявки приходят из CorelDRAW или кнопкой «＋».</div>'; return; }
+  box.innerHTML=keys.map((o,oi)=>{
+    const isClosed=closed.has(o), sp=splitOrder(o);
+    const mats=[...bal.get(o).values()].filter(e=>!planMat||e.mat===planMat).sort((a,b)=>a.mat.localeCompare(b.mat,'ru'));
+    const tNeed=mats.reduce((s,e)=>s+e.need,0), tSpent=mats.reduce((s,e)=>s+e.spent,0);
+    const oc=planUI['o:'+o]!==undefined?!!planUI['o:'+o]:isClosed;
     window.__planCollapsed[o]=oc;
-    const dOpen=!!planUI['d:'+o];
-    const sp=splitOrder(o);
-    const doneBlock=done.length?`<div class="pl-done">
-        <div class="pl-done-head" onclick="togglePlanDone(${oi})"><span class="pl-arrow">${dOpen?'▾':'▸'}</span> Готово: <b>${done.length}</b></div>
-        <div class="pl-done-body" style="display:${dOpen?'block':'none'}">${done.map(l=>planRowHtml(l,infos.get(l.id))).join('')}</div>
-      </div>`:'';
-    return `<div class="ocard">
+    const rows=mats.map(e=>`<div class="po-row"><div class="po-mat">${matChip(e.mat)}</div>
+        <div class="po-nums"><span>нужно <b>${f2(e.need)}</b></span><span>потрачено <b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}</div></div>`).join('');
+    return `<div class="ocard pl-ocard ${isClosed?'is-closed':''}">
       <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
         <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span> <b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
-        <div class="osum">Строк: <b>${ls.length}</b> · к закупке: <b>${buyTotal} шт</b> <button class="pl-clear" onclick="event.stopPropagation();deletePlanOrder(${oi})">очистить план</button></div>
+        <div class="osum">нужно <b>${f2(tNeed)}</b> м² · потрачено <b>${f2(tSpent)}</b> м² ${poDiffHtml(tNeed,tSpent,isClosed)}</div>
       </div>
-      <div class="obody"${oc?' style="display:none"':''}>${act.map(l=>planRowHtml(l,infos.get(l.id))).join('')}${doneBlock}</div>
+      <div class="obody"${oc?' style="display:none"':''}>${rows}
+        <div class="oactions" style="margin-top:8px">${isClosed?`<button class="btn bghost bsm" onclick="planReopenOrder(${oi})">↩️ Открыть снова</button>`:`<button class="btn bprim bsm" onclick="planCloseOrder(${oi})">✅ Закрыть заказ</button>`}<button class="pl-clear" onclick="deletePlanOrder(${oi})">очистить план</button></div>
+      </div>
     </div>`;
   }).join('');
 }
