@@ -84,6 +84,23 @@
 .st-now>div{flex:1;background:var(--card2);border-radius:var(--rs);padding:10px;font-size:13px;color:var(--muted)}
 .st-now b{font-size:20px;color:var(--text)}.st-now span{display:block;font-weight:800;color:var(--blue)}
 .st-note{font-size:11px;color:var(--muted);padding:4px 2px 10px;line-height:1.4}
+/* План: закупка по материалам */
+.pg{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:9px 11px;margin-bottom:6px}
+.pg-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pg-mat{display:flex;align-items:center;gap:7px;min-width:0;flex-wrap:wrap}
+.pg-sz{font-size:12px;font-weight:800;color:var(--muted)}
+.pg-badge{font-size:13px;font-weight:900;padding:4px 11px;border-radius:20px;white-space:nowrap}
+.pg-badge.buy{background:var(--red);color:#fff}
+.pg-badge.wait{background:var(--blt);color:var(--blue)}
+.pg-badge.ok{background:var(--glt);color:var(--green)}
+.pg-line{font-size:12px;color:var(--muted);margin-top:6px}
+.pg-line b{color:var(--text)}
+.pg-ord{font-size:11px;color:var(--accent-ink);margin-top:3px;font-weight:700;line-height:1.35}
+.pg-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pg-sum{font-size:13px;font-weight:800;padding:2px 2px 8px;color:var(--text)}
+.pg-sum b{font-size:22px;color:var(--red)}
+.pg-sub{color:var(--muted);font-weight:600;font-size:12px}
+#pfl-wrap{align-items:center}
 </style>
 </head>
 <body>
@@ -420,9 +437,14 @@
         </div>
       </div>
       <div class="fchips" style="margin-bottom:0">
-        <div class="fchip on" id="pfl-open" onclick="setPlanFilter('open')">🔒 Открытые</div>
-        <div class="fchip" id="pfl-all" onclick="setPlanFilter('all')">Все заказы</div>
+        <div class="fchip on" id="pv-buy" onclick="setPlanView('buy')">🛒 Закупка</div>
+        <div class="fchip" id="pv-ord" onclick="setPlanView('orders')">📋 По заказам</div>
+        <span id="pfl-wrap" style="display:none;gap:6px">
+          <div class="fchip on" id="pfl-open" onclick="setPlanFilter('open')">🔒 Открытые</div>
+          <div class="fchip" id="pfl-all" onclick="setPlanFilter('all')">Все</div>
+        </span>
       </div>
+      <div class="fchips st-months" id="plan-mats" style="margin-bottom:0"></div>
     </div>
     <!-- Добавить заявку — скрытая панель (кнопка «＋» внизу) -->
     <div class="add-panel" id="add-plan">
@@ -675,7 +697,7 @@
 
 <nav class="bnav">
   <div class="bnav-inner">
-    <button class="nbtn nbtn-side" id="nbtn-plan" onclick="go('rev',this)">
+    <button class="nbtn nbtn-side" id="nbtn-plan" onclick="go('plan',this)">
       <div class="ni-wrap" style="width:52px;height:52px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7" width="40" height="40"><circle class="pl-b" cx="3.5" cy="3.5" r="3.45"/><g class="pl-g" fill="none" stroke-width=".36" stroke-linecap="round" stroke-linejoin="round"><rect x="1.9" y="1.7" width="3.2" height="3.6" rx=".5"/><path d="M2.9 3.05h1.8M2.9 3.95h1.8M2.9 4.85h1.1"/><circle cx="2.55" cy="3.05" r=".03"/><circle cx="2.55" cy="3.95" r=".03"/><circle cx="2.55" cy="4.85" r=".03"/></g></svg></div>
     </button>
     <button class="nbtn nbtn-side active" id="nbtn-uchet" onclick="goUchet(this)">
@@ -727,13 +749,13 @@
 <script src="js/crud.js?v=2026-10-13a"></script>
 <script src="js/init.js?v=2026-10-13a"></script>
 <script src="js/autocomplete.js?v=2026-10-13a"></script>
-<script src="js/navigation.js?v=2026-10-13d"></script>
+<script src="js/navigation.js?v=2026-10-13e"></script>
 <script src="js/search.js?v=2026-10-13a"></script>
 <script src="js/stock.js?v=2026-10-13c"></script>
 <script src="js/revision.js?v=2026-10-13a"></script>
 <script src="js/stats.js?v=2026-10-13a"></script>
 <script src="js/orders.js?v=2026-10-13d"></script>
-<script src="js/plan.js?v=2026-10-13g"></script>
+<script src="js/plan.js?v=2026-10-13h"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
 <script src="js/inbox.js?v=2026-10-13a"></script>
