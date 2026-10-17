@@ -118,6 +118,11 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 /* Размеры по материалам */
 .ms-opt{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:14px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer}
 .ms-note{font-size:11px;color:var(--muted);margin-top:6px}
+.pg-tbl{margin-top:5px}
+.pg-orow{display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:3px 0;border-bottom:1px dashed var(--border)}
+.pg-orow:last-child{border-bottom:none}
+.pg-o{color:var(--accent-ink);font-weight:700}
+.pg-d{font-weight:700;color:var(--text);text-align:right}
 </style>
 </head>
 <body>
@@ -313,6 +318,8 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
             <select id="out-order" onchange="onSelectChange('out-order','out-order-custom')"></select>
             <div class="custom-input-wrap" id="out-order-custom"><input type="text" placeholder="9-08-77_Заказчик"></div>
           </div>
+          <div class="fg"><label>Категория</label><input type="text" id="out-cat" placeholder="Табличка(и)" autocomplete="off"></div>
+          <div class="fg"><label>Длина реза, мм</label><input type="number" inputmode="numeric" id="out-cut" placeholder="необязательно"></div>
           <div class="fg full"><label>Примечание</label><input type="text" id="out-note" placeholder="необязательно"></div>
           <div class="fg full"><label style="display:flex;align-items:center;gap:9px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px"><input type="checkbox" id="out-brak" style="width:20px;height:20px;flex:none;margin:0"> 🗑 Списать в брак</label>
             <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35">Испорчена только эта деталь: лист или обрезок списывается как обычно, а деталь возвращается в заказ (в Плане появится строка на повторную вырезку). Для обычной резки не отмечайте.</div></div>
@@ -805,19 +812,19 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 <script src="js/search.js?v=2026-10-13a"></script>
 <script src="js/stock.js?v=2026-10-13c"></script>
 <script src="js/revision.js?v=2026-10-13b"></script>
-<script src="js/stats.js?v=2026-10-13e"></script>
+<script src="js/stats.js?v=2026-10-13f"></script>
 <script src="js/names.js?v=2026-10-13a"></script>
 <script src="js/managers.js?v=2026-10-13a"></script>
-<script src="js/columns.js?v=2026-10-13a"></script>
+<script src="js/columns.js?v=2026-10-13b"></script>
 <script src="js/matsizes.js?v=2026-10-13a"></script>
 <script src="js/orders.js?v=2026-10-13d"></script>
-<script src="js/plan.js?v=2026-10-13k"></script>
+<script src="js/plan.js?v=2026-10-13l"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
-<script src="js/inbox.js?v=2026-10-13a"></script>
+<script src="js/inbox.js?v=2026-10-13b"></script>
 <script src="js/scrap-calc.js?v=2026-10-13b"></script>
 <script src="js/income.js?v=2026-10-13d"></script>
-<script src="js/expense.js?v=2026-10-13g"></script>
+<script src="js/expense.js?v=2026-10-13h"></script>
 <script src="js/remainders.js?v=2026-10-13d"></script>
 <script src="js/scrap-modals.js?v=2026-10-13d"></script>
 <script src="js/selection.js?v=2026-10-13a"></script>
