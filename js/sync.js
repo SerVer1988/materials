@@ -66,7 +66,7 @@ const applyListState=(kind,list)=>list.filter(x=>!(listState[kind]&&listState[ki
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, managers:(typeof managers!=='undefined'?managers:{}), matSizes:(typeof matSizes!=='undefined'?matSizes:{}), listState, deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, managers:(typeof managers!=='undefined'?managers:{}), matSizes:(typeof matSizes!=='undefined'?matSizes:{}), listState, orderAlias:(typeof orderAlias!=='undefined'?orderAlias:{}), deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -96,6 +96,8 @@ function mergePayload(p){
   if(p.renames) mergeRenames(p.renames);
   applyRenamesToPayload(p);
   applyRenamesLocal();
+  // Объединённые заказы (псевдонимы): применяем к облачным и локальным данным
+  if(typeof mergeOrderAliases==='function'){ mergeOrderAliases(p); applyOrderAliases(p.db); applyOrderAliases(db); }
   // Удалённые заказы: объединяем списки и применяем к облачным и локальным данным
   if(p.deletedOrders) deletedOrders=[...new Set([...deletedOrders,...p.deletedOrders])];
   applyDeletedOrders(p.db);

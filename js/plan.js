@@ -467,7 +467,7 @@ function renderPlanOrders(){
         <div class="osum">нужно <b>${f2(tNeed)}</b> м² · потрачено <b>${f2(tSpent)}</b> м² ${poDiffHtml(tNeed,tSpent,isClosed)}</div>
       </div>
       <div class="obody"${oc?' style="display:none"':''}>${rows}
-        <div class="oactions" style="margin-top:8px">${isClosed?`<button class="btn bghost bsm" onclick="planReopenOrder(${oi})">↩️ Открыть снова</button>`:`<button class="btn bprim bsm" onclick="planCloseOrder(${oi})">✅ Закрыть заказ</button>`}<button class="pl-clear" onclick="deletePlanOrder(${oi})">очистить план</button></div>
+        <div class="oactions" style="margin-top:8px">${isClosed?`<button class="btn bghost bsm" onclick="planReopenOrder(${oi})">↩️ Открыть снова</button>`:`<button class="btn bprim bsm" onclick="planCloseOrder(${oi})">✅ Закрыть заказ</button>`}<button class="btn bghost bsm" onclick="openMergeOrder(${oi})" title="Тот же заказ под другим названием">🔗 Объединить</button><button class="pl-clear" onclick="deletePlanOrder(${oi})">очистить план</button></div>
       </div>
     </div>`;
   }).join('');
