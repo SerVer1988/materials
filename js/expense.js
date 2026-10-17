@@ -9,8 +9,11 @@ function saveExpense(){
   const detStr=document.getElementById('out-det').value.trim(); const det=parseSizeStr(detStr);
   const sheetSel=isSheetSelected(); let size='—',w=0,l=0,etype='partial';
   if(sheetSel){const sz=getSizeWL('out-pre');size=document.getElementById('out-pre').value;w=sz.w;l=sz.l;etype='full';}
+  const cat=normCategory((document.getElementById('out-cat')?.value||'').trim());            // «табличка» → «Табличка(и)»
+  const cut=parseFloat(String(document.getElementById('out-cut')?.value||'').replace(',','.'))||0;   // длина реза, мм
+  ['out-cat','out-cut'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const brak=!!document.getElementById('out-brak')?.checked;      // «Списать в брак»: лист списан, но в «израсходовано» по заказу не засчитывается
-  const rec={mat,size,w,l,qty,etype,order,det:detStr,note:document.getElementById('out-note').value.trim(),brak};
+  const rec={mat,size,w,l,qty,etype,order,det:detStr,note:document.getElementById('out-note').value.trim(),brak,cat,cut};
   const brakBox=document.getElementById('out-brak'); if(brakBox) brakBox.checked=false;
   if(editMode.expense!==null){
     const idx=db.expense.findIndex(r=>r.id===editMode.expense);
@@ -120,6 +123,11 @@ function syncBrakPlan(rec){
   else db.plan.push({id:Date.now()+1,...fields,blocks:null,frac:null,noFit:false,status:'buy',booked:0,created:now(),fromBrak:rec.id});
   ensureOrder(rec.order);
 }
+// Категория и длина реза (из подписи Corel или вручную)
+function setExpenseExtra(cat,cut){
+  const c=document.getElementById('out-cat'), u=document.getElementById('out-cut');
+  if(c) c.value=cat||''; if(u) u.value=cut||'';
+}
 function editExpense(id){
   const r=db.expense.find(x=>x.id===id); if(!r) return;
   editMode.expense=id;
@@ -133,6 +141,7 @@ function editExpense(id){
   document.getElementById('out-det').value=r.det||'';
   document.getElementById('out-note').value=r.note||'';
   const bb=document.getElementById('out-brak'); if(bb) bb.checked=!!r.brak;
+  setExpenseExtra(r.cat||'',r.cut||'');
   setOrderSelect('out-order',r.order||'');
   parseDetSize(); renderOut(); window.scrollTo(0,0);
 }
@@ -168,7 +177,7 @@ function renderOut(){
 (function(){
   const _cancelEdit=window.cancelEdit;
   window.cancelEdit=function(type){
-    if(type==='expense'){ const b=document.getElementById('out-brak'); if(b) b.checked=false; }
+    if(type==='expense'){ const b=document.getElementById('out-brak'); if(b) b.checked=false; setExpenseExtra('',''); }
     return _cancelEdit.apply(this,arguments);
   };
 })();

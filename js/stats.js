@@ -20,7 +20,7 @@ function statOrderInfo(r){
   }
   const g=(no.match(/^(\d+)-/)||[])[1];
   const mgr=g?String(parseInt(g,10)):'';
-  return {no,cust,cat:(typeof normCategory==='function'?normCategory(cat):cat),mgr};
+  return {no,cust,cat:(typeof normCategory==='function'?normCategory(r.cat||cat):(r.cat||cat)),mgr};
 }
 const statCap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 

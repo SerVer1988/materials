@@ -35,6 +35,9 @@ function parsePlanText(text){
     const q=rest.match(/(\d+(?:[.,]\d+)?)\s*(?:шт|лист)/i);          // «1шт», «4 листа», «0,7 листа»
     const qF=q?parseFloat(q[1].replace(',','.')):null;
     const w=+sheet[1], l=+sheet[2];
+    // размер изделия в скобках после листа: «ПВХ 8 мм - 1220х2440 мм (1159х2388) - 5 листа»
+    let det=null;
+    if(!strip&&sizes[1]&&/\(/.test(rest.slice(sheet.index+sheet[0].length,sizes[1].index))) det=`${sizes[1][1]}×${sizes[1][2]}`;
     if(!q){ out.push({mat,w,l,qty:strip?0:1,sw:strip?+strip[1]:0,sl:strip?+strip[2]:0,simple:!strip}); return; }
     if(strip){ out.push({mat,w,l,qty:Math.round(qF),sw:+strip[1],sl:+strip[2]}); return; }
     const isSheet=sheetCandidates(mat).some(sh=>sameDims(sh,{w,l}));
@@ -46,7 +49,7 @@ function parsePlanText(text){
     const W=Math.min(w,l), L=Math.max(w,l);
     let whole=Math.floor(qF), frac=qF-whole;
     if(frac>=PLAN_WHOLE_RATIO){ whole++; frac=0; }
-    out.push({mat,w,l,qty:whole,sw:frac>0.001?W:0,sl:frac>0.001?Math.round(frac*L):0,frac:qF!==Math.round(qF)?qF:null});
+    out.push({mat,w,l,qty:whole,sw:frac>0.001?W:0,sl:frac>0.001?Math.round(frac*L):0,frac:qF!==Math.round(qF)?qF:null,det});
   });
   return out.filter(x=>!x.simple).concat(planFromBlocks(out.filter(x=>x.simple)));
 }
@@ -131,12 +134,12 @@ function addPlanFromText(order,text,baseId,auto){
   if(!parsed.length){ toast('Не удалось разобрать заявку: нужны строки вида «Материал - 1220х2440 - 1шт + 1220х456»','err'); return false; }
   if(!db.plan) db.plan=[];
   const base=baseId||Date.now()*100;
-  let lines=parsed.map((p,i)=>({id:base+i,order,mat:canonMat(p.mat),size:fmtSheet(p.w,p.l),w:p.w,l:p.l,qty:p.qty,stripW:p.sw,stripL:p.sl,blocks:p.blocks||null,frac:p.frac||null,noFit:!!p.noFit,status:'buy',booked:0,created:now()}));
+  let lines=parsed.map((p,i)=>({id:base+i,order,mat:canonMat(p.mat),size:fmtSheet(p.w,p.l),w:p.w,l:p.l,qty:p.qty,stripW:p.sw,stripL:p.sl,blocks:p.blocks||null,frac:p.frac||null,noFit:!!p.noFit,det:p.det||null,status:'buy',booked:0,created:now()}));
   lines=lines.filter(l=>!db.plan.some(x=>x.id===l.id));          // уже добавлено (с другого устройства)
   if(!lines.length) return false;
   const isNewOrder=!db.plan.some(x=>x.order===order)&&!ordersList().some(o=>o.key===order);
   if(auto){
-    const lineKey=l=>[l.mat,l.w+'x'+l.l,l.stripW||0,l.stripL||0].join('|');
+    const lineKey=l=>[l.mat,l.w+'x'+l.l,l.stripW||0,l.stripL||0,l.det||''].join('|');
     const have=new Set(db.plan.filter(x=>x.order===order).map(lineKey));
     lines=lines.filter(l=>{ const k=lineKey(l); if(have.has(k)) return false; have.add(k); return true; });
     if(!lines.length){ toast(`Заказ ${order}: все материалы уже в плане`,'info'); return false; }
@@ -485,10 +488,14 @@ function planGroupsData(){
     if(closed.has(l.order)) return;
     const f=infos.get(l.id), k=l.mat+'||'+l.size;
     if(!f.done) matLines.set(l.mat,(matLines.get(l.mat)||0)+1);
-    if(!groups.has(k)) groups.set(k,{key:k,mat:l.mat,size:l.size,need:0,free:f.free,stock:ctx.stockQ[k]||0,orders:new Map(),lines:[],ordered:0,strips:0});
+    if(!groups.has(k)) groups.set(k,{key:k,mat:l.mat,size:l.size,need:0,free:f.free,stock:ctx.stockQ[k]||0,orders:new Map(),orderRows:new Map(),lines:[],ordered:0,strips:0});
     const g=groups.get(k); g.lines.push(l);
     if(f.toBuy>0){ g.need+=f.toBuy; g.orders.set(l.order,(g.orders.get(l.order)||0)+f.toBuy); if(l.status==='ordered') g.ordered+=f.toBuy; matNeed.set(l.mat,(matNeed.get(l.mat)||0)+f.toBuy); }
     if(f.needSheet||f.sharesSheet) g.strips++;
+    // что именно нужно по заказу: размеры изделий (из заявки) и полосы
+    const addRow=(label,n)=>{ if(!g.orderRows.has(l.order)) g.orderRows.set(l.order,new Map()); const rr=g.orderRows.get(l.order); rr.set(label,(rr.get(label)||0)+n); };
+    if(f.toBuy>0&&l.qty>0) addRow(l.det||'',l.qty);
+    if(f.needSheet||f.sharesSheet) addRow(l.stripW+'×'+l.stripL,1);
   });
   groups.forEach(g=>{ g.cover=Math.min(g.free,g.need); g.buy=g.need-g.cover; g.wait=Math.min(g.ordered,g.buy); g.toOrder=g.buy-g.wait; });
   return {groups,infos,matNeed,matLines};
@@ -525,7 +532,10 @@ function renderPlanBuy(){
   const sum=`<div class="pg-sum"><b>${tot.o}</b> л. к закупке${tot.w?` · ждём ${tot.w}`:''}${tot.c?` · из наличия ${tot.c}`:''} <span class="pg-sub">· ${gs.length} поз. · ${ords.size} заказ.</span></div>`;
   box.innerHTML=sum+gs.map((g,i)=>{
     const badge=g.toOrder>0?`<div class="pg-badge buy">Купить ${g.toOrder}</div>`:(g.wait>0?`<div class="pg-badge wait">Ждём ${g.wait}</div>`:`<div class="pg-badge ok">Есть в наличии</div>`);
-    const ords=[...g.orders.entries()].map(([o,n])=>`${planOrderShort(o)} ×${n}`).join(' · ');
+    const tbl=[...g.orderRows.entries()].map(([o,rr])=>{
+      const dets=[...rr.entries()].map(([lab,n])=>lab?(lab+(n>1?` ×${n}`:'')):`×${n}`).join(', ');
+      return `<div class="pg-orow"><span class="pg-o">${planOrderShort(o)}</span><span class="pg-d">${escHtml(dets)}</span></div>`;
+    }).join('');
     const btns=[];
     if(g.toOrder>0) btns.push(`<button class="btn bghost bsm" onclick="orderGroup(${i})">📦 Заказано (${g.toOrder})</button>`);
     if(g.buy>0) btns.push(`<button class="btn bghost bsm" onclick="receiveGroup(${i})">✅ Получено</button>`);
@@ -533,7 +543,7 @@ function renderPlanBuy(){
     return `<div class="pg">
       <div class="pg-top"><div class="pg-mat">${matChip(g.mat)}<span class="pg-sz">${escHtml(g.size)}</span></div>${badge}</div>
       <div class="pg-line">Нужно <b>${g.need}</b> · в наличии свободно <b>${g.free}</b>${g.cover?` → из наличия <b>${g.cover}</b>`:''}${g.strips?` · полос: ${g.strips}`:''}</div>
-      <div class="pg-ord">${ords}</div>
+      <div class="pg-tbl">${tbl}</div>
       <div class="pg-btns">${btns.join('')}</div>
     </div>`;
   }).join('');
