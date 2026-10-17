@@ -111,10 +111,11 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 .mgr-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .mgr-n{width:26px;height:26px;border-radius:50%;background:var(--aclt);color:var(--accent-ink);font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
 /* План → По заказам: площади */
-.po-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.po-nums{display:flex;gap:10px;font-size:12px;color:var(--muted);align-items:center;flex-wrap:wrap}
-.po-nums b{color:var(--text)}
-.po-d{font-weight:800;font-size:12px;color:var(--blue)}.po-d.ok{color:var(--green)}.po-d.bad{color:var(--red)}
+.po-row{display:grid;grid-template-columns:minmax(0,1fr) 62px 66px 104px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.po-row.po-head{font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;padding:2px 0 4px}
+.po-row.po-head span:not(:first-child),.po-c,.po-d{text-align:right}
+.po-c{font-size:13px}.po-c b{color:var(--text)}
+.po-d{font-weight:800;font-size:12px;color:var(--blue);white-space:nowrap}.po-d.ok{color:var(--green)}.po-d.bad{color:var(--red)}
 /* Размеры по материалам */
 .ms-opt{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:14px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer}
 .ms-note{font-size:11px;color:var(--muted);margin-top:6px}
@@ -470,7 +471,6 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
           <div class="fchip" id="pfl-all" onclick="setPlanFilter('all')">Все</div>
         </span>
       </div>
-      <div class="fchips st-months" id="plan-mats" style="margin-bottom:0"></div>
     </div>
     <!-- Добавить заявку — скрытая панель (кнопка «＋» внизу) -->
     <div class="add-panel" id="add-plan">
@@ -812,23 +812,23 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 <script src="js/autocomplete.js?v=2026-10-13a"></script>
 <script src="js/navigation.js?v=2026-10-13e"></script>
 <script src="js/search.js?v=2026-10-13a"></script>
-<script src="js/stock.js?v=2026-10-13c"></script>
+<script src="js/stock.js?v=2026-10-13d"></script>
 <script src="js/revision.js?v=2026-10-13b"></script>
 <script src="js/stats.js?v=2026-10-13f"></script>
 <script src="js/names.js?v=2026-10-13a"></script>
-<script src="js/managers.js?v=2026-10-13a"></script>
-<script src="js/columns.js?v=2026-10-13b"></script>
+<script src="js/managers.js?v=2026-10-13b"></script>
+<script src="js/columns.js?v=2026-10-13c"></script>
 <script src="js/matsizes.js?v=2026-10-13a"></script>
 <script src="js/ordermerge.js?v=2026-10-13a"></script>
 <script src="js/orders.js?v=2026-10-13d"></script>
-<script src="js/plan.js?v=2026-10-13m"></script>
+<script src="js/plan.js?v=2026-10-13n"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
 <script src="js/inbox.js?v=2026-10-13b"></script>
 <script src="js/scrap-calc.js?v=2026-10-13b"></script>
-<script src="js/income.js?v=2026-10-13d"></script>
-<script src="js/expense.js?v=2026-10-13h"></script>
-<script src="js/remainders.js?v=2026-10-13d"></script>
+<script src="js/income.js?v=2026-10-13e"></script>
+<script src="js/expense.js?v=2026-10-13i"></script>
+<script src="js/remainders.js?v=2026-10-13e"></script>
 <script src="js/scrap-modals.js?v=2026-10-13d"></script>
 <script src="js/selection.js?v=2026-10-13a"></script>
 <script src="js/history.js?v=2026-10-13a"></script>
