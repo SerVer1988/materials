@@ -76,7 +76,7 @@ function renderIn(){
   let rows=[...db.income].reverse();
   const sq=(document.getElementById('in-s')?.value||'').toLowerCase();
   if(inPlaceFilter) rows=rows.filter(r=>(r.place||'')=== inPlaceFilter);
-  if(sq) rows=rows.filter(r=>r.mat&&r.mat.toLowerCase().includes(sq));
+  if(sq) rows=rows.filter(r=>searchMatch(incHay(r),sq));        // ищем по материалу, размеру, месту, заказу, примечанию, дате
   rows=rows.slice(0,60);
   const cols=colsFor('in'); colsHead('in');
   if(!rows.length){tb.innerHTML=`<tr><td colspan="${cols.length+1}"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>`;return;}

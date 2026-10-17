@@ -431,8 +431,8 @@ function calcOrderBalance(){
 function poDiffHtml(need,spent,closed){
   const d=Math.round((need-spent)*100)/100;
   if(Math.abs(d)<0.005) return `<span class="po-d ok">впритык</span>`;
-  if(d>0) return closed?`<span class="po-d ok">экономия ${f2(d)} м²</span>`:`<span class="po-d">осталось ${f2(d)} м²</span>`;
-  return `<span class="po-d bad">перерасход ${f2(-d)} м²</span>`;
+  if(d>0) return closed?`<span class="po-d ok">экономия ${f2(d)}</span>`:`<span class="po-d">осталось ${f2(d)}</span>`;
+  return `<span class="po-d bad">перерасход ${f2(-d)}</span>`;
 }
 function planCloseOrder(i){
   const key=(window.__planKeys||[])[i]; if(key===undefined) return;
@@ -459,8 +459,8 @@ function renderPlanOrders(){
     const tNeed=mats.reduce((s,e)=>s+e.need,0), tSpent=mats.reduce((s,e)=>s+e.spent,0);
     const oc=planUI['o:'+o]!==undefined?!!planUI['o:'+o]:isClosed;
     window.__planCollapsed[o]=oc;
-    const rows=mats.map(e=>`<div class="po-row"><div class="po-mat">${matChip(e.mat)}</div>
-        <div class="po-nums"><span>нужно <b>${f2(e.need)}</b></span><span>потрачено <b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}</div></div>`).join('');
+    const rows=`<div class="po-row po-head"><span></span><span>нужно, м²</span><span>потрачено</span><span>итог, м²</span></div>`+
+      mats.map(e=>`<div class="po-row"><div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}</div>`).join('');
     return `<div class="ocard pl-ocard ${isClosed?'is-closed':''}">
       <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
         <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span> <b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
@@ -500,12 +500,7 @@ function planGroupsData(){
   groups.forEach(g=>{ g.cover=Math.min(g.free,g.need); g.buy=g.need-g.cover; g.wait=Math.min(g.ordered,g.buy); g.toOrder=g.buy-g.wait; });
   return {groups,infos,matNeed,matLines};
 }
-function planMatChips(counts,unit){
-  const el=document.getElementById('plan-mats'); if(!el) return;
-  const mats=[...counts.keys()].filter(m=>counts.get(m)>0).sort((a,b)=>a.localeCompare(b,'ru'));
-  if(planMat&&!mats.includes(planMat)) planMat='';
-  el.innerHTML=mats.length?`<div class="fchip${planMat?'':' on'}" onclick="setPlanMat('')">Все</div>`+mats.map(m=>`<div class="fchip${m===planMat?' on':''}" data-m="${escHtml(m)}" onclick="setPlanMat(this.dataset.m)">${escHtml(m)} · ${counts.get(m)}</div>`).join(''):'';
-}
+function planMatChips(){ const el=document.getElementById('plan-mats'); if(el) el.innerHTML=''; }   // фильтр по материалам убран: есть строка поиска
 function planOrderShort(o){ const sp=splitOrder(o); return escHtml(sp.no)+(sp.customer?' '+escHtml(sp.customer.length>16?sp.customer.slice(0,15)+'…':sp.customer):''); }
 
 function renderPlan(){

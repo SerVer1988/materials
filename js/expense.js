@@ -163,7 +163,7 @@ function renderOut(){
   const sq=(document.getElementById('out-s')?.value||'').toLowerCase();
   if(outFilter==='full')    rows=rows.filter(r=>r.etype==='full');
   if(outFilter==='partial') rows=rows.filter(r=>r.etype==='partial');
-  if(sq) rows=rows.filter(r=>r.mat&&r.mat.toLowerCase().includes(sq));
+  if(sq) rows=rows.filter(r=>searchMatch(expHay(r),sq));        // материал, размер, изделие, заказ, заказчик, менеджер, категория, примечание, дата
   if(outPlaceFilter) rows=rows.filter(r=>expRowPlaces(r).has(outPlaceFilter));
   updatePlaceChips();
   const total=rows.length;

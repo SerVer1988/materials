@@ -55,7 +55,7 @@ function renderStock(){
   // Фильтр по месту: позиции (материал+размер), которые поступали в выбранное место
   const placeKeys=stkPlaceFilter?new Set(db.income.filter(r=>(r.place||'')===stkPlaceFilter).map(r=>`${r.mat}||${r.size}`)):null;
   const inPlace=(m,sz)=>!placeKeys||placeKeys.has(`${m}||${sz}`);
-  let keys=Object.keys(by).filter(m=>!q||m.toLowerCase().includes(q));
+  let keys=Object.keys(by).filter(m=>!q||searchMatch(m+' '+by[m].map(s=>s.size).join(' '),q));
   if(placeKeys) keys=keys.filter(m=>by[m].some(s=>inPlace(m,s.size)));
   if(filterFav) keys=keys.filter(m=>by[m].some(s=>favorites.has(`${m}||${s.size}`)));
   if(filterLow) keys=keys.filter(m=>by[m].some(s=>s.qty<=2));
@@ -63,6 +63,7 @@ function renderStock(){
   if(!keys.length){grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';return;}
   grid.innerHTML=keys.map(mat=>{
     let sizes=by[mat];
+    if(q&&!searchMatch(mat,q)) sizes=sizes.filter(s=>searchMatch(mat+' '+s.size,q));      // поиск по размеру: показываем только подходящие
     if(placeKeys) sizes=sizes.filter(s=>inPlace(mat,s.size));
     if(filterLow) sizes=sizes.filter(s=>s.qty<=2);
     if(filterFav) sizes=sizes.filter(s=>favorites.has(`${mat}||${s.size}`));

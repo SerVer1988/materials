@@ -162,7 +162,7 @@ function renderRemByMat(){
     rec.pieces.forEach((p,pi)=>{
       const piecePlace=p.place||rec.place||'';
       if(remPlaceFilter&&piecePlace!==remPlaceFilter) return;
-      if(stkQ&&!p.mat.toLowerCase().includes(stkQ)) return;
+      if(stkQ&&!searchMatch(`${p.mat} ${p.w}х${p.l} ${p.place||''}`,stkQ)) return;
       allPieces.push({recId:rec.id,pi,mat:p.mat,w:p.w,l:p.l,qty:p.qty,type:p.type,place:piecePlace,m2:p.w*p.l*p.qty/1e6, dt:rec.dt||''});
     });
   });
@@ -369,7 +369,7 @@ function syncRemGroupsToFilter(){
     db.remainders.forEach(rec=>{
       rec.pieces.forEach(p=>{
         const piecePlace=p.place||rec.place||'';
-        if(stkQ&&!p.mat.toLowerCase().includes(stkQ)) return;
+        if(stkQ&&!searchMatch(`${p.mat} ${p.w}х${p.l} ${p.place||''}`,stkQ)) return;
         if(remPlaceFilter&&piecePlace!==remPlaceFilter) return;
         const m2=p.w*p.l*(p.qty||1)/1e6;
         // Для фильтров размера — открываем только подходящие материалы

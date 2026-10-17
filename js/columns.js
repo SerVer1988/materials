@@ -92,3 +92,16 @@ function outCell(id,r,i,total,cols){
   }
   return '<td></td>';
 }
+
+// ── Поиск по всем полям записи (не только по материалу): слова через пробел, все должны найтись ──
+const srchNorm=s=>String(s==null?'':s).toLowerCase().replace(/ё/g,'е').replace(/[хx×*]/g,'x');
+function searchMatch(hay,q){
+  const ws=String(q||'').toLowerCase().split(/\s+/).filter(Boolean); if(!ws.length) return true;
+  const h=srchNorm(hay); return ws.every(w=>h.includes(srchNorm(w)));
+}
+function incHay(r){ return [r.mat,r.size,r.place,r.order,r.note,r.dt,r.rev?'ревизия':''].join(' '); }
+function expHay(r){
+  const inf=(typeof statOrderInfo==='function')?statOrderInfo(r):{no:'',cust:'',cat:'',mgr:''};
+  return [r.mat,r.size,r.det,r.note,r.order,r.sourceScrap,inf.no,inf.cust,(typeof managerLabel==='function'?managerLabel(inf.mgr):inf.mgr),inf.mgr,
+          (typeof normCategory==='function'?normCategory(r.cat||inf.cat):(r.cat||inf.cat)),r.brak?'брак':'',r.rev?'ревизия':'',r.dt,(r.etype==='partial'?'обрезок изделие':'лист')].join(' ');
+}

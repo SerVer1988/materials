@@ -8,8 +8,8 @@ function managerName(no){
   const k=String(parseInt(no,10)); if(!no||k==='NaN') return '';
   const m=managers[k]; return (m&&m.n)?m.n:'';
 }
-// «9 Иван» или просто «9», если имя не задано
-function managerLabel(no){ if(no===''||no==null) return '—'; const n=managerName(no); return n?`${no} ${n}`:String(no); }
+// Имя менеджера без цифры («Иван»); если имя не задано — просто номер («9»)
+function managerLabel(no){ if(no===''||no==null) return '—'; const n=managerName(no); return n?n:String(no); }
 function setManager(k,name){
   managers[String(k)]={n:String(name||'').trim(),ts:Date.now()};
   persistManagers(); save();
