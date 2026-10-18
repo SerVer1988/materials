@@ -747,12 +747,13 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
   <div class="modal" style="max-height:85vh;overflow-y:auto">
     <div class="mhandle"></div>
     <div class="mtitle">✂️ Выбрать обрезок</div>
+    <!-- Кнопки сверху в одну строку: при долгом списке кусков не нужно листать вниз; при прокрутке остаются на виду -->
+    <div id="scrap-find-actions" style="display:flex;flex-direction:row;gap:8px;position:sticky;top:0;z-index:3;background:inherit;padding:2px 0 10px">
+      <button class="btn bsuc" id="scrap-cut-btn" onclick="applyScrapCut()" style="display:none;flex:1;width:auto">✂️ Вырезать</button>
+      <button class="btn bghost" onclick="closeScrapFindModal()" style="flex:1;width:auto">Отмена</button>
+    </div>
     <p id="scrap-find-desc" style="color:var(--muted);font-size:12px;margin-bottom:12px;line-height:1.5"></p>
     <div id="scrap-find-list"></div>
-    <div id="scrap-find-actions" style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
-      <button class="btn bsuc bfull" id="scrap-cut-btn" onclick="applyScrapCut()" style="display:none">✂️ Вырезать</button>
-      <button class="btn bghost bfull" onclick="closeScrapFindModal()">Отмена</button>
-    </div>
   </div>
 </div>
 </main>
