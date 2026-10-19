@@ -110,10 +110,18 @@
 table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-width:110px}
 .mgr-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .mgr-n{width:26px;height:26px;border-radius:50%;background:var(--aclt);color:var(--accent-ink);font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+/* План → По заказам: галочка «вырезано» */
+.po-chk{display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-user-select:none;user-select:none}
+.po-chk .c{fill:none;stroke:var(--muted);stroke-width:1.8;opacity:.8}
+.po-chk .t{fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+.po-chk.on .c{fill:var(--green);stroke:var(--green);opacity:1}
+.po-chk.on .t{stroke:#fff;opacity:1}
+.po-row.po-done .po-mat,.po-row.po-done .po-c,.po-row.po-done .po-d{opacity:.3}
 /* План → По заказам: площади */
-.po-row{display:grid;grid-template-columns:minmax(0,1fr) 62px 66px 104px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.po-row{display:grid;grid-template-columns:26px minmax(0,1fr) 58px 62px 98px 20px;gap:5px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
 .po-row.po-head{font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;padding:2px 0 4px}
-.po-row.po-head span:not(:first-child),.po-c,.po-d{text-align:right}
+.po-row.po-head span:nth-child(n+3),.po-c,.po-d{text-align:right}
+.po-del{cursor:pointer;color:var(--red);font-size:13px;font-weight:800;text-align:center;opacity:.65}.po-del:hover{opacity:1}
 .po-c{font-size:13px}.po-c b{color:var(--text)}
 .po-d{font-weight:800;font-size:12px;color:var(--blue);white-space:nowrap}.po-d.ok{color:var(--green)}.po-d.bad{color:var(--red)}
 /* Размеры по материалам */
@@ -321,6 +329,7 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
             <select id="out-order" onchange="onSelectChange('out-order','out-order-custom')"></select>
             <div class="custom-input-wrap" id="out-order-custom"><input type="text" placeholder="9-08-77_Заказчик"></div>
           </div>
+          <input type="hidden" id="out-dlabel">
           <div class="fg"><label>Категория</label><input type="text" id="out-cat" placeholder="Табличка(и)" autocomplete="off"></div>
           <div class="fg"><label>Длина реза, мм</label><input type="number" inputmode="numeric" id="out-cut" placeholder="необязательно"></div>
           <div class="fg full"><label>Примечание</label><input type="text" id="out-note" placeholder="необязательно"></div>
@@ -806,7 +815,7 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 <script src="js/config.js?v=2026-10-13a"></script>
 <script src="js/ui.js?v=2026-10-13a"></script>
 <script src="js/theme.js?v=2026-10-13a"></script>
-<script src="js/sync.js?v=2026-10-13f"></script>
+<script src="js/sync.js?v=2026-10-13g"></script>
 <script src="js/access.js?v=2026-10-13a"></script>
 <script src="js/storage.js?v=2026-10-13c"></script>
 <script src="js/crud.js?v=2026-10-13a"></script>
@@ -830,14 +839,15 @@ function planTabs(v){
 <script src="js/columns.js?v=2026-10-13c"></script>
 <script src="js/matsizes.js?v=2026-10-13a"></script>
 <script src="js/ordermerge.js?v=2026-10-13a"></script>
+<script src="js/matdone.js?v=2026-10-13a"></script>
 <script src="js/orders.js?v=2026-10-13d"></script>
-<script src="js/plan.js?v=2026-10-13o"></script>
+<script src="js/plan.js?v=2026-10-13q"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
-<script src="js/inbox.js?v=2026-10-13b"></script>
+<script src="js/inbox.js?v=2026-10-13c"></script>
 <script src="js/scrap-calc.js?v=2026-10-13b"></script>
 <script src="js/income.js?v=2026-10-13e"></script>
-<script src="js/expense.js?v=2026-10-13i"></script>
+<script src="js/expense.js?v=2026-10-13j"></script>
 <script src="js/remainders.js?v=2026-10-13e"></script>
 <script src="js/scrap-modals.js?v=2026-10-13d"></script>
 <script src="js/selection.js?v=2026-10-13a"></script>
