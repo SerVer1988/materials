@@ -66,7 +66,7 @@ async function inboxPoll(){
     const age=Date.now()-new Date(p.t).getTime();                 // t — локальное время компьютера с макросом
     if(isNaN(age) || age>INBOX_MAX_AGE) return;                   // старое сообщение — пропускаем
     fillExpenseForm({mat:p.mat||'', det:p.det||'', sheet:p.sheet||'', qty:parseInt(p.qty)||1, note:p.note||'', order:p.order||''});
-    if(typeof setExpenseExtra==='function') setExpenseExtra(p.cat||'',p.cut||'');     // категория и длина реза из подписи
+    if(typeof setExpenseExtra==='function') setExpenseExtra(p.cat||'',p.cut||'',p.detLabel||'');     // категория и длина реза из подписи
     toast('📥 Данные из CorelDRAW подставлены','ok');
   }catch(e){ /* нет связи — попробуем в следующий раз */ }
   finally{ inboxBusy=false; }

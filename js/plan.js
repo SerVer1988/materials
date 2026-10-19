@@ -413,17 +413,24 @@ function planOrderFor(key,planKeys){
 function calcOrderBalance(){
   const res=new Map();
   const get=(o,m)=>{ if(!res.has(o)) res.set(o,new Map()); const mm=res.get(o); if(!mm.has(m)) mm.set(m,{mat:m,need:0,spent:0}); return mm.get(m); };
+  // Нужно, м² — площадь изделий из заявки (размер изделия × кол-во). Если размера изделия в заявке нет (старые заявки) —
+  // площадь листов и полос из плана.
   planAll().forEach(l=>{
     if(l.fromBrak) return;
-    get(l.order,l.mat).need+=((l.qty||0)*l.w*l.l+(l.stripW>0&&l.stripL>0?l.stripW*l.stripL:0))/1e6;
+    const e=get(l.order,l.mat), det=l.det?parseSizeStr(l.det):null;
+    if(det) e.need+=det.w*det.l*(l.qty||1)/1e6;
+    else e.need+=((l.qty||0)*l.w*l.l)/1e6;
+    if(l.stripW>0&&l.stripL>0) e.need+=l.stripW*l.stripL/1e6;
   });
+  // Вырезано, м² — площадь вырезанных изделий (размер изделия из расхода × кол-во), без брака.
+  // Если у расхода листом нет размера изделия — площадь листа (чтобы не терять учёт).
   db.expense.forEach(r=>{
-    if(!r.order||r.rev) return;
+    if(!r.order||r.rev||r.brak) return;
     const ok=planOrderFor(r.order,[...res.keys()]); if(!ok) return;                   // только заказы, которые есть в плане
-    const q=r.qty||0, full=(r.etype==='full'||!r.etype);
+    const q=r.qty||0, full=(r.etype==='full'||!r.etype), d=parseSizeStr(r.det||'');
     let a=0;
-    if(full){ const s=(r.w>0&&r.l>0)?{w:r.w,l:r.l}:parseSizeStr(r.size||''); a=s?s.w*s.l*q/1e6:0; }
-    else { const d=parseSizeStr(r.det||''); a=d?d.w*d.l*q/1e6:0; }
+    if(d) a=d.w*d.l*q/1e6;
+    else if(full){ const s=(r.w>0&&r.l>0)?{w:r.w,l:r.l}:parseSizeStr(r.size||''); a=s?s.w*s.l*q/1e6:0; }
     get(ok,r.mat).spent+=a;
   });
   return res;
@@ -455,12 +462,14 @@ function renderPlanOrders(){
   if(!keys.length){ box.innerHTML='<div class="empty"><div class="ei">📋</div>Заказов в плане нет.<br>Заявки приходят из CorelDRAW или кнопкой «＋».</div>'; return; }
   box.innerHTML=keys.map((o,oi)=>{
     const isClosed=closed.has(o), sp=splitOrder(o);
-    const mats=[...bal.get(o).values()].filter(e=>!planMat||e.mat===planMat).sort((a,b)=>a.mat.localeCompare(b.mat,'ru'));
+    const mats=[...bal.get(o).values()].filter(e=>!planMat||e.mat===planMat).filter(e=>!matDoneHidden(o,e.mat)).sort((a,b)=>a.mat.localeCompare(b.mat,'ru'));
     const tNeed=mats.reduce((s,e)=>s+e.need,0), tSpent=mats.reduce((s,e)=>s+e.spent,0);
     const oc=planUI['o:'+o]!==undefined?!!planUI['o:'+o]:isClosed;
     window.__planCollapsed[o]=oc;
-    const rows=`<div class="po-row po-head"><span></span><span>нужно, м²</span><span>потрачено</span><span>итог, м²</span></div>`+
-      mats.map(e=>`<div class="po-row"><div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}</div>`).join('');
+    const chk=(m,on)=>{
+      return `<span class="po-chk${on?' on':''}" data-o="${escHtml(o)}" data-m="${escHtml(m)}" onclick="toggleMatDone(this)" title="${on?'Вырезан и готов (нажмите, чтобы снять)':'Отметить: материал вырезан и готов'}"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="10.5" class="c"/><path d="M7 12.5l3.4 3.4L17 9" class="t"/></svg></span>`; };
+    const rows=`<div class="po-row po-head"><span></span><span></span><span>нужно, м²</span><span>вырезано</span><span>итог, м²</span><span></span></div>`+
+      mats.map(e=>{ const on=matDoneEff(o,e); return `<div class="po-row${on?' po-done':''}">${chk(e.mat,on)}<div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}<span class="po-del" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="deleteOrderMat(this)" title="Удалить позицию из заказа">✕</span></div>`; }).join('');
     return `<div class="ocard pl-ocard ${isClosed?'is-closed':''}">
       <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
         <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span> <b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
@@ -505,8 +514,8 @@ function planOrderShort(o){ const sp=splitOrder(o); return escHtml(sp.no)+(sp.cu
 
 function renderPlan(){
   const buy=planView==='buy';
-  document.getElementById('pv-buy')?.classList.toggle('on',buy);
-  document.getElementById('pv-ord')?.classList.toggle('on',!buy);
+  document.getElementById('pv-buy')?.classList.toggle('active',buy);
+  document.getElementById('pv-ord')?.classList.toggle('active',!buy);
   const fw=document.getElementById('pfl-wrap'); if(fw) fw.style.display=buy?'none':'flex';
   const si=document.getElementById('plan-s'); if(si) si.placeholder=buy?'Поиск: материал или заказ…':'Поиск: заказ или материал…';
   if(buy) renderPlanBuy(); else { renderPlanOrders(); const G=planGroupsData(); planMatChips(G.matLines); }
@@ -586,29 +595,22 @@ function bookGroup(i){
 }
 
 // ══════════════════════ АВТОЗАКРЫТИЕ ЗАКАЗА ══════════════════════
-// Заказ закрывается сам, когда вырезано всё из плана: листов (по материалу, любого размера) не меньше, чем в плане,
-// и у каждой полосы есть вырезка (не брак). Это же срабатывает после брака в обратную сторону: автозакрытый заказ
-// снова открывается, если появилась строка на повторную вырезку. Закрытый вручную заказ автоматом не открывается,
+// Заказ закрывается сам, когда ВСЕ материалы заказа «готовы»: стоит зелёная галочка (поставили вы или она появилась сама,
+// потому что вырезано не меньше, чем нужно). Снятая галочка или новая строка (повторная вырезка после брака)
+// снова открывают автозакрытый заказ. Закрытый вручную заказ автоматом не открывается,
 // а открытый вручную — автоматом не закрывается (флаг autoOff).
-function isOrderCut(key,planKeys){
-  const lines=planAll().filter(l=>l.order===key); if(!lines.length) return false;
-  const need={}; lines.forEach(l=>{ if(l.qty>0) need[l.mat]=(need[l.mat]||0)+l.qty; });
-  const used={};
-  db.expense.forEach(r=>{
-    if(r.brak||r.rev||!r.order||!(r.etype==='full'||!r.etype)) return;
-    if(planOrderFor(r.order,planKeys)!==key) return;
-    used[r.mat]=(used[r.mat]||0)+(r.qty||0);
-  });
-  for(const m in need) if((used[m]||0)<need[m]) return false;
-  return lines.every(l=>!(l.stripW>0&&l.stripL>0)||isStripDone(l));
+function isOrderCut(key,planKeys,bal){
+  const mats=(bal||calcOrderBalance()).get(key); if(!mats) return false;
+  const list=[...mats.values()].filter(e=>!matDoneHidden(key,e.mat)); if(!list.length) return false;
+  return list.every(e=>matDoneEff(key,e));
 }
 function autoCloseOrders(){
   if(!db.orders) db.orders=[];
-  const keys=[...new Set(planAll().map(l=>l.order))], closedNow=[];
+  const keys=[...new Set(planAll().map(l=>l.order))], closedNow=[], balAll=calcOrderBalance();
   keys.forEach(key=>{
     const recs=db.orders.filter(o=>o.key===key);
     const cur=recs.length?recs.reduce((a,b)=>((b.ts||b.id||0)>=(a.ts||a.id||0)?b:a)):null;
-    const status=cur?cur.status:'open', done=isOrderCut(key,keys), ts=Date.now();
+    const status=cur?cur.status:'open', done=isOrderCut(key,keys,balAll), ts=Date.now();
     if(status!=='closed'&&done&&!(cur&&cur.autoOff)){
       if(recs.length) recs.forEach(o=>{ o.status='closed'; o.ts=ts; o.closedAt=now(); o.auto=true; });
       else db.orders.push({id:ts,key,status:'closed',ts,created:now(),closedAt:now(),auto:true});
