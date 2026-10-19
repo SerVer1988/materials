@@ -18,10 +18,11 @@ function nmLev(a,b){
   return d[a.length][b.length];
 }
 
-// ── Категория: первое слово подписи → эталонное слово («табличка», «таблички», «табл» → «Табличка(и)») ──
+// ── Категория: первое слово подписи → эталонное слово («табличка», «таблички», «табл» → «Табличка(и)»).
+//    Остальные слова после него отбрасываются. Если в списке ничего не подходит — категория остаётся как набрана. ──
 function normCategory(text){
   const raw=String(text==null?'':text).trim(); if(!raw) return raw;
-  const m=raw.match(/^[^\s_]+/); const first=nmClean(m?m[0]:raw), rest=raw.slice(m?m[0].length:raw.length);
+  const m=raw.match(/^[^\s_]+/); const first=nmClean(m?m[0]:raw);
   let best=null,bestScore=-1;
   CATEGORY_WORDS.forEach(w=>{
     const base=nmClean(w.replace(/\(.*?\)/g,'').replace(/\s.*/,'')); // «Жидкий акрил» → «жидкий»
@@ -33,8 +34,8 @@ function normCategory(text){
     else if(first.length>=5&&nmLev(first,base)<=2) score=50-nmLev(first,base)*10;           // опечатка: «таблчика»
     if(score>bestScore){ best=w; bestScore=score; }
   });
-  if(!best||bestScore<0) return raw;
-  return rest?(best+rest):best;
+  if(!best||bestScore<0) return raw;      // ничего не подошло — оставляем как есть
+  return best;                            // подошло слово из списка — остаётся только оно («Карта Советско-Гаванского округа» → «Карта(ы)»)
 }
 
 // ── Материал: «акрил 3мм» → «Акрил 3 мм (мол.)» ──
@@ -78,6 +79,8 @@ function normMaterial(text){
 
 // При уходе из поля материала — подставляем правильное название (поля прихода, расхода и обрезков)
 document.addEventListener('focusout',e=>{
+  const ce=e.target;
+  if(ce&&ce.id==='out-cat'){ const cv=ce.value, cn=normCategory(cv); if(cn&&cn!==cv.trim()) ce.value=cn; return; }
   const el=e.target; if(!el||!/^(in-mat|out-mat|rem-mat)$/.test(el.id||'')) return;
   const v=el.value, n=normMaterial(v);
   if(n&&n!==v.trim()){ el.value=n; if(typeof acUpdateClear==='function') acUpdateClear(el.id); }

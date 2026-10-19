@@ -127,7 +127,7 @@ function syncBrakPlan(rec){
 // Категория и длина реза (из подписи Corel или вручную)
 function setExpenseExtra(cat,cut,detLabel){
   const c=document.getElementById('out-cat'), u=document.getElementById('out-cut'), d=document.getElementById('out-dlabel');
-  if(c) c.value=cat||''; if(u) u.value=cut||''; if(d) d.value=detLabel||'';
+  if(c) c.value=(typeof normCategory==='function'?normCategory(cat||''):(cat||'')); if(u) u.value=cut||''; if(d) d.value=detLabel||'';
 }
 function editExpense(id){
   const r=db.expense.find(x=>x.id===id); if(!r) return;
