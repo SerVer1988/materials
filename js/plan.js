@@ -175,6 +175,28 @@ function togglePlanAdd(force){
 }
 
 // Сообщение из макроса (строка «<код>::plan»)
+// Отчёт для макроса Corel: какие листы и обрезки по заявке есть в наличии, каких нет (свободные = склад минус бронь под заказы)
+function planAvailabilityReport(order,text){
+  const items=parsePlanText(text); if(!items.length) return '';
+  const ctx=planContext(), sheets=new Map(), strips=[], out=[];
+  items.forEach(it=>{
+    const mat=canonMat(it.mat), size=fmtSheet(it.w,it.l), k=mat+'||'+size;
+    if(it.qty>0){ if(!sheets.has(k)) sheets.set(k,{mat,size,need:0}); sheets.get(k).need+=it.qty; }
+    if(it.sw>0&&it.sl>0) strips.push({mat,size,w:it.sw,l:it.sl,k});
+  });
+  const freeOf=k=>Math.max(0,(ctx.stockQ[k]||0)-(ctx.res[k]||[]).reduce((s,x)=>s+x.left,0));
+  sheets.forEach((g,k)=>{
+    const free=freeOf(k), ok=free>=g.need;
+    out.push(`${ok?'ЕСТЬ:':'НЕТ:'} ${g.mat} ${g.size}: нужно ${g.need} л., в наличии ${free}${ok?'':' — докупить '+(g.need-free)}`);
+  });
+  strips.forEach(s=>{
+    const sc=findStripScraps(s.mat,s.w,s.l,0);
+    if(sc.length){ const c=sc[0]; out.push(`ЕСТЬ: ${s.mat} полоса ${s.w}×${s.l}: есть обрезок ${c.w}×${c.l}${c.place?' ('+c.place+')':''}`); }
+    else { const fr=freeOf(s.k); out.push(`${fr>0?'ЕСТЬ:':'НЕТ:'} ${s.mat} полоса ${s.w}×${s.l}: обрезка нет${fr>0?', можно из листа '+s.size+' (свободно '+fr+')':' и листа '+s.size+' нет'}`); }
+  });
+  return out.join('\n');
+}
+
 function handleInboxPlan(p){
   if(!p||!p.id||localStorage.getItem(PLAN_SEEN_KEY)===p.id) return;
   localStorage.setItem(PLAN_SEEN_KEY,p.id);
@@ -183,6 +205,7 @@ function handleInboxPlan(p){
   const baseId=(parseInt(String(p.id).replace(/\D/g,'').slice(-12),10)||0)*100;  // одинаковые id на всех устройствах → нет дублей
   go('plan',document.getElementById('nbtn-plan'));
   addPlanFromText(p.order||'',p.text||'',baseId||undefined,true);
+  try{ const rep=planAvailabilityReport(p.order||'',p.text||''); if(rep&&typeof sbPostReply==='function') sbPostReply(p.id,p.order||'',rep); }catch(e){ console.warn('reply',e); }
 }
 
 // ── Расчёт по строке ──

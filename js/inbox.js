@@ -42,6 +42,13 @@ function handleInboxCommand(p){
   }
 }
 
+// Ответ макросу Corel (строка «<код>::reply»): макрос ждёт его и показывает, какие листы есть, а каких нет
+async function sbPostReply(id,order,text){
+  try{
+    await fetch(`${SB_URL}/rest/v1/material_data`,{method:'POST',headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify({id:sbRowId()+'::reply',payload:{id,order,text,t:new Date().toISOString()},updated_at:new Date().toISOString()})});
+  }catch(e){ /* нет связи — макрос просто не получит ответ */ }
+}
 let inboxBusy=false;
 async function inboxPoll(){
   if(inboxBusy || !inboxEnabled() || !ACCESS_CODE) return;
@@ -66,8 +73,9 @@ async function inboxPoll(){
     const age=Date.now()-new Date(p.t).getTime();                 // t — локальное время компьютера с макросом
     if(isNaN(age) || age>INBOX_MAX_AGE) return;                   // старое сообщение — пропускаем
     fillExpenseForm({mat:p.mat||'', det:p.det||'', sheet:p.sheet||'', qty:parseInt(p.qty)||1, note:p.note||'', order:p.order||''});
-    if(typeof setExpenseExtra==='function') setExpenseExtra(p.cat||'',p.cut||'',p.detLabel||'');     // категория и длина реза из подписи
-    toast('📥 Данные из CorelDRAW подставлены','ok');
+    if(typeof setExpenseExtra==='function') setExpenseExtra(p.cat||'',p.cut||'',p.detLabel||'');
+    if(p.brak){ const bk=document.getElementById('out-brak'); if(bk) bk.checked=true; }      // макрос «Брак»: деталь испорчена     // категория и длина реза из подписи
+    toast(p.brak?'🗑 Брак из CorelDRAW подставлен: проверьте и запишите':'📥 Данные из CorelDRAW подставлены','ok');
   }catch(e){ /* нет связи — попробуем в следующий раз */ }
   finally{ inboxBusy=false; }
 }
