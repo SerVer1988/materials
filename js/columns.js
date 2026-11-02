@@ -5,10 +5,10 @@ const COLS={
   in:[ {id:'n',label:'№ записи'},{id:'dt',label:'Дата'},{id:'mat',label:'Материал'},{id:'sz',label:'Размер'},{id:'qty',label:'Кол-во'},
        {id:'pl',label:'Место'},{id:'ord',label:'Заказ'},{id:'note',label:'Примечание'} ],
   out:[{id:'n',label:'№ записи'},{id:'dt',label:'Дата'},{id:'mat',label:'Материал'},{id:'sz',label:'Размер листа'},{id:'qty',label:'Кол-во'},
-       {id:'det',label:'Изделие'},{id:'ord',label:'Заказ (номер)'},{id:'cust',label:'Заказчик'},{id:'mgr',label:'Менеджер'},{id:'cat',label:'Категория'},{id:'cut',label:'Длина реза'},{id:'pct',label:'% от листа'},{id:'area',label:'Площадь изделия'},{id:'note',label:'Примечание'} ]
+       {id:'det',label:'Изделие'},{id:'ord',label:'Заказ (номер)'},{id:'cust',label:'Заказчик'},{id:'mgr',label:'Менеджер'},{id:'cat',label:'Категория'},{id:'cut',label:'Длина реза (на лист)'},{id:'cutall',label:'Длина реза всего (× кол-во)'},{id:'pct',label:'% от листа'},{id:'area',label:'Площадь изделия'},{id:'note',label:'Примечание'} ]
 };
 const COLS_DEF={ in:['n','dt','mat','sz','qty','pl'], out:['n','dt','mat','sz','qty','det'] };
-const COLS_HEAD={n:'#',dt:'Дата',mat:'Материал',sz:'Размер',qty:'Кол-во',pl:'Место',det:'Изделие',ord:'Заказ',cust:'Заказчик',mgr:'Менеджер',cat:'Категория',cut:'Рез',pct:'% листа',area:'Площадь',note:'Примечание'};
+const COLS_HEAD={n:'#',dt:'Дата',mat:'Материал',sz:'Размер',qty:'Кол-во',pl:'Место',det:'Изделие',ord:'Заказ',cust:'Заказчик',mgr:'Менеджер',cat:'Категория',cut:'Рез',cutall:'Рез всего',pct:'% листа',area:'Площадь',note:'Примечание'};
 
 function colsIds(kind){
   let v=null; try{ v=JSON.parse(localStorage.getItem('lm7_cols_'+kind)||'null'); }catch(e){}
@@ -80,6 +80,7 @@ function outCell(id,r,i,total,cols){
     case 'mgr': return `<td>${escHtml(typeof managerLabel==='function'?managerLabel(inf.mgr):(inf.mgr||'—'))}</td>`;
     case 'cat': return `<td>${escHtml(normCategory(r.cat||inf.cat)||'—')}</td>`;
     case 'cut': return `<td>${r.cut>0?f2(r.cut/1000)+' м':'—'}</td>`;
+    case 'cutall': return `<td>${r.cut>0?f2(r.cut*(r.qty||1)/1000)+' м':'—'}</td>`;
     case 'area': { const d=parseSizeStr(r.det||''); return `<td>${d?f2(d.w*d.l*(r.qty||1)/1e6)+' м²':'—'}</td>`; }
     case 'pct': {
       const d=parseSizeStr(r.det||''); let sh=null;

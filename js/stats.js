@@ -42,6 +42,7 @@ function calcStats(){
     const sp=parseSizeStr(r.size||''), sA=(full&&sp)?sp.w*sp.l*q/1e6:0;
     const inf=statOrderInfo(r);
     m.rows++; if(inf.no) m.orders.add(inf.no);
+    m.cutM+=(r.cut||0)*q/1000;                           // длина реза: на лист × кол-во листов, м
     if(full){ m.sheets+=q; m.sheetM2+=sA; }
     if(r.brak){ m.brakQty+=q; m.brakM2+=dA; return; }    // брак — отдельно, в топы не входит
     m.detM2+=dA; if(!full) m.scrapM2+=dA;
@@ -100,7 +101,7 @@ function statTop(map,third){
     arr.map((e,i)=>`<tr><td>${i+1}</td><td class="st-n">${escHtml(e.name)}</td><td>${f2(e.m2)}</td><td>${third.sheets?e.sheets:e.orders.size}</td></tr>`).join('')+`</table>`;
 }
 
-function get_(months,k){ months.set(k,{skipped:0,rows:0,orders:new Set(),sheets:0,sheetM2:0,detM2:0,scrapM2:0,brakQty:0,brakM2:0,cust:new Map(),cat:new Map(),mgr:new Map(),mat:new Map()}); }
+function get_(months,k){ months.set(k,{skipped:0,rows:0,orders:new Set(),sheets:0,sheetM2:0,detM2:0,scrapM2:0,brakQty:0,brakM2:0,cutM:0,cust:new Map(),cat:new Map(),mgr:new Map(),mat:new Map()}); }
 // Экономия и перерасход по материалам за выбранный месяц, с компенсацией внутри материала
 function statEcoCard(e){
   const title=`Экономия и перерасход по материалам · ${statMonthName(statsMonth)}`;
@@ -134,6 +135,7 @@ function renderStats(){
     ${row('Резов (строк расхода)',m=>m.rows)}
     ${row('Листов израсходовано',m=>m.sheets)}
     ${row('Листов, м²',m=>f2(m.sheetM2))}
+    ${row('Длина реза, м',m=>f2(m.cutM))}
     ${row('Изделий, м²',m=>f2(m.detM2))}
     ${row('из них из обрезков, м²',m=>f2(m.scrapM2))}
     ${row('% из обрезков',m=>pct(m.scrapM2,m.detM2))}
