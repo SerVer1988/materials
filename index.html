@@ -40,7 +40,7 @@
 <link rel="stylesheet" href="css/tables.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/modals.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/orders.css?v=2026-10-13a">
-<link rel="stylesheet" href="css/plan.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/plan.css?v=2026-10-13b">
 <link rel="stylesheet" href="css/responsive.css?v=2026-10-13a">
 <style>
 /* Форма по «＋»: .sec-top не прокручивался и обрезал форму под нижней панелью.
@@ -114,16 +114,17 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
 .po-chk{display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-user-select:none;user-select:none}
 .po-chk .c{fill:none;stroke:var(--muted);stroke-width:1.8;opacity:.8}
 .po-chk .t{fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
-.po-chk.on .c{fill:var(--green);stroke:var(--green);opacity:1}
-.po-chk.on .t{stroke:#fff;opacity:1}
+.po-chk.on .c{fill:var(--glt);stroke:var(--green);opacity:.55}
+.po-chk.on .t{stroke:var(--green);opacity:.75}
+.po-mg{display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);opacity:.85}.po-mg:active{opacity:1;color:var(--accent-ink)}
 .po-row.po-done .po-mat,.po-row.po-done .po-c,.po-row.po-done .po-d{opacity:.3}
 /* План → По заказам: площади */
-.po-row{display:grid;grid-template-columns:26px minmax(0,1fr) 58px 62px 98px 20px;gap:5px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.po-row{display:grid;grid-template-columns:22px 24px minmax(0,1fr) 50px 54px 92px 16px;gap:4px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
 .po-row.po-head{font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;padding:2px 0 4px}
-.po-row.po-head span:nth-child(n+3),.po-c,.po-d{text-align:right}
+.po-row.po-head span:nth-child(n+4),.po-c,.po-d{text-align:right}
 .po-del{cursor:pointer;color:var(--red);font-size:13px;font-weight:800;text-align:center;opacity:.65}.po-del:hover{opacity:1}
 .po-c{font-size:13px}.po-c b{color:var(--text)}
-.po-d{font-weight:800;font-size:12px;color:var(--blue);white-space:nowrap}.po-d.ok{color:var(--green)}.po-d.bad{color:var(--red)}
+.po-d{font-weight:800;font-size:11px;color:var(--blue);white-space:nowrap}.po-d.ok{color:var(--green)}.po-d.bad{color:var(--red)}
 /* Размеры по материалам */
 .ms-opt{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:14px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer}
 .ms-note{font-size:11px;color:var(--muted);margin-top:6px}
@@ -478,8 +479,11 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
         </div>
       </div>
       <div class="fchips" id="pfl-wrap" style="margin-bottom:0;display:none">
-        <div class="fchip on" id="pfl-open" onclick="setPlanFilter('open')">🔒 Открытые</div>
-        <div class="fchip" id="pfl-all" onclick="setPlanFilter('all')">Все</div>
+        <button type="button" class="ficon on" id="pfl-open" onclick="setPlanFilter('open')" title="Открытые" aria-label="Открытые" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg></button>
+        <button type="button" class="ficon" id="pfl-closed" onclick="setPlanFilter('closed')" title="Закрытые" aria-label="Закрытые" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
+        <span class="ficon-sep"></span>
+        <button type="button" class="ficon" id="pfl-date" onclick="setPlanFilter('date')" title="По дате" aria-label="По дате" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></button>
+        <button type="button" class="ficon" id="pfl-pct" onclick="setPlanFilter('pct')" title="По проценту" aria-label="По проценту" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5L5 19"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg></button>
       </div>
     </div>
     <!-- Добавить заявку — скрытая панель (кнопка «＋» внизу) -->
@@ -841,7 +845,7 @@ function planTabs(v){
 <script src="js/ordermerge.js?v=2026-10-13a"></script>
 <script src="js/matdone.js?v=2026-10-13a"></script>
 <script src="js/orders.js?v=2026-10-13d"></script>
-<script src="js/plan.js?v=2026-10-13r"></script>
+<script src="js/plan.js?v=2026-10-13s"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13a"></script>
 <script src="js/inbox.js?v=2026-10-13d"></script>
