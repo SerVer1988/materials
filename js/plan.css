@@ -1,0 +1,46 @@
+/* ── ПЛАН: потребность по заказам ── */
+#nbtn-plan .pl-b{fill:var(--ni-plan-bg)} #nbtn-plan .pl-g{stroke:var(--ni-plan-fg)}
+#nbtn-plan.active{--ni-plan-bg:var(--ni-plan-bg-on)}
+.pi-plan .b{fill:var(--ni-plan-bg-on)} .pi-plan .g2{stroke:var(--ni-plan-fg)}
+
+.pl-row{padding:9px 0;border-bottom:1px solid var(--inforow-line)}
+.pl-row:last-child{border-bottom:none}
+.pl-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pl-st{font-size:10px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pl-st.buy{background:var(--rlt);color:var(--red)}
+.pl-st.ordered{background:var(--blt);color:var(--blue)}
+.pl-st.received{background:var(--glt);color:var(--green)}
+.pl-need{margin-top:6px;font-size:13px;color:var(--text)}
+.pl-strip{font-weight:800;color:var(--accent-ink)}
+.pl-line{margin-top:4px;font-size:11px;font-weight:700;color:var(--muted);line-height:1.5}
+.pl-line b{color:var(--text)}
+.pl-line.ok{color:var(--green)} .pl-line.ok b{color:var(--green)}
+.pl-line.bad{color:var(--red)}
+.pl-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pl-btns .btn{padding:7px 11px;font-size:12px}
+.pl-btns .pl-del{margin-left:auto}
+.pl-clear{margin-left:6px;border:none;background:none;color:var(--muted);font-size:10px;font-weight:700;text-decoration:underline;cursor:pointer}
+/* ── ПЛАН: добавить в конец css-файла со стилями плана (.pl-row, .ocard) ── */
+.pl-ohead{background:var(--aclt);border-left:4px solid var(--accent);border-radius:var(--rs);padding:9px 11px;-webkit-user-select:none;user-select:none}
+.pl-ohead .otitle{font-size:16px;font-weight:900;color:var(--accent-ink)}
+.pl-ohead .otitle b{font-weight:900}
+.pl-ohead .ocust{color:var(--accent-ink);font-weight:800}
+.pl-arrow{display:inline-block;width:14px;color:var(--muted);font-size:12px}
+.pl-head{cursor:pointer;-webkit-user-select:none;user-select:none}
+.pl-row.collapsed .pl-line,.pl-row.collapsed .pl-btns{display:none}
+.pl-row.done{opacity:.55}
+.pl-done{margin-top:6px;border-top:1px dashed var(--border);padding-top:6px}
+.pl-done-head{font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;padding:4px 0;-webkit-user-select:none;user-select:none}
+
+/* ── ПЛАН → По заказам: фильтры-иконки, копирование названия, дата и процент справа ── */
+.ficon{width:38px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:30px;border:1px solid var(--border);background:var(--card2);color:var(--muted);cursor:pointer;padding:0;transition:all .15s}
+.ficon svg{width:19px;height:19px}
+.ficon.on{background:var(--aclt);border-color:var(--accent);color:var(--accent-ink)}
+.ficon-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.pl-copy{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin:-4px 2px -4px 0;border-radius:7px;color:var(--muted);cursor:pointer;flex:none}
+.pl-copy:active{background:var(--card2);color:var(--accent-ink)}
+.pl-osum{flex-wrap:nowrap;justify-content:space-between;align-items:flex-start;gap:8px}
+.pl-osum-l{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pl-osum-r{flex:none;display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}
+.pl-pct{font-size:16px;font-weight:900;color:var(--text)}
+.pl-dt{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
