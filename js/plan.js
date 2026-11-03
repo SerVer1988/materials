@@ -4,7 +4,7 @@ window.__B=window.__B||{};__B['plan']='2026-10-13a';
 // Строка плана: {id, order, mat, size, w, l, qty (целых листов), stripW, stripL (полоса «дорезать», 0 = нет),
 //                status:'buy'|'ordered'|'received', booked (листов, забронировано из наличия),
 //                stripBook:{w,l,place}|null (забронированный обрезок под полосу), created}
-let planFilter='open';                         // open | all
+// Фильтры «По заказам» (иконки): planUI.f = {open,closed,date,pct}; любые можно включать вместе, хранятся на устройстве
 const PLAN_SEEN_KEY='lm7_plan_seen';
 const PLAN_UI_KEY='lm7_plan_ui';               // свёрнутость заказов / материалов / блока «Готово» (только на этом устройстве)
 const PLAN_MAX_AGE=3*24*60*60*1000;            // сообщение из макроса ждёт до 3 суток, если приложение было закрыто
@@ -359,11 +359,12 @@ function deletePlanOrder(i){
     db.plan=db.plan.filter(x=>x.order!==key); save(); renderAll(); toast('План заказа удалён');
   });
 }
-function setPlanFilter(f){
-  planFilter=f;
-  ['open','all'].forEach(k=>document.getElementById('pfl-'+k)?.classList.toggle('on',k===f));
-  renderPlan();
+function planF(){ const d={open:1,closed:0,date:0,pct:0}; const f=planUI.f; return (f&&typeof f==='object')?Object.assign(d,f):d; }
+function paintPlanFilters(){
+  const f=planF();
+  ['open','closed','date','pct'].forEach(k=>{ const el=document.getElementById('pfl-'+k); if(el){ el.classList.toggle('on',!!f[k]); el.setAttribute('aria-pressed',f[k]?'true':'false'); } });
 }
+function setPlanFilter(k){ const f=planF(); f[k]=f[k]?0:1; planUI.f=f; savePlanUI(); renderPlan(); }
 
 // ── Сворачивание ──
 function togglePlanOrder(i){
@@ -471,35 +472,68 @@ function planCloseOrder(i){
 }
 function planReopenOrder(i){ const key=(window.__planKeys||[])[i]; if(key===undefined) return; setOrderStatus(key,'open'); (db.orders||[]).filter(o=>o.key===key).forEach(o=>{ o.auto=false; o.autoOff=true; }); save(); renderPlan(); toast('Заказ открыт снова (автозакрытие для него выключено)','ok'); }
 
+const PL_ICON_COPY='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
+const PL_ICON_LINK='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
+// «27.10.26 14:32» → время в мс (0, если не разобрать)
+function planParseDt(s){ const m=String(s||'').match(/^(\d{2})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2})/); return m?new Date(2000+(+m[3]),(+m[2])-1,+m[1],+m[4],+m[5]).getTime():0; }
+function copyOrderName(i,ev){
+  if(ev) ev.stopPropagation();
+  const key=(window.__planKeys||[])[i]; if(key===undefined) return;
+  const ok=()=>toast('📋 Скопировано: '+key,'ok'), bad=()=>toast('Не удалось скопировать','err');
+  const fallback=()=>{ try{ const t=document.createElement('textarea'); t.value=key; t.style.cssText='position:fixed;top:0;left:0;opacity:0'; document.body.appendChild(t); t.focus(); t.select(); t.setSelectionRange(0,key.length); const r=document.execCommand('copy'); t.remove(); r?ok():bad(); }catch(e){ bad(); } };
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(key).then(ok,fallback); else fallback();
+}
+
 function renderPlanOrders(){
   const box=document.getElementById('plan-list'); if(!box) return;
   const q=(document.getElementById('plan-s')?.value||'').trim().toLowerCase();
-  const bal=calcOrderBalance(), stages=calcOrderStages();
+  const bal=calcOrderBalance(), stages=calcOrderStages(), pf=planF();
   const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
-  const keys=[...bal.keys()]
-    .filter(o=>planFilter==='all'||!closed.has(o))
+  // дата и время заказа — когда добавлена первая строка его плана
+  const born=new Map();
+  planAll().forEach(l=>{ const t=planParseDt(l.created), c=born.get(l.order); if(!c||(t&&(!c.t||t<c.t))) born.set(l.order,{t,s:l.created||''}); });
+  const showAll=!!pf.open===!!pf.closed;                // оба или ни одного — без фильтра по статусу
+  const items=[...bal.keys()]
+    .filter(o=>showAll||(pf.closed?closed.has(o):!closed.has(o)))
     .filter(o=>!q||o.toLowerCase().includes(q)||[...bal.get(o).keys()].some(m=>m.toLowerCase().includes(q)))
     .filter(o=>!planMat||bal.get(o).has(planMat))
-    .sort((a,b)=>b.localeCompare(a,'ru',{numeric:true}));
-  window.__planKeys=keys; window.__planCollapsed={};
-  if(!keys.length){ box.innerHTML='<div class="empty"><div class="ei">📋</div>Заказов в плане нет.<br>Заявки приходят из CorelDRAW или кнопкой «＋».</div>'; return; }
-  box.innerHTML=keys.map((o,oi)=>{
-    const isClosed=closed.has(o), sp=splitOrder(o);
-    const mats=[...bal.get(o).values()].filter(e=>!planMat||e.mat===planMat).filter(e=>!matDoneHidden(o,e.mat)).sort((a,b)=>a.mat.localeCompare(b.mat,'ru'));
-    const tNeed=mats.reduce((s,e)=>s+e.need,0), tSpent=mats.reduce((s,e)=>s+e.spent,0);
+    .map(o=>{
+      const isClosed=closed.has(o);
+      const mats=[...bal.get(o).values()].filter(e=>!planMat||e.mat===planMat).filter(e=>!matDoneHidden(o,e.mat)).sort((a,b)=>a.mat.localeCompare(b.mat,'ru'));
+      const tNeed=mats.reduce((s,e)=>s+e.need,0), tSpent=mats.reduce((s,e)=>s+e.spent,0);
+      let pct=tNeed>0?Math.round(tSpent/tNeed*100):0;
+      if(isClosed&&pct<100) pct=100;                    // выполненный заказ — 100%
+      const b=born.get(o)||{t:0,s:''};
+      return {o,isClosed,mats,tNeed,tSpent,pct,ts:b.t,dt:b.s,day:b.t?new Date(b.t).setHours(0,0,0,0):0};
+    });
+  // выполненные (закрытые) — всегда внизу; внутри: по дате и/или проценту, иначе по номеру
+  items.sort((a,b)=>{
+    if(a.isClosed!==b.isClosed) return a.isClosed?1:-1;
+    if(pf.date&&pf.pct){ const d=b.day-a.day; if(d) return d; const p=b.pct-a.pct; if(p) return p; if(b.ts!==a.ts) return b.ts-a.ts; }
+    else if(pf.date){ if(b.ts!==a.ts) return b.ts-a.ts; }
+    else if(pf.pct){ const p=b.pct-a.pct; if(p) return p; }
+    return b.o.localeCompare(a.o,'ru',{numeric:true});
+  });
+  window.__planKeys=items.map(it=>it.o); window.__planCollapsed={};
+  if(!items.length){ box.innerHTML='<div class="empty"><div class="ei">📋</div>Заказов нет.<br>Заявки приходят из CorelDRAW или кнопкой «＋».<br><span style="font-size:11px">Проверьте фильтры сверху.</span></div>'; return; }
+  box.innerHTML=items.map((it,oi)=>{
+    const o=it.o, isClosed=it.isClosed, sp=splitOrder(o), mats=it.mats;
     const oc=planUI['o:'+o]!==undefined?!!planUI['o:'+o]:isClosed;
     window.__planCollapsed[o]=oc;
     const chk=(m,on)=>{
       return `<span class="po-chk${on?' on':''}" data-o="${escHtml(o)}" data-m="${escHtml(m)}" onclick="toggleMatDone(this)" title="${on?'Вырезан и готов (нажмите, чтобы снять)':'Отметить: материал вырезан и готов'}"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="10.5" class="c"/><path d="M7 12.5l3.4 3.4L17 9" class="t"/></svg></span>`; };
-    const rows=`<div class="po-row po-head"><span></span><span></span><span>нужно, м²</span><span>вырезано</span><span>итог, м²</span><span></span></div>`+
-      mats.map(e=>{ const on=matDoneEff(o,e); return `<div class="po-row${on?' po-done':''}">${chk(e.mat,on)}<div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}<span class="po-del" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="deleteOrderMat(this)" title="Удалить позицию из заказа">✕</span></div>`; }).join('');
+    const rows=`<div class="po-row po-head"><span></span><span></span><span></span><span>нужно, м²</span><span>вырезано</span><span>итог, м²</span><span></span></div>`+
+      mats.map(e=>{ const on=matDoneEff(o,e); return `<div class="po-row${on?' po-done':''}"><span class="po-mg" onclick="openMergeOrder(${oi})" title="Объединить">${PL_ICON_LINK}</span>${chk(e.mat,on)}<div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}<span class="po-del" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="deleteOrderMat(this)" title="Удалить позицию из заказа">✕</span></div>`; }).join('');
     return `<div class="ocard pl-ocard ${isClosed?'is-closed':''}">
       <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
-        <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span> <b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
-        <div class="osum">нужно <b>${f2(tNeed)}</b> м² · потрачено <b>${f2(tSpent)}</b> м² ${poDiffHtml(tNeed,tSpent,isClosed)}</div>
+        <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span><span class="pl-copy" role="button" aria-label="Копировать название" title="Копировать название" onclick="copyOrderName(${oi},event)">${PL_ICON_COPY}</span><b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
+        <div class="osum pl-osum">
+          <div class="pl-osum-l">нужно <b>${f2(it.tNeed)}</b> м² · потрачено <b>${f2(it.tSpent)}</b> м² ${poDiffHtml(it.tNeed,it.tSpent,isClosed)}</div>
+          <div class="pl-osum-r"><span class="pl-pct">${it.pct}%</span>${it.dt?`<span class="pl-dt">${escHtml(it.dt)}</span>`:''}</div>
+        </div>
       </div>
       <div class="obody"${oc?' style="display:none"':''}>${rows}
-        <div class="oactions" style="margin-top:8px">${isClosed?`<button class="btn bghost bsm" onclick="planReopenOrder(${oi})">↩️ Открыть снова</button>`:`<button class="btn bprim bsm" onclick="planCloseOrder(${oi})">✅ Закрыть заказ</button>`}<button class="btn bghost bsm" onclick="openMergeOrder(${oi})" title="Тот же заказ под другим названием">🔗 Объединить</button><button class="pl-clear" onclick="deletePlanOrder(${oi})">очистить план</button></div>
+        <div class="oactions" style="margin-top:8px">${isClosed?`<button class="btn bghost bsm" onclick="planReopenOrder(${oi})">↩️ Открыть снова</button>`:`<button class="btn bprim bsm" onclick="planCloseOrder(${oi})">✅ Закрыть заказ</button>`}<button class="pl-clear" onclick="deletePlanOrder(${oi})">очистить план</button></div>
       </div>
     </div>`;
   }).join('');
@@ -540,6 +574,7 @@ function renderPlan(){
   document.getElementById('pv-buy')?.classList.toggle('active',buy);
   document.getElementById('pv-ord')?.classList.toggle('active',!buy);
   const fw=document.getElementById('pfl-wrap'); if(fw) fw.style.display=buy?'none':'flex';
+  paintPlanFilters();
   const si=document.getElementById('plan-s'); if(si) si.placeholder=buy?'Поиск: материал или заказ…':'Поиск: заказ или материал…';
   if(buy) renderPlanBuy(); else { renderPlanOrders(); const G=planGroupsData(); planMatChips(G.matLines); }
 }
