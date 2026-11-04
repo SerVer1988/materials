@@ -45,3 +45,38 @@ function deleteOrderMat(el){
     toast('🗑 Позиция удалена из заказа','ok');
   });
 }
+
+// ── Пометка по материалу заказа: «нет материала», «ждём поставку» или своя заметка ──
+//   Нажали на название материала в «По заказам» → быстрые кнопки и поле. Пометка видна под строкой, синхронизируется между устройствами.
+let matNote={};     // {"заказ||материал":[текст, время]}  (пустой текст = пометка снята)
+try{ matNote=JSON.parse(localStorage.getItem('lm7_matnote')||'{}')||{}; }catch(e){ matNote={}; }
+function persistMatNote(){ try{ localStorage.setItem('lm7_matnote',JSON.stringify(matNote)); }catch(e){} }
+function matNoteGet(o,m){ const s=matNote[mdKey(o,m)]; return (s&&s[0])||''; }
+function mergeMatNote(p){
+  const c=(p&&p.matNote)||{}; let ch=false;
+  Object.keys(c).forEach(k=>{ if(!matNote[k]||(c[k][1]||0)>(matNote[k][1]||0)){ matNote[k]=c[k]; ch=true; } });
+  if(ch) persistMatNote();
+}
+function setMatNote(o,m,text){
+  matNote[mdKey(o,m)]=[String(text||'').trim().slice(0,80),Date.now()];
+  persistMatNote(); save(); closeMatNote();
+  if(typeof renderPlan==='function') renderPlan();
+}
+function closeMatNote(){ document.getElementById('mnote-pop')?.remove(); }
+function openMatNote(el){
+  const o=el.dataset.o, m=el.dataset.m; if(o===undefined||m===undefined) return;
+  closeMatNote();
+  const cur=matNoteGet(o,m), d=document.createElement('div');
+  d.id='mnote-pop'; d.className='cols-pop'; d.onclick=closeMatNote;
+  d.innerHTML=`<div class="cols-card" onclick="event.stopPropagation()"><div class="ctitle">Пометка по материалу</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${escHtml(m)} · заказ ${escHtml(splitOrder(o).no)}</div>
+    <div class="brow" style="gap:6px;flex-wrap:wrap;margin-bottom:8px"><button class="btn bghost bsm" data-t="Нет материала">⚠️ Нет материала</button><button class="btn bghost bsm" data-t="Ждём поставку">📦 Ждём поставку</button></div>
+    <input type="text" id="mnote-inp" maxlength="80" placeholder="Своя пометка…" value="${escHtml(cur)}" autocomplete="off">
+    <div class="brow" style="margin-top:10px;gap:6px"><button class="btn bghost bsm" id="mnote-no">Отмена</button>${cur?'<button class="btn bghost bsm" id="mnote-clr">Снять пометку</button>':''}<button class="btn bprim bsm" id="mnote-ok">Сохранить</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelectorAll('button[data-t]').forEach(b=>b.onclick=()=>setMatNote(o,m,b.dataset.t));
+  d.querySelector('#mnote-ok').onclick=()=>setMatNote(o,m,document.getElementById('mnote-inp').value);
+  d.querySelector('#mnote-no').onclick=closeMatNote;
+  const c=d.querySelector('#mnote-clr'); if(c) c.onclick=()=>setMatNote(o,m,'');
+  document.getElementById('mnote-inp').addEventListener('keydown',e=>{ if(e.key==='Enter') setMatNote(o,m,e.target.value); });
+}
