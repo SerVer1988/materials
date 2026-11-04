@@ -46,54 +46,100 @@ function calcStockDetailed(){
   keys.forEach(k=>{const[mat,size]=k.split('||');if(!res[mat])res[mat]=[];const i=inc[k]||0,d=dec[k]||0;res[mat].push({size,inc:i,dec:d,qty:i-d});});
   return res;
 }
+// ══════════════════════════════════════ ЛИСТЫ ПОШТУЧНО
+// Раздел «Листы» устроен как «Обрезки»: группа «материал + размер» (шт. и общая площадь), внутри — каждый лист отдельной строкой:
+// заказ, к которому он относится (бронь), размер, дата и время прихода, место, м².
+// Листы берутся из прихода (запись на N листов = N строк). Расход списывает самые старые: сначала листы своего заказа, потом свободные.
+// Бронь из Плана («забронировано из наличия») закрепляет за заказом самые старые свободные листы. Закрытый заказ листы не держит.
+const stkOpenGroups=new Set();     // раскрытые группы «материал||размер»
+let stkVisibleKeys=[];             // группы, показанные сейчас (для «Свернуть/Развернуть все»)
+function stkParseDt(dt){
+  const m=String(dt||'').match(/(\d{2})\.(\d{2})\.(\d{2,4})[,\s]+(\d{2}):(\d{2})/); if(!m) return 0;
+  let y=+m[3]; if(y<100) y+=2000; return new Date(y,+m[2]-1,+m[1],+m[4],+m[5]).getTime();
+}
+const stkT=r=>stkParseDt(r.dt)||r.id||0;
+function calcSheetUnits(){
+  const units={}, closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
+  [...db.income].sort((a,b)=>stkT(a)-stkT(b)||(a.id||0)-(b.id||0)).forEach(r=>{
+    const k=`${r.mat}||${r.size}`, arr=units[k]||(units[k]=[]);
+    for(let i=0;i<(r.qty||0);i++) arr.push({dt:r.dt||'',place:r.place||'',order:r.order||'',rev:!!r.rev});
+  });
+  planAll().forEach(l=>{                                    // бронь из наличия (План) — за заказом закрепляются самые старые свободные листы
+    if(!(l.booked>0)||closed.has(l.order)) return;
+    let n=l.booked; (units[`${l.mat}||${l.size}`]||[]).forEach(u=>{ if(n>0&&!u.order){ u.order=l.order; n--; } });
+  });
+  [...db.expense].filter(r=>r.etype==='full'||!r.etype).sort((a,b)=>stkT(a)-stkT(b)||(a.id||0)-(b.id||0)).forEach(r=>{
+    const arr=units[`${r.mat}||${r.size}`]; if(!arr||!arr.length) return;
+    let n=r.qty||0;
+    const take=pred=>{ for(let i=0;i<arr.length&&n>0;){ if(pred(arr[i])){ arr.splice(i,1); n--; } else i++; } };
+    if(r.order) take(u=>u.order===r.order);               // свои листы заказа
+    take(u=>!u.order);                                      // затем свободные, старые первыми
+    take(()=>true);
+  });
+  Object.values(units).forEach(a=>a.forEach(u=>{ if(u.order&&closed.has(u.order)) u.order=''; }));   // закрытый заказ листы не держит
+  return units;
+}
+function toggleStkGroup(key){ if(stkOpenGroups.has(key)) stkOpenGroups.delete(key); else stkOpenGroups.add(key); renderStock(); }
+function toggleAllStkGroups(){
+  const allOpen=stkVisibleKeys.length>0&&stkVisibleKeys.every(k=>stkOpenGroups.has(k));
+  if(allOpen) stkVisibleKeys.forEach(k=>stkOpenGroups.delete(k)); else stkVisibleKeys.forEach(k=>stkOpenGroups.add(k));
+  renderStock();
+}
+function updateStkToggle(){
+  const el=document.getElementById('fchip-stk-toggle'); if(!el) return;
+  el.innerHTML=(stkVisibleKeys.length>0&&stkVisibleKeys.every(k=>stkOpenGroups.has(k)))?'▲ Свернуть':'▼ Развернуть';
+}
+function toggleFavEl(btn){ const c=btn.closest('[data-mat]'); if(c) toggleFav(c.dataset.mat,c.dataset.size); }
 function renderStock(){
   const _revKeep=document.getElementById('rev-inp')?.value;      // не терять введённое число при перерисовке
   updatePlaceChips();
+  const grid=document.getElementById('stk-grid'); if(!grid) return;
   const q=(document.getElementById('stk-s')?.value||'').toLowerCase();
-  const by=calcStockDetailed(); const grid=document.getElementById('stk-grid');
-  const reserves=calcReserves(); // бронь под заказы
-  // Фильтр по месту: позиции (материал+размер), которые поступали в выбранное место
-  const placeKeys=stkPlaceFilter?new Set(db.income.filter(r=>(r.place||'')===stkPlaceFilter).map(r=>`${r.mat}||${r.size}`)):null;
-  const inPlace=(m,sz)=>!placeKeys||placeKeys.has(`${m}||${sz}`);
-  let keys=Object.keys(by).filter(m=>!q||searchMatch(m+' '+by[m].map(s=>s.size).join(' '),q));
-  if(placeKeys) keys=keys.filter(m=>by[m].some(s=>inPlace(m,s.size)));
-  if(filterFav) keys=keys.filter(m=>by[m].some(s=>favorites.has(`${m}||${s.size}`)));
-  if(filterLow) keys=keys.filter(m=>by[m].some(s=>s.qty<=2));
-  keys.sort();
-  if(!keys.length){grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';return;}
-  grid.innerHTML=keys.map(mat=>{
-    let sizes=by[mat];
-    if(q&&!searchMatch(mat,q)) sizes=sizes.filter(s=>searchMatch(mat+' '+s.size,q));      // поиск по размеру: показываем только подходящие
-    if(placeKeys) sizes=sizes.filter(s=>inPlace(mat,s.size));
-    if(filterLow) sizes=sizes.filter(s=>s.qty<=2);
-    if(filterFav) sizes=sizes.filter(s=>favorites.has(`${mat}||${s.size}`));
-    if(!sizes.length) return '';
-    const anyFav=sizes.some(s=>favorites.has(`${mat}||${s.size}`));
-    const rows=sizes.map((s,i)=>{
-      const favKey=`${mat}||${s.size}`;
-      const isFavRow=favorites.has(favKey);
-      const rs=reserves[favKey]||[];
-      const free=Math.max(0,s.qty-rs.reduce((t,x)=>t+x.left,0));
-      const resRow=rs.length?`<div class="stkres">${rs.map(x=>`<span class="rchip" title="${escHtml(x.order)}">🔒 ${escHtml(x.order)} · ${x.left} шт</span>`).join('')}<span class="rfree">свободно ${free}</span></div>`:'';
-      const revOpen=(revKey===favKey);
-      const revPanel=revOpen?revPanelHtml(mat,s):'';
-      return `
-      <div class="stkrow rev-able${revOpen?' rev-open':''}" data-k="${escHtml(favKey)}" onclick="toggleRev(this.dataset.k)">
-        ${i===0
-          ? `<span class="stkmat-inline">${mat}</span>`
-          : `<span class="stkmat-inline" style="color:var(--muted);font-weight:600;font-size:11px;opacity:.45">${mat}</span>`}
-        <span class="stksz">${s.size}</span>
-        <span class="stkmath">
-          <span class="inc">${s.inc}</span><span class="sep">−</span><span class="dec">${s.dec}</span><span class="eq">=</span>
-          <span class="res ${s.qty===0?'zero':s.qty<=2?'low':''}">${s.qty}шт</span>
-        </span>
-        <button class="star-btn" onclick="event.stopPropagation();toggleFav('${mat.replace(/'/g,"\\'")}','${s.size.replace(/'/g,"\\'")}')">${starSvg(isFavRow)}</button>
-        ${resRow}${revPanel}
+  const by=calcStockDetailed(), units=calcSheetUnits(), reserves=calcReserves();
+  let groups=[];
+  Object.keys(by).forEach(mat=>by[mat].forEach(s=>groups.push({mat,size:s.size,s,key:`${mat}||${s.size}`})));
+  groups=groups.map(g=>{
+    const all=units[g.key]||[];
+    return {...g,list:stkPlaceFilter?all.filter(u=>u.place===stkPlaceFilter):all};
+  }).filter(g=>{
+    if(stkPlaceFilter&&!g.list.length) return false;
+    if(filterLow&&!(g.s.qty<=2)) return false;
+    if(filterFav&&!favorites.has(g.key)) return false;
+    if(q){ const hay=g.mat+' '+g.size+' '+g.list.map(u=>u.place+' '+u.order).join(' '); if(!searchMatch(hay,q)) return false; }
+    return true;
+  }).sort((a,b)=>a.mat.localeCompare(b.mat,'ru')||a.size.localeCompare(b.size,'ru',{numeric:true}));
+  stkVisibleKeys=groups.map(g=>g.key);
+  if(!groups.length){ grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>'; updateStkToggle(); return; }
+  grid.innerHTML=groups.map(g=>{
+    const sz=parseSizeStr(g.size)||{w:0,l:0}, m2=sz.w*sz.l/1e6;
+    const cnt=stkPlaceFilter?g.list.length:g.s.qty;
+    const area=Math.max(0,cnt)*m2;
+    const isFav=favorites.has(g.key), isOpen=stkOpenGroups.has(g.key), revOpen=(revKey===g.key);
+    const rs=(reserves[g.key]||[]).reduce((t,x)=>t+x.left,0), free=Math.max(0,g.s.qty-rs);
+    const rows=g.list.map(u=>{
+      const tag=u.order
+        ?`<span class="piece-book"><span class="rchip" title="В брони под заказ ${escHtml(u.order)}">🔒 ${typeof planOrderShort==='function'?planOrderShort(u.order):escHtml(splitOrder(u.order).no)}</span></span>`
+        :`<span class="piece-free">в запас</span>`;
+      return `<div class="piece-row stk-unit">
+        <span class="piece-left"><span class="piece-sz">${sz.w}х${sz.l}</span>${u.dt?`<span class="piece-dt">${shortDt(u.dt)}</span>`:''}${tag}</span>
+        <span class="piece-right"><span class="piece-place">${escHtml(u.place)}</span><span class="piece-type-ico"${u.rev?' title="Запись ревизии">⚖️':'>'}</span><span class="piece-pcs">1 шт.</span><span class="piece-m2 pm2-pos">${m2.toFixed(3)} м²</span></span>
       </div>`;
     }).join('');
-    return `<div class="stkcard ${anyFav?'fav':''}">${rows}</div>`;
-  }).filter(Boolean).join('');
-  if(!grid.innerHTML) grid.innerHTML='<div class="empty"><div class="ei">🔍</div>Нет данных</div>';
+    const body=`<div class="stk-tools"><span>${rs?`в брони <b>${rs}</b> · `:''}свободно <b>${free}</b></span><button class="btn bghost bsm" onclick="toggleRev(this.closest('.remcard').dataset.k)">⚖️ Ревизия</button></div>`+
+      (revOpen?revPanelHtml(g.mat,g.s):'')+(rows||'<div class="stk-empty">Листов нет</div>');
+    return `<div class="remcard stk-card${isFav?' fav':''}" data-k="${escHtml(g.key)}" data-mat="${escHtml(g.mat)}" data-size="${escHtml(g.size)}">
+      <div class="remmat-name stk-hd" onclick="toggleStkGroup(this.parentNode.dataset.k)">
+        <span class="stk-hd-name"><span>${escHtml(g.mat)}</span><span class="stk-hd-sz">${escHtml(g.size)}</span></span>
+        <span class="stk-hd-right">
+          <span class="remarea-badge rem-net" style="display:inline-flex;align-items:center;gap:5px"><span class="stk-cnt ${cnt<=0?'zero':cnt<=2?'low':''}">${cnt} шт.</span><span style="opacity:.5">·</span>${area.toFixed(3)} м²</span>
+          <button class="star-btn" onclick="event.stopPropagation();toggleFavEl(this)">${starSvg(isFav)}</button>
+          <span class="stk-chev" style="${isOpen?'transform:rotate(180deg)':''}">▼</span>
+        </span>
+      </div>
+      <div style="display:${isOpen||revOpen?'block':'none'}">${body}</div>
+    </div>`;
+  }).join('');
+  updateStkToggle();
   const _ri=document.getElementById('rev-inp');
   if(_ri){ if(_revKeep!==undefined&&_revKeep!=='') _ri.value=_revKeep; if(revJustOpened){ revJustOpened=false; _ri.focus(); _ri.select(); } }
 }
@@ -105,6 +151,7 @@ function renderStock(){
 let revKey=null, revJustOpened=false;
 function toggleRev(key){
   revKey=(revKey===key)?null:key; revJustOpened=!!revKey;
+  if(revKey) stkOpenGroups.add(revKey);
   renderStock();
 }
 function revLast(mat,size){
