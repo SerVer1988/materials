@@ -508,10 +508,13 @@ function flashEl(el){
   el.scrollIntoView({behavior:'smooth',block:'center'});
   setTimeout(()=>el.classList.remove('flash-hl'),3800);
 }
-function goToOrderMat(kind,id){
-  const r=(db[kind]||[]).find(x=>x.id===id); if(!r||!r.order) return;
-  const o=planOrderFor(r.order,[...calcOrderBalance().keys()]);
-  if(o){                                                     // заказ есть в Плане → «По заказам», строка материала
+// Показать заказ в приложении: «План → По заказам» (раскрыть карточку, подсветить; mat — подсветить строку материала).
+// Если заказа нет в Плане (приход/расход без заявки) — раздел «Заказы». Возвращает false, если заказ не найден.
+function focusOrder(orderKey,mat){
+  orderKey=String(orderKey||'').trim(); if(!orderKey) return false;
+  const mt=mat?normName(mat):'';
+  const o=planOrderFor(orderKey,[...calcOrderBalance().keys()]);
+  if(o){                                                     // заказ есть в Плане → «По заказам»
     const isClosed=ordersList().some(x=>x.key===o&&x.status==='closed');
     const f=planF(), showAll=!!f.open===!!f.closed, need=isClosed?'closed':'open';
     if(!showAll&&!f[need]){ f[need]=1; planUI.f=f; }          // фильтр скрывал бы заказ — включаем нужный
@@ -520,22 +523,28 @@ function goToOrderMat(kind,id){
     go('plan',document.getElementById('nbtn-plan')); planTabs('orders');
     setTimeout(()=>{
       const card=[...document.querySelectorAll('#plan-list .pl-ocard')].find(c=>c.dataset.o===o); if(!card) return;
-      const row=[...card.querySelectorAll('.po-row[data-m]')].find(x=>normName(x.dataset.m)===normName(r.mat));
+      const row=mt?[...card.querySelectorAll('.po-row[data-m]')].find(x=>normName(x.dataset.m)===mt):null;
       flashEl(row||card.querySelector('.pl-ohead'));
     },300);
-    return;
+    return true;
   }
-  // заказа нет в Плане (приход/расход без заявки) → раздел «Заказы», позиция материала
-  const st=(ordersList().find(x=>x.key===r.order)||{}).status;
-  ordersOpen.add(r.order);
+  const ex=ordersList().find(x=>x.key===orderKey)||(typeof findOrderForCommand==='function'?findOrderForCommand(orderKey):null);
+  if(!ex) return false;                                      // нигде нет
+  ordersOpen.add(ex.key);
   const si=document.getElementById('ord-s'); if(si) si.value='';
-  if(st&&ordersFilter!=='all'&&st!==ordersFilter) setOrdersFilter('all');
+  if(ordersFilter!=='all'&&ex.status!==ordersFilter) setOrdersFilter('all');
   go('orders');
   setTimeout(()=>{
-    const card=[...document.querySelectorAll('#orders-list .ocard')].find(c=>c.dataset.o===r.order); if(!card) return;
-    const pos=[...card.querySelectorAll('.opos[data-m]')].find(x=>normName(x.dataset.m)===normName(r.mat));
+    const card=[...document.querySelectorAll('#orders-list .ocard')].find(c=>c.dataset.o===ex.key); if(!card) return;
+    const pos=mt?[...card.querySelectorAll('.opos[data-m]')].find(x=>normName(x.dataset.m)===mt):null;
     flashEl(pos||card.querySelector('.ohead'));
   },300);
+  return true;
+}
+// Из Прихода/Расхода: к заказу записи, материал подсвечивается
+function goToOrderMat(kind,id){
+  const r=(db[kind]||[]).find(x=>x.id===id); if(!r||!r.order) return;
+  if(!focusOrder(r.order,r.mat)) toast('Заказ не найден: '+r.order,'err');
 }
 
 function copyOrderName(i,ev){

@@ -37,6 +37,12 @@ function handleInboxCommand(p){
     if(age>INBOX_MAX_AGE){ toast('Сообщение «объединённый рез» устарело — запустите макрос ещё раз','info'); return; }
     handleMergeCut(p); return;
   }
+  if(p.action==='openOrder'){                         // макрос «ПоказатьЗаказВПриложении»: открыть и подсветить заказ
+    if(age>INBOX_MAX_AGE) return;
+    if(p.path&&typeof setOrderPath==='function') setOrderPath(p.order||'',p.path);     // заодно путь к файлу для кнопки 📂
+    if(!focusOrder(p.order||'')) toast(`⚠️ Заказ «${p.order}» не найден в приложении`,'err');
+    return;
+  }
   if(p.action==='closeOrder'){
     const o=findOrderForCommand(p.order||'');
     if(!o){ toast(`⚠️ Заказ «${p.order}» не найден в приложении`,'err'); return; }
