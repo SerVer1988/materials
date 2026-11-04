@@ -171,7 +171,7 @@ function renderOut(){
   rows=rows.slice(0,60);
   const cols=colsFor('out'); colsHead('out');
   if(!rows.length){tb.innerHTML=`<tr><td colspan="${cols.length+1}"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>`;return;}
-  tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">${cols.map(c=>outCell(c,r,i,total,cols)).join('')}<td><button class="dbtn" onclick="event.stopPropagation();del('expense',${r.id})">✕</button></td></tr>`).join('');
+  tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.expense===r.id?'is-editing':''}" onclick="editExpense(${r.id})">${cols.map(c=>outCell(c,r,i,total,cols)).join('')}<td style="white-space:nowrap">${orderGoBtn('expense',r)}<button class="dbtn" onclick="event.stopPropagation();del('expense',${r.id})">✕</button></td></tr>`).join('');
 }
 
 // Отмена редактирования расхода сбрасывает галочку «Списать в брак» (cancelEdit лежит в income.js)

@@ -208,7 +208,7 @@ function diffLabel(diff,status,unit){
 function orderCutsHtml(d){
   if(!d.cuts||!d.cuts.size) return '';
   const blocks=[...d.cuts.values()].sort((a,b)=>a.mat.localeCompare(b.mat,'ru')).map(c=>`
-    <div class="opos">
+    <div class="opos" data-m="${escHtml(c.mat)}">
       <div class="opos-name">${escHtml(c.mat)} <span class="opos-sz">вырезано ${m2fmt(c.m2)} м²</span></div>
       <div class="opos-nums" style="flex-wrap:wrap;gap:4px 12px">${c.items.map(it=>`<span>${it.brak?'🗑 ':''}${it.scrap?'✂️':'▭'} <b>${escHtml(it.det)}</b>${it.qty>1?' ×'+it.qty:''}${it.src?` <span style="color:var(--muted);font-size:11px">из ${escHtml(normSizeStr(it.src))}</span>`:''}</span>`).join('')}</div>
     </div>`).join('');
@@ -238,7 +238,7 @@ function renderOrders(){
       let body='';
       if(open){
         const rows=[...d.pos.values()].sort((a,b)=>a.mat.localeCompare(b.mat,'ru')).map(p=>`
-          <div class="opos">
+          <div class="opos" data-m="${escHtml(p.mat)}">
             <div class="opos-name">${escHtml(p.mat)} <span class="opos-sz">${escHtml(p.size)}</span></div>
             <div class="opos-nums"><span>заказано <b>${p.got}</b></span><span>израсходовано <b>${p.used}</b></span>${diffLabel(p.got-p.used,o.status,n=>n+' шт.')}</div>
           </div>`).join('');
@@ -253,7 +253,7 @@ function renderOrders(){
           <div class="oactions">${o.status==='closed'?`<button class="btn bghost" onclick="reopenOrder(${idx})">↩️ Открыть снова</button>`:`<button class="btn bprim" onclick="closeOrder(${idx})">✅ Закрыть заказ</button>`}<button class="btn bdng odel" onclick="deleteOrder(${idx})" title="Удалить заказ">🗑 Удалить</button></div>
         </div>`;
       }
-      html+=`<div class="ocard ${o.status==='closed'?'is-closed':''}">
+      html+=`<div class="ocard ${o.status==='closed'?'is-closed':''}" data-o="${escHtml(o.key)}">
         <div class="ohead" onclick="toggleOrderCard(${idx})">
           <div class="otitle"><b>${escHtml(o.no)}</b>${o.customer?` <span class="ocust">${escHtml(o.customer)}</span>`:''} ${status}</div>
           <div class="osum">листов: заказано <b>${t.got}</b> · израсходовано <b>${t.used}</b>${nCut?` · вырезано деталей <b>${nCut}</b>`:''}${d.brakCount?` · брак <b>${d.brakCount}</b>`:''} ${diffLabel(t.diff,o.status,n=>n+' шт.')}</div>

@@ -492,6 +492,47 @@ const PL_ICON_COPY='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" 
 const PL_ICON_LINK='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
 // «27.10.26 14:32» → время в мс (0, если не разобрать)
 function planParseDt(s){ const m=String(s||'').match(/^(\d{2})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2})/); return m?new Date(2000+(+m[3]),(+m[2])-1,+m[1],+m[4],+m[5]).getTime():0; }
+// ── Переход из Прихода/Расхода к заказу, материал подсвечивается ──
+const PL_ICON_GO='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg>';
+function orderGoBtn(kind,r){
+  return r&&r.order?`<button class="dbtn gbtn" title="К заказу ${escHtml(r.order)}" onclick="event.stopPropagation();goToOrderMat('${kind}',${r.id})">${PL_ICON_GO}</button>`:'';
+}
+function flashEl(el){
+  if(!el) return;
+  el.classList.remove('flash-hl'); void el.offsetWidth; el.classList.add('flash-hl');
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>el.classList.remove('flash-hl'),3800);
+}
+function goToOrderMat(kind,id){
+  const r=(db[kind]||[]).find(x=>x.id===id); if(!r||!r.order) return;
+  const o=planOrderFor(r.order,[...calcOrderBalance().keys()]);
+  if(o){                                                     // заказ есть в Плане → «По заказам», строка материала
+    const isClosed=ordersList().some(x=>x.key===o&&x.status==='closed');
+    const f=planF(), showAll=!!f.open===!!f.closed, need=isClosed?'closed':'open';
+    if(!showAll&&!f[need]){ f[need]=1; planUI.f=f; }          // фильтр скрывал бы заказ — включаем нужный
+    planUI['o:'+o]=false; savePlanUI(); planMat=''; planView='orders';
+    const si=document.getElementById('plan-s'); if(si) si.value='';
+    go('plan',document.getElementById('nbtn-plan')); planTabs('orders');
+    setTimeout(()=>{
+      const card=[...document.querySelectorAll('#plan-list .pl-ocard')].find(c=>c.dataset.o===o); if(!card) return;
+      const row=[...card.querySelectorAll('.po-row[data-m]')].find(x=>normName(x.dataset.m)===normName(r.mat));
+      flashEl(row||card.querySelector('.pl-ohead'));
+    },300);
+    return;
+  }
+  // заказа нет в Плане (приход/расход без заявки) → раздел «Заказы», позиция материала
+  const st=(ordersList().find(x=>x.key===r.order)||{}).status;
+  ordersOpen.add(r.order);
+  const si=document.getElementById('ord-s'); if(si) si.value='';
+  if(st&&ordersFilter!=='all'&&st!==ordersFilter) setOrdersFilter('all');
+  go('orders');
+  setTimeout(()=>{
+    const card=[...document.querySelectorAll('#orders-list .ocard')].find(c=>c.dataset.o===r.order); if(!card) return;
+    const pos=[...card.querySelectorAll('.opos[data-m]')].find(x=>normName(x.dataset.m)===normName(r.mat));
+    flashEl(pos||card.querySelector('.ohead'));
+  },300);
+}
+
 function copyOrderName(i,ev){
   if(ev) ev.stopPropagation();
   const key=(window.__planKeys||[])[i]; if(key===undefined) return;
@@ -539,8 +580,8 @@ function renderPlanOrders(){
     const chk=(m,on)=>{
       return `<span class="po-chk${on?' on':''}" data-o="${escHtml(o)}" data-m="${escHtml(m)}" onclick="toggleMatDone(this)" title="${on?'Вырезан и готов (нажмите, чтобы снять)':'Отметить: материал вырезан и готов'}"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="10.5" class="c"/><path d="M7 12.5l3.4 3.4L17 9" class="t"/></svg></span>`; };
     const rows=`<div class="po-row po-head"><span></span><span></span><span></span><span>нужно, м²</span><span>вырезано</span><span>итог, м²</span><span></span></div>`+
-      mats.map(e=>{ const on=matDoneEff(o,e); return `<div class="po-row${on?' po-done':''}"><span class="po-mg" onclick="openMergeOrder(${oi})" title="Объединить">${PL_ICON_LINK}</span>${chk(e.mat,on)}<div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}<span class="po-del" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="deleteOrderMat(this)" title="Удалить позицию из заказа">✕</span></div>`; }).join('');
-    return `<div class="ocard pl-ocard ${isClosed?'is-closed':''}">
+      mats.map(e=>{ const on=matDoneEff(o,e); return `<div class="po-row${on?' po-done':''}" data-m="${escHtml(e.mat)}"><span class="po-mg" onclick="openMergeOrder(${oi})" title="Объединить">${PL_ICON_LINK}</span>${chk(e.mat,on)}<div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}<span class="po-del" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="deleteOrderMat(this)" title="Удалить позицию из заказа">✕</span></div>`; }).join('');
+    return `<div class="ocard pl-ocard ${isClosed?'is-closed':''}" data-o="${escHtml(o)}">
       <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
         <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span><span class="pl-copy" role="button" aria-label="Копировать название" title="Копировать название" onclick="copyOrderName(${oi},event)">${PL_ICON_COPY}</span><b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
         <div class="osum pl-osum">
