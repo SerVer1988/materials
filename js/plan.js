@@ -130,6 +130,11 @@ function addPlanFromText(order,text,baseId,auto){
   order=String(order||'').trim().replace(/\s+/g,' ');
   if(!order){ const m=String(text).match(/Заказ\s*№?\s*([^\s:,]+)/i); order=m?m[1]:''; }
   if(!order){ toast('Укажите заказ','err'); return false; }
+  const unhideMats=mats=>{                                   // позицию удаляли (✕), а в файле она снова есть — возвращаем
+    if(typeof matDone==='undefined') return; let ch=false;
+    mats.forEach(m=>{ if(matDoneHidden(order,m)){ matDone[mdKey(order,m)]=[3,Date.now()]; ch=true; } });
+    if(ch) persistMatDone();
+  };
   const parsed=parsePlanText(text);
   if(!parsed.length){ toast('Не удалось разобрать заявку: нужны строки вида «Материал - 1220х2440 - 1шт + 1220х456»','err'); return false; }
   if(!db.plan) db.plan=[];
@@ -145,18 +150,19 @@ function addPlanFromText(order,text,baseId,auto){
     // у старой строки не было размера изделия, а теперь есть — дополняем. Строки, которых в новой заявке нет, не трогаем.
     const exist=db.plan.filter(x=>x.order===order&&!x.fromBrak), byKey=new Map(), used=new Set();
     exist.forEach(x=>{ const k=lineKey(x); if(!byKey.has(k)) byKey.set(k,[]); byKey.get(k).push(x); });
-    let updated=0;
+    let updated=0; const updMats=new Set();
     const fresh=[];
     lines.forEach(l=>{
       const hit=(byKey.get(lineKey(l))||[]).find(x=>!used.has(x.id));
-      if(hit){ used.add(hit.id); if(hit.qty!==l.qty){ hit.qty=l.qty; hit.blocks=l.blocks; hit.frac=l.frac; updated++; } return; }
+      if(hit){ used.add(hit.id); if(hit.qty!==l.qty){ hit.qty=l.qty; hit.blocks=l.blocks; hit.frac=l.frac; updated++; updMats.add(l.mat); } return; }
       if(l.det){
         const old=exist.find(x=>!used.has(x.id)&&!x.det&&x.mat===l.mat&&x.w===l.w&&x.l===l.l&&(x.stripW||0)===(l.stripW||0)&&(x.stripL||0)===(l.stripL||0));
-        if(old){ used.add(old.id); old.det=l.det; old.qty=l.qty; old.blocks=l.blocks; old.frac=l.frac; updated++; return; }
+        if(old){ used.add(old.id); old.det=l.det; old.qty=l.qty; old.blocks=l.blocks; old.frac=l.frac; updated++; updMats.add(l.mat); return; }
       }
       fresh.push(l);
     });
     lines=fresh;
+    unhideMats(updMats);
     if(updated){ save(); renderAll(); }
     if(!lines.length){
       toast(updated?`🔄 Заказ ${order}: обновлено строк плана: ${updated}`:`Заказ ${order}: все материалы уже в плане`,'info');
@@ -167,6 +173,7 @@ function addPlanFromText(order,text,baseId,auto){
   const repeats=lines.filter(l=>db.plan.some(x=>x.order===order&&x.mat===l.mat));
   const commit=list=>{
     if(!list.length){ toast('Повторы пропущены, новых строк нет','info'); return; }
+    unhideMats(new Set(list.map(l=>l.mat)));
     list.forEach(l=>db.plan.push(l)); ensureOrder(order);
     save(); fillOrderSelects(); renderAll();
     toast(auto?(isNewOrder?`🆕 Новый заказ ${order}: строк ${list.length}`:`➕ В заказ ${order} добавлено строк: ${list.length}`):`📋 В план добавлено строк: ${list.length} (заказ ${order})`,'ok');
