@@ -52,8 +52,14 @@ function nmParse(s){
 function normMaterial(text){
   const raw=String(text==null?'':text).trim().replace(/\s+/g,' '); if(!raw) return raw;
   const list=(typeof MATS!=='undefined'&&Array.isArray(MATS))?MATS:[];
+  const q0=nmParse(raw);
+  // Акрил 3 / 5 / 8 / 10 мм без указания цвета — всегда молочный «(мол.)» (даже если в списке есть «голый» акрил)
+  if(q0.fam.length>=3&&'акрил'.startsWith(q0.fam)&&!q0.colors.length&&[3,5,8,10].includes(q0.th)){
+    const want=`Акрил ${q0.th} мм (мол.)`;
+    return list.find(m=>nmClean(m)===nmClean(want))||want;
+  }
   const exact=list.find(m=>nmClean(m)===nmClean(raw)); if(exact) return exact;
-  const q=nmParse(raw); if(q.fam.length<3) return raw;
+  const q=q0; if(q.fam.length<3) return raw;
   // кандидаты: то же семейство и толщина
   const cands=list.map(m=>({m,p:nmParse(m)})).filter(c=>{
     const f=c.p.fam; if(!f) return false;

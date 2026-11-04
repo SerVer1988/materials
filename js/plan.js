@@ -105,7 +105,7 @@ function planFromBlocks(list){
   return res;
 }
 const normName=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
-function canonMat(name){ const n=normName(name); return MATS.find(m=>normName(m)===n)||normMaterial(String(name).replace(/\s+/g,' ').trim()); }
+function canonMat(name){ const a=normMaterial(String(name).replace(/\s+/g,' ').trim()); return MATS.find(m=>normName(m)===normName(a))||a; }   // normMaterial: акрил без цвета → (мол.)
 function fmtSheet(w,l){
   const hit=SIZES.find(s=>{ const p=parseSizeStr(s); return p&&p.w===w&&p.l===l; });
   return hit||`${w}х${l}`;
@@ -140,8 +140,11 @@ function addPlanFromText(order,text,baseId,auto){
   const isNewOrder=!db.plan.some(x=>x.order===order)&&!ordersList().some(o=>o.key===order);
   if(auto){
     const lineKey=l=>[l.mat,l.w+'x'+l.l,l.stripW||0,l.stripL||0,l.det||''].join('|');
-    const have=new Set(db.plan.filter(x=>x.order===order).map(lineKey));
-    lines=lines.filter(l=>{ const k=lineKey(l); if(have.has(k)) return false; have.add(k); return true; });
+    // Повторы внутри заявки (два одинаковых размера одного материала) — это РАЗНЫЕ детали, их вносим все.
+    // Защита от двойной отправки: добавляем только то, чего в заказе ещё нет по количеству таких строк.
+    const haveN=new Map(), seenN=new Map();
+    db.plan.filter(x=>x.order===order).forEach(x=>{ const k=lineKey(x); haveN.set(k,(haveN.get(k)||0)+1); });
+    lines=lines.filter(l=>{ const k=lineKey(l), n=(seenN.get(k)||0)+1; seenN.set(k,n); return n>(haveN.get(k)||0); });
     if(!lines.length){ toast(`Заказ ${order}: все материалы уже в плане`,'info'); return false; }
   }
   const repeats=lines.filter(l=>db.plan.some(x=>x.order===order&&x.mat===l.mat));

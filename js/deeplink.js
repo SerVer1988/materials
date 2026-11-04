@@ -23,7 +23,7 @@ function fillExpenseForm(d){
 
   // материал
   const mat=document.getElementById('out-mat');
-  mat.value=d.mat; acUpdateClear('out-mat');
+  mat.value=(typeof normMaterial==='function'?normMaterial(d.mat):d.mat); acUpdateClear('out-mat');
 
   // размер листа: если передан и есть в списке — выбираем, иначе «— без листа —» (поиск обрезка)
   const sel=document.getElementById('out-pre');
