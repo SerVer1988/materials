@@ -63,7 +63,7 @@ const SHEETS_BY_FAMILY={
   'полик-нат':[[2050,3050]],
   'абс':[[1200,600],[1240,615],[1220,900]],
   'дсп':[[2750,2070]],
-  'пэт':[[1250,2050]]
+  'пэт':[[1250,2050],[1220,2440]]
 };
 const PLAN_WHOLE_RATIO=0.75;   // раскладка занимает ≥ 75% длины листа — считаем целым листом (остаток слишком мал)
 const familyOf=mat=>String(mat||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ')[0];
@@ -141,12 +141,29 @@ function addPlanFromText(order,text,baseId,auto){
   if(auto){
     const lineKey=l=>[l.mat,l.w+'x'+l.l,l.stripW||0,l.stripL||0,l.det||''].join('|');
     // Повторы внутри заявки (два одинаковых размера одного материала) — это РАЗНЫЕ детали, их вносим все.
-    // Защита от двойной отправки: добавляем только то, чего в заказе ещё нет по количеству таких строк.
-    const haveN=new Map(), seenN=new Map();
-    db.plan.filter(x=>x.order===order).forEach(x=>{ const k=lineKey(x); haveN.set(k,(haveN.get(k)||0)+1); });
-    lines=lines.filter(l=>{ const k=lineKey(l), n=(seenN.get(k)||0)+1; seenN.set(k,n); return n>(haveN.get(k)||0); });
-    if(!lines.length){ toast(`Заказ ${order}: все материалы уже в плане`,'info'); return false; }
+    // Повторная отправка не дублирует строки, а ОБНОВЛЯЕТ их: изменилось количество листов (раскладку доработали) — берём новое;
+    // у старой строки не было размера изделия, а теперь есть — дополняем. Строки, которых в новой заявке нет, не трогаем.
+    const exist=db.plan.filter(x=>x.order===order&&!x.fromBrak), byKey=new Map(), used=new Set();
+    exist.forEach(x=>{ const k=lineKey(x); if(!byKey.has(k)) byKey.set(k,[]); byKey.get(k).push(x); });
+    let updated=0;
+    const fresh=[];
+    lines.forEach(l=>{
+      const hit=(byKey.get(lineKey(l))||[]).find(x=>!used.has(x.id));
+      if(hit){ used.add(hit.id); if(hit.qty!==l.qty){ hit.qty=l.qty; hit.blocks=l.blocks; hit.frac=l.frac; updated++; } return; }
+      if(l.det){
+        const old=exist.find(x=>!used.has(x.id)&&!x.det&&x.mat===l.mat&&x.w===l.w&&x.l===l.l&&(x.stripW||0)===(l.stripW||0)&&(x.stripL||0)===(l.stripL||0));
+        if(old){ used.add(old.id); old.det=l.det; old.qty=l.qty; old.blocks=l.blocks; old.frac=l.frac; updated++; return; }
+      }
+      fresh.push(l);
+    });
+    lines=fresh;
+    if(updated){ save(); renderAll(); }
+    if(!lines.length){
+      toast(updated?`🔄 Заказ ${order}: обновлено строк плана: ${updated}`:`Заказ ${order}: все материалы уже в плане`,'info');
+      return updated>0;
+    }
   }
+
   const repeats=lines.filter(l=>db.plan.some(x=>x.order===order&&x.mat===l.mat));
   const commit=list=>{
     if(!list.length){ toast('Повторы пропущены, новых строк нет','info'); return; }
