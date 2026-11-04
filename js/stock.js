@@ -102,7 +102,7 @@ function renderStock(){
     const all=units[g.key]||[];
     return {...g,list:stkPlaceFilter?all.filter(u=>u.place===stkPlaceFilter):all};
   }).filter(g=>{
-    if(stkPlaceFilter&&!g.list.length) return false;
+    if(stkPlaceFilter?!g.list.length:g.s.qty===0) return false;      // нулевые позиции не показываем
     if(filterLow&&!(g.s.qty<=2)) return false;
     if(filterFav&&!favorites.has(g.key)) return false;
     if(q){ const hay=g.mat+' '+g.size+' '+g.list.map(u=>u.place+' '+u.order).join(' '); if(!searchMatch(hay,q)) return false; }
@@ -114,19 +114,16 @@ function renderStock(){
     const sz=parseSizeStr(g.size)||{w:0,l:0}, m2=sz.w*sz.l/1e6;
     const cnt=stkPlaceFilter?g.list.length:g.s.qty;
     const area=Math.max(0,cnt)*m2;
-    const isFav=favorites.has(g.key), isOpen=stkOpenGroups.has(g.key), revOpen=(revKey===g.key);
+    const isFav=favorites.has(g.key), isOpen=stkOpenGroups.has(g.key);
     const rs=(reserves[g.key]||[]).reduce((t,x)=>t+x.left,0), free=Math.max(0,g.s.qty-rs);
     const rows=g.list.map(u=>{
       const tag=u.order
-        ?`<span class="piece-book"><span class="rchip" title="В брони под заказ ${escHtml(u.order)}">🔒 ${typeof planOrderShort==='function'?planOrderShort(u.order):escHtml(splitOrder(u.order).no)}</span></span>`
+        ?`<span class="rchip" title="В брони под заказ ${escHtml(u.order)}">🔒 ${typeof planOrderShort==='function'?planOrderShort(u.order):escHtml(splitOrder(u.order).no)}</span>`
         :`<span class="piece-free">в запас</span>`;
-      return `<div class="piece-row stk-unit">
-        <span class="piece-left"><span class="piece-sz">${sz.w}х${sz.l}</span>${u.dt?`<span class="piece-dt">${shortDt(u.dt)}</span>`:''}${tag}</span>
-        <span class="piece-right"><span class="piece-place">${escHtml(u.place)}</span><span class="piece-type-ico"${u.rev?' title="Запись ревизии">⚖️':'>'}</span><span class="piece-pcs">1 шт.</span><span class="piece-m2 pm2-pos">${m2.toFixed(3)} м²</span></span>
-      </div>`;
+      return `<div class="piece-row stk-unit"><span class="stk-u-l"><span class="piece-sz">${sz.w}х${sz.l}</span>${u.dt?`<span class="piece-dt">${shortDt(u.dt)}</span>`:''}${u.rev?'<span class="piece-dt" title="Запись ревизии">⚖️</span>':''}${tag}</span><span class="stk-u-r">${u.place?`<span class="piece-place">${escHtml(u.place)}</span>`:''}<span class="piece-m2 pm2-pos">${m2.toFixed(3)} м²</span></span></div>`;
     }).join('');
-    const body=`<div class="stk-tools"><span>${rs?`в брони <b>${rs}</b> · `:''}свободно <b>${free}</b></span><button class="btn bghost bsm" onclick="toggleRev(this.closest('.remcard').dataset.k)">⚖️ Ревизия</button></div>`+
-      (revOpen?revPanelHtml(g.mat,g.s):'')+(rows||'<div class="stk-empty">Листов нет</div>');
+    const info=rs?`<div class="stk-tools">в брони <b>${rs}</b> · свободно <b>${free}</b></div>`:'';
+    const body=info+(rows||'<div class="stk-empty">Листов нет</div>');
     return `<div class="remcard stk-card${isFav?' fav':''}" data-k="${escHtml(g.key)}" data-mat="${escHtml(g.mat)}" data-size="${escHtml(g.size)}">
       <div class="remmat-name stk-hd" onclick="toggleStkGroup(this.parentNode.dataset.k)">
         <span class="stk-hd-name"><span>${escHtml(g.mat)}</span><span class="stk-hd-sz">${escHtml(g.size)}</span></span>
@@ -136,7 +133,7 @@ function renderStock(){
           <span class="stk-chev" style="${isOpen?'transform:rotate(180deg)':''}">▼</span>
         </span>
       </div>
-      <div style="display:${isOpen||revOpen?'block':'none'}">${body}</div>
+      <div style="display:${isOpen?'block':'none'}">${body}</div>
     </div>`;
   }).join('');
   updateStkToggle();
