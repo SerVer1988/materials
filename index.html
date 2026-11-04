@@ -35,7 +35,7 @@
 <link rel="stylesheet" href="css/layout.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/components.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/stock.css?v=2026-10-13c">
-<link rel="stylesheet" href="css/controls.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/controls.css?v=2026-10-13b">
 <link rel="stylesheet" href="css/remainders.css?v=2026-10-13b">
 <link rel="stylesheet" href="css/tables.css?v=2026-10-13b">
 <link rel="stylesheet" href="css/modals.css?v=2026-10-13a">
@@ -580,6 +580,51 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
     </div>
   </div>
 
+  <!-- Дополнения для CorelDRAW и Windows -->
+  <div class="ccard" id="cc-addons">
+    <div class="ccard-head" onclick="toggleCard('cc-addons')">
+      <div class="ccard-title">🧩 Дополнения для CorelDRAW и Windows</div>
+      <span class="ccard-arrow">▼</span>
+    </div>
+    <div class="ccard-body">
+      <div class="addon">
+        <div class="addon-h">1. Макросы для CorelDRAW</div>
+        <div class="addon-t">Передают в приложение заказы, расход, брак и «объединённый рез», закрывают и показывают заказ. Ваш код доступа уже вписан в файл.</div>
+        <button class="btn bprim bsm" onclick="downloadMacro()">⬇️ Скачать AppSend.bas</button>
+        <ol class="addon-steps">
+          <li>В CorelDRAW нажмите <b>Alt+F11</b> — откроется редактор макросов.</li>
+          <li>Если слева в проекте уже есть модуль <b>AppSend</b> (или старые SendOrder, ОтправитьВПлан) — щёлкните по нему правой кнопкой → <b>Remove</b>, на вопрос про экспорт ответьте «Нет».</li>
+          <li>Меню <b>File → Import File…</b> → выберите скачанный <b>AppSend.bas</b>.</li>
+          <li>Закройте редактор. Запуск: <b>Alt+F8</b> → <b>AppSend.Меню</b> → «Запустить». Выберите нужный пункт в окне.</li>
+          <li>Приложение должно быть открыто на компьютере, а «Приём из CorelDRAW на этом устройстве» — включён (выше).</li>
+        </ol>
+        <details class="addon-more"><summary>Какие макросы есть</summary>
+          <ul>
+            <li><b>Меню</b> — все пункты в одном окне.</li>
+            <li><b>ОткрытьЗаказ</b> — материалы заказа попадают в «План», приходит ответ о наличии.</li>
+            <li><b>ОтправитьСтрокуВПриложение</b> — «вырезано» (или брак) с реальным размером деталей.</li>
+            <li><b>ОбъединенныйРез</b> — раскладка без подписей: площадь делится между выбранными заказами.</li>
+            <li><b>ПоказатьЗаказВПриложении</b> — открывает и подсвечивает заказ этого файла.</li>
+            <li><b>ЗакрытьЗаказ</b> — закрывает заказ.</li>
+          </ul>
+        </details>
+      </div>
+      <div class="addon">
+        <div class="addon-h">2. Windows: открытие файла заказа кнопкой 📂 <span style="font-weight:600;color:var(--muted)">(по желанию)</span></div>
+        <div class="addon-t">Кнопка 📂 рядом с заказом открывает его файл в CorelDRAW. Нужна один раз на каждом компьютере.</div>
+        <a class="btn bprim bsm" href="addons/CorelOpen.zip" download style="display:inline-block;text-decoration:none">⬇️ Скачать CorelOpen.zip</a>
+        <ol class="addon-steps">
+          <li>Откройте скачанный архив и нажмите «Извлечь всё» (правый щелчок → Извлечь всё).</li>
+          <li>В папке дважды щёлкните <b>Install.cmd</b>. Если Windows напишет «защитила ваш компьютер» — «Подробнее» → «Выполнить в любом случае».</li>
+          <li>Появится «Готово». Папку из архива можно удалить.</li>
+          <li>Откройте файл заказа в CorelDRAW и запустите <b>Меню → 5</b> (показать заказ) — приложение запомнит путь, и у заказа появится 📂.</li>
+          <li>При первом нажатии 📂 браузер спросит разрешение — выберите «Всегда разрешать».</li>
+        </ol>
+        <div class="addon-t" style="margin-top:6px">Удаление: запустите <b>Uninstall.cmd</b> из архива. Подробности — в README.txt внутри архива.</div>
+      </div>
+    </div>
+  </div>
+
   <!-- История — сворачиваемая -->
   <div class="ccard" id="cc-hist">
     <div class="ccard-head" onclick="toggleCard('cc-hist')">
@@ -849,6 +894,7 @@ function planTabs(v){
 <script src="js/plan.js?v=2026-10-14a"></script>
 <script src="js/mergecut.js?v=2026-10-13a"></script>
 <script src="js/orderfile.js?v=2026-10-13b"></script>
+<script src="js/addons.js?v=2026-10-13a"></script>
 <script src="js/place-filter.js?v=2026-10-13a"></script>
 <script src="js/deeplink.js?v=2026-10-13b"></script>
 <script src="js/inbox.js?v=2026-10-14a"></script>
