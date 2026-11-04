@@ -78,3 +78,9 @@
 .sec-body{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
 .add-panel-body{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
 .modal{max-height:92vh;overflow-y:auto}
+
+/* кнопка «Обновить» в шапке рядом со счётчиком записей и статусом синхронизации */
+.sync-btn{background:var(--card2);border:1px solid var(--border);color:var(--accent-ink);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
+.sync-btn:active{transform:scale(.92)}
+.sync-btn.spin svg{animation:syncspin .9s linear infinite}
+@keyframes syncspin{to{transform:rotate(360deg)}}
