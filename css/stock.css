@@ -31,3 +31,20 @@
 .pmenu.show{display:block}
 .pmenu-item{padding:9px 12px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;white-space:nowrap}
 .pmenu-item:active,.pmenu-item.on{background:var(--aclt);color:var(--accent-ink)}
+
+/* ── «Листы» поштучно: группа «материал + размер», внутри — каждый лист (как в «Обрезках») ── */
+.stk-hd{display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:0;padding:2px 0}
+.stk-hd-name{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
+.stk-hd-sz{font-size:12px;font-weight:800;color:var(--muted)}
+.stk-hd-right{display:flex;align-items:center;gap:6px;flex:none}
+.stk-hd-right .star-btn{margin-left:0}
+.stk-cnt{color:var(--text);font-weight:800}
+.stk-cnt.low{color:var(--gold)} .stk-cnt.zero{color:var(--red)}
+.stk-chev{font-size:12px;color:var(--muted);transition:transform .2s}
+.stk-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0 4px;font-size:11px;font-weight:700;color:var(--muted)}
+.stk-tools b{color:var(--text)}
+.stk-unit{cursor:default}.stk-unit:hover{background:none}
+.stk-unit .piece-right{grid-template-columns:76px 14px 38px 64px}
+.piece-book{display:flex;flex-wrap:wrap;gap:4px}
+.piece-free{font-size:10px;font-weight:700;color:var(--muted);opacity:.7}
+.stk-empty{padding:8px 4px;font-size:12px;color:var(--muted)}
