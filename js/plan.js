@@ -561,7 +561,8 @@ function renderPlanOrders(){
     .filter(o=>!planMat||bal.get(o).has(planMat))
     .map(o=>{
       const isClosed=closed.has(o);
-      const mats=[...bal.get(o).values()].filter(e=>!planMat||e.mat===planMat).filter(e=>!matDoneHidden(o,e.mat)).sort((a,b)=>a.mat.localeCompare(b.mat,'ru'));
+      const mats=[...bal.get(o).values()].filter(e=>!planMat||e.mat===planMat).filter(e=>!matDoneHidden(o,e.mat))
+        .sort((a,b)=>(+matDoneEff(o,a))-(+matDoneEff(o,b))||a.mat.localeCompare(b.mat,'ru'));   // готовые материалы — вниз, невыполненные сверху
       const tNeed=mats.reduce((s,e)=>s+e.need,0), tSpent=mats.reduce((s,e)=>s+e.spent,0);
       let pct=tNeed>0?Math.round(tSpent/tNeed*100):0;
       if(isClosed&&pct<100) pct=100;                    // выполненный заказ — 100%
