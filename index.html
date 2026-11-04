@@ -34,7 +34,7 @@
 <link rel="stylesheet" href="css/base.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/layout.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/components.css?v=2026-10-13a">
-<link rel="stylesheet" href="css/stock.css?v=2026-10-13a">
+<link rel="stylesheet" href="css/stock.css?v=2026-10-13b">
 <link rel="stylesheet" href="css/controls.css?v=2026-10-13a">
 <link rel="stylesheet" href="css/remainders.css?v=2026-10-13b">
 <link rel="stylesheet" href="css/tables.css?v=2026-10-13b">
@@ -424,6 +424,7 @@ table.acct td.c-note{font-size:11px;color:var(--muted);white-space:normal;max-wi
       <div class="fchips">
         <div class="fchip" id="fchip-low" onclick="toggleFilter('low')">⚠️ Мало (≤2)</div>
         <div class="fchip" id="fchip-fav" onclick="toggleFilter('fav')">⭐ Избранные</div>
+        <div class="fchip" id="fchip-stk-toggle" onclick="toggleAllStkGroups()">▼ Развернуть</div>
         <div class="fdd-wrap">
           <div class="fchip fdd" id="fchip-place-stk" onclick="togglePlaceMenu(event,'stk')">📍 <span id="fchip-place-label-stk">Место</span> <span class="fdd-caret">▼</span></div>
           <div class="pmenu" id="place-menu-stk"></div>
@@ -835,7 +836,7 @@ function planTabs(v){
   if(typeof setPlanView==='function') setPlanView(v);
 }
 </script>
-<script src="js/stock.js?v=2026-10-13d"></script>
+<script src="js/stock.js?v=2026-10-13e"></script>
 <script src="js/revision.js?v=2026-10-13b"></script>
 <script src="js/stats.js?v=2026-10-13i"></script>
 <script src="js/names.js?v=2026-10-13c"></script>
