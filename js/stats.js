@@ -26,7 +26,7 @@ const statCap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 
 function calcStats(){
   const months=new Map();
-  const get=k=>{ if(!months.has(k)) months.set(k,{skipped:0,rows:0,orders:new Set(),sheets:0,sheetM2:0,detM2:0,scrapM2:0,brakQty:0,brakM2:0,
+  const get=k=>{ if(!months.has(k)) months.set(k,{skipped:0,rows:0,orders:new Set(),sheets:0,sheetM2:0,detM2:0,scrapM2:0,brakQty:0,brakM2:0,cutM:0,
     cust:new Map(),cat:new Map(),mgr:new Map(),mat:new Map()}); return months.get(k); };
   const bump=(map,key,disp,m2,order,sheets)=>{
     const k=String(key||'—').toLowerCase();

@@ -187,7 +187,8 @@ function planAvailabilityReport(order,text){
   const freeOf=k=>Math.max(0,(ctx.stockQ[k]||0)-(ctx.res[k]||[]).reduce((s,x)=>s+x.left,0));
   sheets.forEach((g,k)=>{
     const free=freeOf(k), ok=free>=g.need;
-    out.push(`${ok?'ЕСТЬ:':'НЕТ:'} ${g.mat} ${g.size}: нужно ${g.need} л., в наличии ${free}${ok?'':' — докупить '+(g.need-free)}`);
+    const bg=ok?[]:planBiggerSheets(ctx,g.mat,g.size);
+    out.push(`${ok?'ЕСТЬ:':'НЕТ:'} ${g.mat} ${g.size}: нужно ${g.need} л., в наличии ${free}${ok?'':' — докупить '+(g.need-free)+(bg.length?' (но есть крупнее: '+planBiggerTxt(bg)+')':'')}`);
   });
   strips.forEach(s=>{
     const sc=findStripScraps(s.mat,s.w,s.l,0);
@@ -268,6 +269,21 @@ function findStripScraps(mat,w,l,skipId){
   }));
   return out.sort((a,b)=>a.w*a.l-b.w*b.l);
 }
+// Свободные листы того же материала БОЛЬШЕГО размера, из которых можно вырезать нужный (нужен 1220×2440, на складе есть 2050×3050).
+// taken — сколько листов этого размера уже занято другими группами закупки
+function planBiggerSheets(ctx,mat,size,taken){
+  const sh=parseSizeStr(size); if(!sh) return [];
+  const out=[];
+  Object.keys(ctx.stockQ).forEach(k=>{
+    const i=k.indexOf('||'); if(k.slice(0,i)!==mat) return;
+    const sz=k.slice(i+2); if(sz===size) return;
+    const b=parseSizeStr(sz); if(!b||b.w*b.l<=sh.w*sh.l||!fitBlock(sh.w,sh.l,b)) return;
+    const free=Math.max(0,ctx.stockQ[k]-(ctx.res[k]||[]).reduce((t,x)=>t+x.left,0)-((taken&&taken[k])||0));
+    if(free>0) out.push({size:sz,free,area:b.w*b.l});
+  });
+  return out.sort((a,b)=>a.area-b.area);
+}
+const planBiggerTxt=a=>a.map(x=>`${x.size} — ${x.free} шт`).join(', ');
 function planLineInfo(line,ctx){
   const k=`${line.mat}||${line.size}`, rk=`${line.order}||${k}`;
   const booked=line.booked||0;
@@ -564,6 +580,8 @@ function planGroupsData(){
     if(f.needSheet||f.sharesSheet) addRow(l.stripW+'×'+l.stripL,1);
   });
   groups.forEach(g=>{ g.cover=Math.min(g.free,g.need); g.buy=g.need-g.cover; g.wait=Math.min(g.ordered,g.buy); g.toOrder=g.buy-g.wait; });
+  const taken={}; groups.forEach(g=>{ taken[g.key]=g.cover; });
+  groups.forEach(g=>{ g.alt=g.buy>0?planBiggerSheets(ctx,g.mat,g.size,taken):[]; });
   return {groups,infos,matNeed,matLines};
 }
 function planMatChips(){ const el=document.getElementById('plan-mats'); if(el) el.innerHTML=''; }   // фильтр по материалам убран: есть строка поиска
@@ -605,6 +623,7 @@ function renderPlanBuy(){
     return `<div class="pg">
       <div class="pg-top"><div class="pg-mat">${matChip(g.mat)}<span class="pg-sz">${escHtml(g.size)}</span></div>${badge}</div>
       <div class="pg-line">Нужно <b>${g.need}</b> · в наличии свободно <b>${g.free}</b>${g.cover?` → из наличия <b>${g.cover}</b>`:''}${g.strips?` · полос: ${g.strips}`:''}</div>
+      ${g.alt&&g.alt.length?`<div class="pg-line pg-alt">💡 Но есть крупнее: <b>${escHtml(planBiggerTxt(g.alt))}</b> — можно вырезать из него</div>`:''}
       <div class="pg-tbl">${tbl}</div>
       <div class="pg-btns">${btns.join('')}</div>
     </div>`;
