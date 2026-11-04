@@ -81,5 +81,5 @@ function renderIn(){
   const cols=colsFor('in'); colsHead('in');
   if(!rows.length){tb.innerHTML=`<tr><td colspan="${cols.length+1}"><div class="empty"><div class="ei">📭</div>Нет записей</div></td></tr>`;return;}
   const total=db.income.filter(r=>!inPlaceFilter||(r.place||'')=== inPlaceFilter).length;
-  tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.income===r.id?'is-editing':''}" onclick="editIncome(${r.id})">${cols.map(c=>incCell(c,r,i,total,cols)).join('')}<td style="white-space:nowrap">${orderGoBtn('income',r)}<button class="dbtn" onclick="event.stopPropagation();del('income',${r.id})">✕</button></td></tr>`).join('');
+  tb.innerHTML=rows.map((r,i)=>`<tr class="trow-edit ${editMode.income===r.id?'is-editing':''}" data-rid="${r.id}" onclick="editIncome(${r.id})">${cols.map(c=>incCell(c,r,i,total,cols)).join('')}<td style="white-space:nowrap">${orderGoBtn('income',r)}<button class="dbtn" onclick="event.stopPropagation();del('income',${r.id})">✕</button></td></tr>`).join('');
 }

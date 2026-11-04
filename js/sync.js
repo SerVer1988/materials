@@ -23,7 +23,7 @@ function sbErrText(e){
 const REC_TABLES=['income','expense','remainders','orders','plan'];
 let recSnap=null;
 function recHash(r){
-  const s=JSON.stringify(r,(k,v)=>k==='_u'?undefined:v); let h=5381;
+  const s=JSON.stringify(r,(k,v)=>(k==='_u'||k==='_by')?undefined:v); let h=5381;
   for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0;
   return h;
 }
@@ -33,7 +33,7 @@ function trackRecordChanges(){
   const cur=recSnapBuild();
   if(!recSnap){ recSnap=cur; return; }
   const ts=Date.now();
-  REC_TABLES.forEach(t=>(db[t]||[]).forEach(r=>{ if(recSnap[t+':'+r.id]!==cur[t+':'+r.id]) r._u=ts; }));
+  REC_TABLES.forEach(t=>(db[t]||[]).forEach(r=>{ if(recSnap[t+':'+r.id]!==cur[t+':'+r.id]){ r._u=ts; if(typeof deviceLabel==='function') r._by=deviceLabel(); } }));
   recSnap=cur;
 }
 // Есть ли у нас то, чего нет в облаке (или наша версия новее) — тогда нужно отправить
@@ -126,6 +126,7 @@ function mergeList(local=[], cloud=[], kind, cloudTs){
 
 // ── Применяет облачный payload с объединением (не заменой) ──
 function mergePayload(p){
+  const _nb=(typeof notifyBegin==='function')?notifyBegin():null;      // снимок до слияния — для колокольчика
   if(!p) return;
   // Переименования: сначала объединяем списки замен, затем применяем их и к облачным данным, и к локальным
   if(p.renames) mergeRenames(p.renames);
@@ -165,6 +166,7 @@ function mergePayload(p){
   if(typeof mergeMatDone==='function') mergeMatDone(p);
   if(typeof mergeMatNote==='function') mergeMatNote(p);
   if(typeof mergeOrderPaths==='function') mergeOrderPaths(p);
+  if(_nb) notifyEnd(_nb);            // что изменили другие устройства
   refreshRecSnap();                  // слияние с облаком — не правка пользователя
 }
 
@@ -240,6 +242,7 @@ async function syncNow(opts){
   if(syncBusy) return false;
   if(!opts.manual && Date.now()-lastSyncAt<4000) return false;      // фокус + видимость срабатывают почти одновременно
   syncBusy=true; setSyncBtn(true); setSyncStatus('load');
+  const _t0=Date.now();
   try{
     const before=syncSig();
     const fresh=await sbPull();
@@ -250,6 +253,7 @@ async function syncNow(opts){
     let pushed=false;
     if(!fresh||localAheadOf(fresh)){ await sbPostPayload(); saveLocal(); pushed=true; }   // в облаке пусто или у нас есть то, чего там нет
     lastSyncAt=Date.now(); setSyncStatus('ok');
+    if(typeof notifTouchBase==='function') notifTouchBase(_t0);
     if(opts.manual) toast(changed?'✅ Данные обновлены':(pushed?'☁️ Ваши изменения отправлены':'✅ Всё актуально'),'ok');
     return true;
   }catch(e){
