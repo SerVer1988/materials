@@ -48,3 +48,8 @@
 /* закупка: подсказка про более крупный лист на складе */
 .pg-alt{color:var(--accent-ink);font-weight:700}
 .pg-alt b{color:var(--accent-ink)}
+
+/* кнопка «к заказу» рядом с ✕ в Приходе/Расходе и подсветка найденной строки */
+.dbtn.gbtn{background:var(--aclt);color:var(--accent-ink);margin-right:4px;display:inline-flex;align-items:center;vertical-align:middle}
+@keyframes flashhl{0%,55%{background:rgba(246,201,14,.4)}100%{background:transparent}}
+.flash-hl{animation:flashhl 3.6s ease}
