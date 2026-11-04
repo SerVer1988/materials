@@ -207,6 +207,7 @@ function handleInboxPlan(p){
   const age=Date.now()-new Date(p.t).getTime();
   if(isNaN(age)||age>PLAN_MAX_AGE) return;
   const baseId=(parseInt(String(p.id).replace(/\D/g,'').slice(-12),10)||0)*100;  // одинаковые id на всех устройствах → нет дублей
+  if(p.path&&typeof setOrderPath==='function') setOrderPath(p.order||'',p.path);   // путь к файлу для кнопки 📂
   go('plan',document.getElementById('nbtn-plan'));
   addPlanFromText(p.order||'',p.text||'',baseId||undefined,true);
   try{ const rep=planAvailabilityReport(p.order||'',p.text||''); if(rep&&typeof sbPostReply==='function') sbPostReply(p.id,p.order||'',rep); }catch(e){ console.warn('reply',e); }
@@ -589,7 +590,7 @@ function renderPlanOrders(){
       mats.map(e=>{ const on=matDoneEff(o,e); return `<div class="po-row${on?' po-done':''}" data-m="${escHtml(e.mat)}"><span class="po-mg${typeof mergeHas==='function'&&mergeHas(o,e.mat)?' on':''}" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="toggleMergeSel(this)" title="Объединённый рез: отметить материал (красный = выбран)">${PL_ICON_LINK}</span>${chk(e.mat,on)}<div class="po-mat" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="openMatNote(this)" title="Пометка: нет материала, ждём поставку…">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}<span class="po-del" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="deleteOrderMat(this)" title="Удалить позицию из заказа">✕</span>${(typeof matNoteGet==='function'&&matNoteGet(o,e.mat))?`<div class="po-note">⚠️ ${escHtml(matNoteGet(o,e.mat))}</div>`:''}</div>`; }).join('');
     return `<div class="ocard pl-ocard ${isClosed?'is-closed':''}" data-o="${escHtml(o)}">
       <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
-        <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span><span class="pl-copy" role="button" aria-label="Копировать название" title="Копировать название" onclick="copyOrderName(${oi},event)">${PL_ICON_COPY}</span><b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
+        <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span><span class="pl-copy" role="button" aria-label="Копировать название" title="Копировать название" onclick="copyOrderName(${oi},event)">${PL_ICON_COPY}</span>${typeof orderFileBtn==='function'?orderFileBtn(o):''}<b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>
         <div class="osum pl-osum">
           <div class="pl-osum-l">нужно <b>${f2(it.tNeed)}</b> м² · потрачено <b>${f2(it.tSpent)}</b> м² ${poDiffHtml(it.tNeed,it.tSpent,isClosed)}</div>
           <div class="pl-osum-r"><span class="pl-pct">${it.pct}%</span>${it.dt?`<span class="pl-dt">${escHtml(it.dt)}</span>`:''}</div>

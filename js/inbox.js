@@ -76,6 +76,7 @@ async function inboxPoll(){
     localStorage.setItem(INBOX_SEEN_KEY,p.id);
     const age=Date.now()-new Date(p.t).getTime();                 // t — локальное время компьютера с макросом
     if(isNaN(age) || age>INBOX_MAX_AGE) return;                   // старое сообщение — пропускаем
+    if(p.path&&p.order&&typeof setOrderPath==='function') setOrderPath(p.order,p.path);   // путь к файлу для кнопки 📂
     fillExpenseForm({mat:p.mat||'', det:p.det||'', sheet:p.sheet||'', qty:parseInt(p.qty)||1, note:p.note||'', order:p.order||''});
     if(typeof setExpenseExtra==='function') setExpenseExtra(p.cat||'',p.cut||'',p.detLabel||'');
     if(p.brak){ const bk=document.getElementById('out-brak'); if(bk) bk.checked=true; }      // макрос «Брак»: деталь испорчена     // категория и длина реза из подписи

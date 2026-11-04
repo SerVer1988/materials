@@ -66,7 +66,7 @@ const applyListState=(kind,list)=>list.filter(x=>!(listState[kind]&&listState[ki
 function sbRowId(){ return ACCESS_CODE || 'main'; }
 
 function sbPayload(){
-  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, managers:(typeof managers!=='undefined'?managers:{}), matSizes:(typeof matSizes!=='undefined'?matSizes:{}), listState, orderAlias:(typeof orderAlias!=='undefined'?orderAlias:{}), matDone:(typeof matDone!=='undefined'?matDone:{}), matNote:(typeof matNote!=='undefined'?matNote:{}), deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
+  return { db, MATS, SIZES, PLACES, fav:[...favorites], favState, managers:(typeof managers!=='undefined'?managers:{}), matSizes:(typeof matSizes!=='undefined'?matSizes:{}), listState, orderAlias:(typeof orderAlias!=='undefined'?orderAlias:{}), matDone:(typeof matDone!=='undefined'?matDone:{}), matNote:(typeof matNote!=='undefined'?matNote:{}), orderPaths:(typeof orderPaths!=='undefined'?orderPaths:{}), deletedIds:[...deletedIds], deletedPieces:[...deletedPieces], renames, listTs, deletedOrders };
 }
 
 // ── MERGE: объединяет два массива по id, без потерь ──
@@ -129,6 +129,7 @@ function mergePayload(p){
   if(typeof mergeMatSizes==='function') mergeMatSizes(p);
   if(typeof mergeMatDone==='function') mergeMatDone(p);
   if(typeof mergeMatNote==='function') mergeMatNote(p);
+  if(typeof mergeOrderPaths==='function') mergeOrderPaths(p);
 }
 
 async function sbPush(){

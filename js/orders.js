@@ -255,7 +255,7 @@ function renderOrders(){
       }
       html+=`<div class="ocard ${o.status==='closed'?'is-closed':''}" data-o="${escHtml(o.key)}">
         <div class="ohead" onclick="toggleOrderCard(${idx})">
-          <div class="otitle"><b>${escHtml(o.no)}</b>${o.customer?` <span class="ocust">${escHtml(o.customer)}</span>`:''} ${status}</div>
+          <div class="otitle">${typeof orderFileBtn==='function'?orderFileBtn(o.key):''}<b>${escHtml(o.no)}</b>${o.customer?` <span class="ocust">${escHtml(o.customer)}</span>`:''} ${status}</div>
           <div class="osum">листов: заказано <b>${t.got}</b> · израсходовано <b>${t.used}</b>${nCut?` · вырезано деталей <b>${nCut}</b>`:''}${d.brakCount?` · брак <b>${d.brakCount}</b>`:''} ${diffLabel(t.diff,o.status,n=>n+' шт.')}</div>
           <span class="ochev">${open?'▲':'▼'}</span>
         </div>${body}</div>`;
