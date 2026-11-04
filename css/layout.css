@@ -84,3 +84,18 @@
 .sync-btn:active{transform:scale(.92)}
 .sync-btn.spin svg{animation:syncspin .9s linear infinite}
 @keyframes syncspin{to{transform:rotate(360deg)}}
+
+/* колокольчик: изменения на других устройствах */
+.bell-btn{position:relative;background:var(--card2);border:1px solid var(--border);color:var(--muted);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
+.bell-btn.has-new{color:var(--accent-ink);border-color:var(--accent)}
+.bell-btn.ring svg{animation:bellring .9s ease 2}
+.bell-badge{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-weight:900;align-items:center;justify-content:center;box-sizing:border-box}
+@keyframes bellring{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
+.nt-card{max-height:78vh;display:flex;flex-direction:column}
+.nt-list{overflow-y:auto;margin-top:6px;border-top:1px solid var(--border)}
+.nt-item{display:flex;gap:10px;align-items:flex-start;padding:9px 6px;border-bottom:1px solid var(--border);cursor:pointer}
+.nt-item:active{background:var(--card2)}
+.nt-item.unseen{background:var(--aclt)}
+.nt-ic{flex:none;font-size:15px;line-height:1.3}
+.nt-text{font-size:13px;font-weight:800;color:var(--text);line-height:1.3}
+.nt-meta{font-size:11px;font-weight:700;color:var(--muted);margin-top:2px}
