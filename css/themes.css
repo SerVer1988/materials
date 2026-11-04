@@ -1,85 +1,87 @@
 /* Палитры тем. Светлая — по умолчанию (data-theme="light" ставит js/theme-init.js).
    Все цвета интерфейса берутся отсюда; в остальных css-файлах — только var(--...). */
 
-/* Светлая — серо-голубая (периwinkle): тёмный фон, светлые карточки с мягкой тенью, синие иконки, тёмная шапка */
+/* Светлая — «небесная»: светло-голубой фон и шапка, белые карточки с мягкой тенью, зелёные акценты заказов, синие иконки.
+   Логика цветов: СИНИЙ — навигация и ссылки/иконки, ЗЕЛЁНЫЙ — «в работе»/выполнено/главное действие, КРАСНЫЙ — удалить и тревоги,
+   всё остальное — спокойные серо-голубые оттенки. */
 :root,
 :root[data-theme="light"]{
   color-scheme:light;
-  --bg:#DCE3F1;
-  --bg-body:linear-gradient(180deg,#E1E8F5 0%,#D3DCEE 100%);
-  --surface:#EDF1FA;
-  --card:#F4F7FD;
-  --card2:#E3E9F6;
-  --border:#C5D0E6;
-  --text:#25324A;
-  --muted:#6C7C99;
-  --hdr-bg:#BCC7E0;          /* верхняя шапка (название раздела, статус) */
-  --top-bg:#C9D3E8;          /* блок вкладок и поиска под шапкой */
-  --accent:#9AD5B1;
-  --accent-ink:#2E8B62;          /* акцент для ТЕКСТА на светлом фоне */
-  --on-accent:#1F4D38;           /* текст на акцентной кнопке */
-  --accent-glow:rgba(110,190,150,.35);
-  --aclt:rgba(154,213,177,.30);
-  --green:#58B884;
-  --glt:rgba(88,184,132,.15);
-  --blue:#3F86C7;
-  --blt:rgba(63,134,199,.13);
-  --red:#E5605F;
-  --rlt:rgba(229,96,95,.12);
+  --bg:#E5EDFA;
+  --bg-body:linear-gradient(180deg,#EAF1FC 0%,#DCE7F7 100%);
+  --surface:#F1F6FD;
+  --card:#F9FBFE;
+  --card2:#EAF0FA;
+  --border:#D2DEF1;
+  --text:#1F2D46;
+  --muted:#5C7092;
+  --hdr-bg:linear-gradient(180deg,#C6DAF5 0%,#D9E7FA 100%);   /* верхняя шапка (название раздела, статус) */
+  --top-bg:#E3EDFA;                                          /* блок вкладок и поиска под шапкой */
+  --accent:#55B56C;                                          /* зелёный: главное действие, «в работе» */
+  --accent-ink:#1B6E3E;                                      /* акцент для ТЕКСТА на светлом фоне */
+  --on-accent:#FFFFFF;                                       /* текст на акцентной кнопке */
+  --accent-glow:rgba(70,170,100,.32);
+  --aclt:rgba(85,181,108,.17);
+  --green:#3EA460;
+  --glt:rgba(62,164,96,.15);
+  --blue:#2D6BD6;
+  --blt:rgba(45,107,214,.12);
+  --red:#DE5B54;
+  --rlt:rgba(228,99,91,.12);
   --warn:#F08A00;
-  --gold:#D9A21B;
-  --goldlt:rgba(246,201,14,.2);
-  --fav:#F1F6F9;
-  --favborder:#CBD7E1;
-  --edit:#8068CC;
-  --editlt:rgba(128,104,204,.12);
-  --sh:0 2px 12px rgba(60,90,130,.09);
-  --shl:0 8px 28px rgba(60,90,130,.18);
-  --overlay:rgba(30,45,70,.40);
+  --gold:#D39A12;
+  --goldlt:rgba(246,201,14,.22);
+  --fav:#F3F7FD;
+  --favborder:#CFDBEE;
+  --edit:#7A62C9;
+  --editlt:rgba(122,98,201,.12);
+  --sh:0 3px 12px rgba(40,85,160,.10);
+  --shl:0 10px 30px rgba(40,85,160,.20);
+  --overlay:rgba(25,40,70,.40);
 
   /* строки/таблицы с данными */
-  --infoborder:#C9D4E9;
-  --infotext:#25324A;
-  --inforow:#F4F7FD;
-  --inforow-line:#D9E1F1;
-  --info-size:#4A6290;
-  --info-strong:#2C4160;
-  --chip-bg:#E1E8F6;
-  --thead-bg:#D9E1F2;
-  --th-color:#4F6488;
-  --stripe:rgba(80,110,175,.07);
-  --row-hover:rgba(95,125,205,.12);
+  --infoborder:#D2DEF1;
+  --infotext:#1F2D46;
+  --inforow:#F9FBFE;
+  --inforow-line:#E0E8F5;
+  --info-size:#456190;
+  --info-strong:#243A5E;
+  --chip-bg:#E8EFFA;
+  --thead-bg:#E3EBF8;
+  --th-color:#587096;
+  --stripe:rgba(45,107,214,.045);
+  --row-hover:rgba(45,107,214,.09);
 
-  /* шапка, нижняя навигация, плашки */
-  --pill-base:#E8EEFA;
-  --pill-shade:#C4D0EA;
-  --pill-disc:#4A63C8;
-  --pill-dot:#6B86E0;
-  --nav-bg:#F1F4FC;
-  --nav-shadow:0 6px 24px rgba(50,75,140,.25);
-  --nav-ico:#6B83B3;
-  --nav-active:#4A63C8;
-  --ic-gear-bg:#D6E1F6;  --ic-gear-bg-on:#B9CBF1;  --ic-gear-fg:#3E5FB0;
-  --ni-uchet-bg:#D6E1F6; --ni-uchet-bg-on:#B9CBF1; --ni-uchet-fg:#3E5FB0;
-  --ni-stock-bg:#DCE0F8; --ni-stock-bg-on:#C6CCF3; --ni-stock-fg:#4F5FC8;
-  --search-bg:linear-gradient(180deg,#F6F8FE,#E6ECF8);
-  --search-border:#C3D0E8;
-  --search-sh:0 2px 10px rgba(50,75,140,.10);
-  --search-ico:#4A63C8;
-  --ni-ord-bg:#D6E1F6; --ni-ord-bg-on:#B9CBF1; --ni-ord-fg:#3E5FB0;
-  --ni-plan-bg:#D6E1F6; --ni-plan-bg-on:#B9CBF1; --ni-plan-fg:#3E5FB0;
-  --plus-ring:#C9D4EA;
-  --plus-income:#6DBF8C; --plus-expense:#EF8A85; --plus-rem:#F2C75C; --plus-off:#A9B4C2;
+  /* шапка, нижняя навигация, плашки: все иконки — одного синего семейства */
+  --pill-base:#F4F8FE;
+  --pill-shade:#C3D5F0;
+  --pill-disc:#2D6BD6;
+  --pill-dot:#4B8CF2;
+  --nav-bg:#F7FAFF;
+  --nav-shadow:0 8px 26px rgba(40,85,160,.22);
+  --nav-ico:#6F88B8;
+  --nav-active:#2D6BD6;
+  --ic-gear-bg:#D5E3F8;  --ic-gear-bg-on:#BCD3F4;  --ic-gear-fg:#2D5FC0;
+  --ni-uchet-bg:#D5E3F8; --ni-uchet-bg-on:#BCD3F4; --ni-uchet-fg:#2D5FC0;
+  --ni-stock-bg:#D5E3F8; --ni-stock-bg-on:#BCD3F4; --ni-stock-fg:#2D5FC0;
+  --search-bg:#FFFFFF;
+  --search-border:#D2DEF1;
+  --search-sh:0 3px 10px rgba(40,85,160,.10);
+  --search-ico:#2D6BD6;
+  --ni-ord-bg:#D5E3F8; --ni-ord-bg-on:#BCD3F4; --ni-ord-fg:#2D5FC0;
+  --ni-plan-bg:#D5E3F8; --ni-plan-bg-on:#BCD3F4; --ni-plan-fg:#2D5FC0;
+  --plus-ring:#DCE7F8;
+  --plus-income:#4FB46A; --plus-expense:#EE7C75; --plus-rem:#F0C14E; --plus-off:#A6B4CA;
 
   /* чипы материалов: фон / текст */
-  --mat-pvh-bg:#FDF0C8;  --mat-pvh-fg:#C28A06;
-  --mat-acr-bg:#D8F1E2;  --mat-acr-fg:#2D8A61;
-  --mat-akp-bg:#DDE5FB;  --mat-akp-fg:#4660C4;
-  --mat-abs-bg:#EADFF8;  --mat-abs-fg:#7A4FB8;
-  --mat-pet-bg:#D9F0F5;  --mat-pet-fg:#2C8296;
-  --mat-wood-bg:#F3E4D3; --mat-wood-fg:#9A6A3A;
-  --mat-metal-bg:#E4E9EF;--mat-metal-fg:#5B6B7D;
-  --mat-other-bg:#E9EEF4;--mat-other-fg:#5B6F88;
+  --mat-pvh-bg:#FCEEC2;  --mat-pvh-fg:#946300;
+  --mat-acr-bg:#D4EEDB;  --mat-acr-fg:#1D6F3E;
+  --mat-akp-bg:#DAE6FB;  --mat-akp-fg:#2D5BC0;
+  --mat-abs-bg:#E8DEF8;  --mat-abs-fg:#6B44B0;
+  --mat-pet-bg:#D3EEF3;  --mat-pet-fg:#1B6F82;
+  --mat-wood-bg:#F3E4D2; --mat-wood-fg:#84592F;
+  --mat-metal-bg:#E2E8F0;--mat-metal-fg:#516377;
+  --mat-other-bg:#E7EDF5;--mat-other-fg:#526A86;
 }
 
 :root[data-theme="dark"]{
@@ -159,16 +161,59 @@
   --mat-other-bg:rgba(122,140,153,.17);--mat-other-fg:#A9B8C4;
 }
 
-/* ══ Светлая тема: шапка темнее фона, активные вкладки — сине-фиолетовый градиент, карточки с мягкой тенью ══ */
-:root:not([data-theme="dark"]) .hdr{background:var(--hdr-bg);border-bottom-color:#AEBAD6}
+/* ══ Светлая тема: оформление компонентов (мягкие тени, закруглённые белые «таблетки», синие вкладки, зелёные действия) ══ */
+:root:not([data-theme="dark"]) .hdr{background:var(--hdr-bg);border-bottom-color:#B5CAEA}
 :root:not([data-theme="dark"]) .sec-top{background:var(--top-bg)}
 :root:not([data-theme="dark"]) .uchet-tab.active,
-:root:not([data-theme="dark"]) .itab.active{background:linear-gradient(90deg,#5B8DF5,#8B7BFF);color:#fff;box-shadow:0 3px 12px rgba(91,110,245,.38)}
+:root:not([data-theme="dark"]) .itab.active{background:linear-gradient(180deg,#3478E8,#2862D2);color:#fff;box-shadow:0 3px 10px rgba(45,107,214,.35)}
 :root:not([data-theme="dark"]) .uchet-switcher,
-:root:not([data-theme="dark"]) .itabrow{background:#D3DCEF;border-color:#BFCBE5}
+:root:not([data-theme="dark"]) .itabrow{background:#E4ECF9;border-color:#D2DEF1}
 :root:not([data-theme="dark"]) .card,
 :root:not([data-theme="dark"]) .stkcard,
 :root:not([data-theme="dark"]) .remcard,
 :root:not([data-theme="dark"]) .ocard,
 :root:not([data-theme="dark"]) .pg,
-:root:not([data-theme="dark"]) .ccard{box-shadow:0 4px 14px rgba(60,85,150,.13)}
+:root:not([data-theme="dark"]) .ccard{border-color:#DBE5F4;box-shadow:0 5px 16px rgba(45,90,160,.11),0 1px 0 rgba(255,255,255,.9) inset}
+/* кнопки: главное действие — зелёный градиент, второстепенное — светлая «таблетка» */
+:root:not([data-theme="dark"]) .bprim{background:linear-gradient(180deg,#3E9E5A,#2C8949);color:#fff;box-shadow:0 3px 10px rgba(60,160,90,.30)}
+:root:not([data-theme="dark"]) .bghost{background:#EDF3FC;border-color:#D2DEF1}
+:root:not([data-theme="dark"]) .fchip{background:#fff;border-color:#D2DEF1;box-shadow:0 1px 4px rgba(45,90,160,.08)}
+:root:not([data-theme="dark"]) .fchip.on{background:#D6EEDC;border-color:#8CCBA0;color:#1B6E3E;box-shadow:0 2px 8px rgba(60,160,90,.18)}
+
+/* ══ Светлая тема: раздел «План» ══ */
+/* фильтры-иконки: белые круглые кнопки, включённые — бледно-зелёные */
+:root:not([data-theme="dark"]) .ficon{background:#fff;border-color:#D2DEF1;color:#5B76A8;box-shadow:0 2px 6px rgba(45,90,160,.12)}
+:root:not([data-theme="dark"]) .ficon.on{background:#D3EDD9;border-color:#8CCBA0;color:#1B6E3E;box-shadow:0 2px 8px rgba(60,160,90,.22)}
+:root:not([data-theme="dark"]) .ficon-sep{background:#CBD8EE}
+/* карточка заказа: «в работе» — бледно-зелёный градиент и зелёная кромка, закрытый — спокойный серо-голубой */
+:root:not([data-theme="dark"]) .pl-ohead{background:linear-gradient(135deg,#DCF2E3 0%,#EDF8F0 100%);border-left-color:#58B972}
+:root:not([data-theme="dark"]) .pl-ocard.is-closed .pl-ohead{background:linear-gradient(135deg,#E3EBF8 0%,#EFF3FB 100%);border-left-color:#9DB3D9}
+:root:not([data-theme="dark"]) .pl-ocard.is-closed .pl-ohead .otitle,
+:root:not([data-theme="dark"]) .pl-ocard.is-closed .pl-ohead .ocust{color:var(--info-strong)}
+:root:not([data-theme="dark"]) .pl-arrow{color:var(--info-strong)}
+:root:not([data-theme="dark"]) .pl-copy{color:#6F88BD}
+:root:not([data-theme="dark"]) .of-btn{color:#3F7BE0}
+:root:not([data-theme="dark"]) .of-btn.dim{color:var(--muted)}
+:root:not([data-theme="dark"]) .ostat.open{background:#CDEAD4;color:var(--accent-ink)}
+:root:not([data-theme="dark"]) .ostat.closed{background:#E1E9F6;color:#5A6F94}
+:root:not([data-theme="dark"]) .ostat.info{background:#DAE6FB;color:#2D6BD6}
+/* строки материалов */
+:root:not([data-theme="dark"]) .po-row{border-bottom-color:#E0E8F5}
+:root:not([data-theme="dark"]) .po-row.po-head{color:#8493AD}
+:root:not([data-theme="dark"]) .po-mg:not(.on){color:#6F88BD;opacity:1}
+:root:not([data-theme="dark"]) .po-chk .c{fill:#fff;stroke:#7F93B8;opacity:1}
+:root:not([data-theme="dark"]) .po-chk .t{stroke:#7F93B8;opacity:1}
+:root:not([data-theme="dark"]) .po-chk.on .c{fill:#D6F0DD;stroke:#58B878;opacity:1}
+:root:not([data-theme="dark"]) .po-chk.on .t{stroke:#23864A;opacity:1}
+:root:not([data-theme="dark"]) .po-row.po-done .po-mat,
+:root:not([data-theme="dark"]) .po-row.po-done .po-c,
+:root:not([data-theme="dark"]) .po-row.po-done .po-d{opacity:.55}
+:root:not([data-theme="dark"]) .po-d{color:#2D6BD6}
+:root:not([data-theme="dark"]) .po-d.ok{background:#DDF1E3;color:#1D7440;padding:1px 9px;border-radius:999px}
+:root:not([data-theme="dark"]) .po-d.bad{color:var(--red)}
+:root:not([data-theme="dark"]) .po-del{color:var(--red);opacity:.8}
+/* шапка: кнопки «Обновить» и колокольчик — белые круглые, как на образце */
+:root:not([data-theme="dark"]) .sync-btn{background:#fff;border-color:transparent;color:#3EA460;box-shadow:0 3px 8px rgba(45,90,160,.16)}
+:root:not([data-theme="dark"]) .bell-btn{background:#fff;border-color:transparent;color:#5B76A8;box-shadow:0 3px 8px rgba(45,90,160,.16)}
+:root:not([data-theme="dark"]) .bell-btn.has-new{color:#2D6BD6}
+:root:not([data-theme="dark"]) .hdr .hdr-s{color:#4B6288}
