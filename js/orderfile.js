@@ -17,6 +17,7 @@ function setOrderPath(key,path){
   if(!key||!validCdrPath(path)) return;
   if(orderPaths[key]&&orderPaths[key][0]===path) return;
   orderPaths[key]=[path,Date.now()]; persistOrderPaths();
+  toast('📂 Путь к файлу заказа получен','ok');
   try{ save(); }catch(e){}
   if(typeof renderPlan==='function') renderPlan();
   if(typeof renderOrders==='function') renderOrders();
@@ -34,8 +35,9 @@ function orderFileBtnOn(){
 }
 const OF_ICON='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3V7Z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2V10Z"/></svg>';
 function orderFileBtn(key){
-  if(!orderFileBtnOn()||!orderPathFor(key)) return '';
-  return `<span class="of-btn" role="button" aria-label="Открыть файл заказа" data-o="${escHtml(key)}" title="Открыть файл заказа в CorelDRAW" onclick="openOrderFile(this,event)">${OF_ICON}</span>`;
+  if(!orderFileBtnOn()) return '';
+  const known=!!orderPathFor(key);       // путь неизвестен — значок бледный: нажмите, и приложение подскажет, что сделать
+  return `<span class="of-btn${known?'':' dim'}" role="button" aria-label="Открыть файл заказа" data-o="${escHtml(key)}" title="${known?'Открыть файл заказа в CorelDRAW':'Путь к файлу пока неизвестен'}" onclick="openOrderFile(this,event)">${OF_ICON}</span>`;
 }
 function b64u(s){
   const bytes=new TextEncoder().encode(s); let bin=''; bytes.forEach(b=>bin+=String.fromCharCode(b));
@@ -43,7 +45,8 @@ function b64u(s){
 }
 function openOrderFile(el,ev){
   if(ev) ev.stopPropagation();
-  const path=orderPathFor(el.dataset.o); if(!path) return;
+  const path=orderPathFor(el.dataset.o);
+  if(!path){ toast('Путь к файлу ещё не получен: откройте файл в CorelDRAW и запустите макрос «ОткрытьЗаказ» (приложение должно быть открыто на компьютере)','info'); return; }
   const a=document.createElement('a'); a.href='corelopen://open/'+b64u(path); a.style.display='none';
   document.body.appendChild(a); a.click(); a.remove();
   toast('📂 Открываю в CorelDRAW…','info');
