@@ -37,7 +37,7 @@ function calcStats(){
     if(r.rev) return;                                    // ревизия — не расход
     const k=statMonthKey(r.dt); if(!k) return;
     const m=get(k), q=r.qty||0, full=(r.etype==='full'||!r.etype);
-    const det=parseSizeStr(r.det||''), dA=det?det.w*det.l*q/1e6:0;
+    const det=parseSizeStr(r.det||''), dA=r.m2>0?r.m2:(det?det.w*det.l*q/1e6:0);
     if(det && det.w*det.l/1e6>8){ m.skipped++; return; }  // изделие больше 8 м² листового материала не бывает — опечатка в размере
     const sp=parseSizeStr(r.size||''), sA=(full&&sp)?sp.w*sp.l*q/1e6:0;
     const inf=statOrderInfo(r);

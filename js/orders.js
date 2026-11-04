@@ -104,15 +104,15 @@ function calcOrderData(){
     const o=get(r.order); o.expCount++;
     const full=(r.etype==='full'||!r.etype);
     const dd=parseSizeStr(r.det||'');
-    const a=dd?dd.w*dd.l*r.qty/1e6:0;
+    const a=r.m2>0?r.m2:(dd?dd.w*dd.l*r.qty/1e6:0);
     if(full) pos(o,r.mat,r.size,r.w,r.l).used+=r.qty;            // материал списан в любом случае
     // Вырезанные детали по материалам (в т.ч. из обрезков — для них нет позиции «листов»)
     if(!o.cuts.has(r.mat)) o.cuts.set(r.mat,{mat:r.mat,items:[],m2:0});
     const cu=o.cuts.get(r.mat);
-    cu.items.push({det:(r.det?normSizeStr(r.det):'—'),qty:r.qty,scrap:!full,brak:!!r.brak,src:r.sourceScrap||''});
+    cu.items.push({det:(r.m2>0?'объед. рез '+m2fmt(r.m2)+' м²':(r.det?normSizeStr(r.det):'—')),qty:r.qty,scrap:!full,brak:!!r.brak,src:r.sourceScrap||''});
     if(!r.brak) cu.m2+=a;
     if(r.brak){ o.brakM2+=a; o.brakCount+=r.qty; }                // деталь испорчена — в «изделия» не идёт, вернулась в заказ
-    else if(full) o.detFull+=a; else o.detScrap+=a;
+    else if(full||r.etype==='merge') o.detFull+=a; else o.detScrap+=a;
   });
   return res;
 }

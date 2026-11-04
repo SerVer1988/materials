@@ -469,7 +469,8 @@ function calcOrderBalance(){
     const ok=planOrderFor(r.order,[...res.keys()]); if(!ok) return;                   // только заказы, которые есть в плане
     const q=r.qty||0, full=(r.etype==='full'||!r.etype), d=parseSizeStr(r.det||'');
     let a=0;
-    if(d) a=d.w*d.l*q/1e6;
+    if(r.m2>0) a=r.m2;                                                              // объединённый рез: доля площади, посчитанная приложением
+    else if(d) a=d.w*d.l*q/1e6;
     else if(full){ const s=(r.w>0&&r.l>0)?{w:r.w,l:r.l}:parseSizeStr(r.size||''); a=s?s.w*s.l*q/1e6:0; }
     get(ok,r.mat).spent+=a;
   });
@@ -545,6 +546,7 @@ function renderPlanOrders(){
   const box=document.getElementById('plan-list'); if(!box) return;
   const q=(document.getElementById('plan-s')?.value||'').trim().toLowerCase();
   const bal=calcOrderBalance(), stages=calcOrderStages(), pf=planF();
+  if(typeof mergePrune==='function') mergePrune(bal);
   const closed=new Set(ordersList().filter(o=>o.status==='closed').map(o=>o.key));
   // дата и время заказа — когда добавлена первая строка его плана
   const born=new Map();
@@ -573,14 +575,14 @@ function renderPlanOrders(){
   });
   window.__planKeys=items.map(it=>it.o); window.__planCollapsed={};
   if(!items.length){ box.innerHTML='<div class="empty"><div class="ei">📋</div>Заказов нет.<br>Заявки приходят из CorelDRAW или кнопкой «＋».<br><span style="font-size:11px">Проверьте фильтры сверху.</span></div>'; return; }
-  box.innerHTML=items.map((it,oi)=>{
+  box.innerHTML=(typeof mergeBarHtml==='function'?mergeBarHtml():'')+items.map((it,oi)=>{
     const o=it.o, isClosed=it.isClosed, sp=splitOrder(o), mats=it.mats;
     const oc=planUI['o:'+o]!==undefined?!!planUI['o:'+o]:isClosed;
     window.__planCollapsed[o]=oc;
     const chk=(m,on)=>{
       return `<span class="po-chk${on?' on':''}" data-o="${escHtml(o)}" data-m="${escHtml(m)}" onclick="toggleMatDone(this)" title="${on?'Вырезан и готов (нажмите, чтобы снять)':'Отметить: материал вырезан и готов'}"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="10.5" class="c"/><path d="M7 12.5l3.4 3.4L17 9" class="t"/></svg></span>`; };
     const rows=`<div class="po-row po-head"><span></span><span></span><span></span><span>нужно, м²</span><span>вырезано</span><span>итог, м²</span><span></span></div>`+
-      mats.map(e=>{ const on=matDoneEff(o,e); return `<div class="po-row${on?' po-done':''}" data-m="${escHtml(e.mat)}"><span class="po-mg" onclick="openMergeOrder(${oi})" title="Объединить">${PL_ICON_LINK}</span>${chk(e.mat,on)}<div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}<span class="po-del" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="deleteOrderMat(this)" title="Удалить позицию из заказа">✕</span></div>`; }).join('');
+      mats.map(e=>{ const on=matDoneEff(o,e); return `<div class="po-row${on?' po-done':''}" data-m="${escHtml(e.mat)}"><span class="po-mg${typeof mergeHas==='function'&&mergeHas(o,e.mat)?' on':''}" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="toggleMergeSel(this)" title="Объединённый рез: отметить материал (красный = выбран)">${PL_ICON_LINK}</span>${chk(e.mat,on)}<div class="po-mat">${matChip(e.mat)}</div><span class="po-c"><b>${f2(e.need)}</b></span><span class="po-c"><b>${f2(e.spent)}</b></span>${poDiffHtml(e.need,e.spent,isClosed)}<span class="po-del" data-o="${escHtml(o)}" data-m="${escHtml(e.mat)}" onclick="deleteOrderMat(this)" title="Удалить позицию из заказа">✕</span></div>`; }).join('');
     return `<div class="ocard pl-ocard ${isClosed?'is-closed':''}" data-o="${escHtml(o)}">
       <div class="ohead pl-ohead" style="cursor:pointer" onclick="togglePlanOrder(${oi})">
         <div class="otitle"><span class="pl-arrow">${oc?'▸':'▾'}</span><span class="pl-copy" role="button" aria-label="Копировать название" title="Копировать название" onclick="copyOrderName(${oi},event)">${PL_ICON_COPY}</span><b>${escHtml(sp.no)}</b>${sp.customer?` <span class="ocust">${escHtml(sp.customer)}</span>`:''} ${stageTag(stages.get(o))}</div>

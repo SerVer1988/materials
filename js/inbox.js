@@ -33,6 +33,10 @@ function handleInboxCommand(p){
   localStorage.setItem(CMD_SEEN_KEY,p.id);
   const age=Date.now()-new Date(p.t).getTime();
   if(isNaN(age) || age>CMD_MAX_AGE) return;
+  if(p.action==='mergeCut'){                         // объединённый рез: размер рамки объектов без подписей
+    if(age>INBOX_MAX_AGE){ toast('Сообщение «объединённый рез» устарело — запустите макрос ещё раз','info'); return; }
+    handleMergeCut(p); return;
+  }
   if(p.action==='closeOrder'){
     const o=findOrderForCommand(p.order||'');
     if(!o){ toast(`⚠️ Заказ «${p.order}» не найден в приложении`,'err'); return; }

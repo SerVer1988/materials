@@ -73,7 +73,7 @@ function outCell(id,r,i,total,cols){
       else c=`<span style="font-size:12px;color:var(--muted)">—</span>`;
       return `<td class="c-sz">${c}</td>`;
     }
-    case 'qty': return `<td><span class="badge bout">${r.qty} л.</span></td>`;
+    case 'qty': return r.etype==='merge'?`<td><span class="badge bout" title="Объединённый рез">🔗 рез</span></td>`:`<td><span class="badge bout">${r.qty} л.</span></td>`;
     case 'det': return `<td class="c-sz c-det">${sizeStack(normSizeStr(r.det))}</td>`;
     case 'ord': return `<td>${inf.no?escHtml(inf.no):colOrdNo(r.order)}</td>`;
     case 'cust':return `<td>${escHtml(inf.cust||'—')}</td>`;
@@ -81,7 +81,7 @@ function outCell(id,r,i,total,cols){
     case 'cat': return `<td>${escHtml(normCategory(r.cat||inf.cat)||'—')}</td>`;
     case 'cut': return `<td>${r.cut>0?f2(r.cut/1000)+' м':'—'}</td>`;
     case 'cutall': return `<td>${r.cut>0?f2(r.cut*(r.qty||1)/1000)+' м':'—'}</td>`;
-    case 'area': { const d=parseSizeStr(r.det||''); return `<td>${d?f2(d.w*d.l*(r.qty||1)/1e6)+' м²':'—'}</td>`; }
+    case 'area': { if(r.m2>0) return `<td>${f2(r.m2)} м²</td>`; const d=parseSizeStr(r.det||''); return `<td>${d?f2(d.w*d.l*(r.qty||1)/1e6)+' м²':'—'}</td>`; }
     case 'pct': {
       const d=parseSizeStr(r.det||''); let sh=null;
       if(r.etype==='full'||!r.etype) sh=(r.w>0&&r.l>0)?{w:r.w,l:r.l}:parseSizeStr(r.size||'');

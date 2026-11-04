@@ -131,6 +131,7 @@ function setExpenseExtra(cat,cut,detLabel){
 }
 function editExpense(id){
   const r=db.expense.find(x=>x.id===id); if(!r) return;
+  if(r.etype==='merge'){ toast('Запись объединённого реза не редактируется — удалите её (✕) и внесите заново','info'); return; }
   editMode.expense=id;
   document.getElementById('add-expense').classList.add('open');
   document.getElementById('out-edit-banner').style.display='flex';

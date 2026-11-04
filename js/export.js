@@ -10,7 +10,7 @@ function expExcel(){
   }
   if(document.getElementById('ex-out').checked&&db.expense.length){
     const d=[['#','Дата','Тип','Материал','Размер','Кол-во','Изделие','Примечание']];
-    db.expense.forEach((r,i)=>d.push([i+1,r.dt,r.etype==='partial'?'Изделие':'Лист',r.mat,r.size,r.qty,r.det||'',r.note||'']));
+    db.expense.forEach((r,i)=>d.push([i+1,r.dt,r.etype==='merge'?'Объед. рез':(r.etype==='partial'?'Изделие':'Лист'),r.mat,r.size,r.etype==='merge'?'':r.qty,r.etype==='merge'?(f2(r.m2||0)+' м²'):(r.det||''),r.note||'']));
     XLSX.utils.book_append_sheet(wb,mks(d),'Расход');
   }
   if(document.getElementById('ex-rem').checked&&db.remainders.length){
