@@ -42,47 +42,15 @@ async function init(){
   updateThemeBtns();
   applyPendingDeepLink(); // данные из макроса CorelDRAW (если открыли по ссылке)
 
-  // Тянем свежие данные из облака
-  setSyncStatus('load');
-  const cloud=await sbPull();
-  if(cloud){
-    mergePayload(cloud);   // объединяем, не заменяем
-    saveLocal();
-    fillAllSelects();
-    migrateScrapQty();
-    renderAll();
-    setSyncStatus('ok');
-  } else {
-    setSyncStatus('err');
-  }
+  refreshRecSnap();      // отсчёт для меток правок _u: всё, что уже есть, — исходное состояние
 
-  // Если вкладка становится видимой — обновляем (переключились с другого устройства)
-  document.addEventListener('visibilitychange',async()=>{
-    if(document.visibilityState==='visible'){
-      setSyncStatus('load');
-      const fresh=await sbPull();
-      if(fresh){
-        mergePayload(fresh);
-        saveLocal();
-        fillAllSelects();
-        renderAll();
-        setSyncStatus('ok');
-      }
-    }
-  });
-
-  // Периодическая синхронизация каждые 5 минут
-  setInterval(async()=>{
-    if(document.visibilityState!=='visible') return;
-    const fresh=await sbPull();
-    if(fresh){
-      mergePayload(fresh);
-      saveLocal();
-      fillAllSelects();
-      renderAll();
-      setSyncStatus('ok');
-    }
-  }, 5*60*1000);
+  // Тянем свежие данные из облака, затем держим синхронизацию: возврат в окно, фокус, появление сети, таймер раз в 30 с
+  await syncNow({first:true});
+  migrateScrapQty();
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') syncNow(); });
+  window.addEventListener('focus',()=>syncNow());
+  window.addEventListener('online',()=>syncNow());
+  setInterval(()=>{ if(document.visibilityState==='visible') syncNow(); },30*1000);
 }
 function fillAllSelects(){
   fillSelect('in-pre',SIZES,false,DEFAULT_SIZE);

@@ -10,10 +10,41 @@ let   lastSyncError = null; // причина последней ошибки с
 
 function sbErrText(e){
   const m=String((e&&e.message)||e);
+  if(/abort/i.test(m)) return 'сервер не отвечает (таймаут)';
   if(/Failed to fetch|NetworkError|Load failed|network/i.test(m)) return 'сервер недоступен (сеть, блокировка или проект Supabase приостановлен)';
   if(/^40[13]/.test(m)) return 'нет доступа (ключ или политики RLS): '+m.slice(0,100);
   if(/^404/.test(m))    return 'таблица material_data не найдена: '+m.slice(0,100);
   return m.slice(0,120);
+}
+
+// ── Версии записей: у изменённой записи ставится время правки _u, при слиянии побеждает более поздняя правка ──
+// Раньше при совпадении id всегда побеждала локальная копия, и правка существующей записи на одном устройстве до другого не доходила.
+// Снимок «хэш каждой записи» хранится в памяти: save() сравнивает записи со снимком и метит изменённые.
+const REC_TABLES=['income','expense','remainders','orders','plan'];
+let recSnap=null;
+function recHash(r){
+  const s=JSON.stringify(r,(k,v)=>k==='_u'?undefined:v); let h=5381;
+  for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0;
+  return h;
+}
+function recSnapBuild(){ const o={}; REC_TABLES.forEach(t=>(db[t]||[]).forEach(r=>{ o[t+':'+r.id]=recHash(r); })); return o; }
+function refreshRecSnap(){ recSnap=recSnapBuild(); }           // после загрузки и после слияния с облаком — это не правки пользователя
+function trackRecordChanges(){
+  const cur=recSnapBuild();
+  if(!recSnap){ recSnap=cur; return; }
+  const ts=Date.now();
+  REC_TABLES.forEach(t=>(db[t]||[]).forEach(r=>{ if(recSnap[t+':'+r.id]!==cur[t+':'+r.id]) r._u=ts; }));
+  recSnap=cur;
+}
+// Есть ли у нас то, чего нет в облаке (или наша версия новее) — тогда нужно отправить
+function localAheadOf(p){
+  if(!p||!p.db) return true;
+  for(const t of REC_TABLES){
+    const cm=new Map((p.db[t]||[]).map(r=>[r.id,r]));
+    for(const r of (db[t]||[])){ if(deletedIds.has(r.id)) continue; const c=cm.get(r.id); if(!c||(r._u||0)>(c._u||0)) return true; }
+  }
+  const cd=new Set(p.deletedIds||[]); for(const id of deletedIds) if(!cd.has(id)) return true;
+  return false;
 }
 
 // ── Избранное: у каждой звезды своя отметка «поставил/снял» + время. При слиянии побеждает более позднее действие ──
@@ -75,7 +106,11 @@ function sbPayload(){
 function mergeById(local=[], cloud=[]){
   const map = new Map();
   cloud.forEach(r => { if(!deletedIds.has(r.id)) map.set(r.id, r); });
-  local.forEach(r => { if(!deletedIds.has(r.id)) map.set(r.id, r); });
+  local.forEach(r => {
+    if(deletedIds.has(r.id)) return;
+    const c=map.get(r.id);
+    if(!c || (r._u||0)>=(c._u||0)) map.set(r.id, r);          // облачная копия берётся, только если её правка новее нашей
+  });
   return [...map.values()].sort((a,b)=>(a.id||0)-(b.id||0));
 }
 
@@ -130,23 +165,36 @@ function mergePayload(p){
   if(typeof mergeMatDone==='function') mergeMatDone(p);
   if(typeof mergeMatNote==='function') mergeMatNote(p);
   if(typeof mergeOrderPaths==='function') mergeOrderPaths(p);
+  refreshRecSnap();                  // слияние с облаком — не правка пользователя
+}
+
+// fetch с таймаутом: на планшете при плохой сети запрос мог висеть бесконечно и блокировать синхронизацию
+async function sbFetch(url,opts,ms){
+  const ac=new AbortController(), t=setTimeout(()=>ac.abort(),ms||15000);
+  try{ return await fetch(url,{...(opts||{}),signal:ac.signal}); } finally{ clearTimeout(t); }
+}
+async function sbPostPayload(){
+  const r=await sbFetch(`${SB_URL}/rest/v1/material_data`,{
+    method:'POST',
+    headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
+    body:JSON.stringify({id:sbRowId(), payload:sbPayload(), updated_at:new Date().toISOString()})
+  },30000);
+  if(!r.ok){ const txt=await r.text(); throw new Error(`${r.status}: ${txt}`); }
 }
 
 async function sbPush(){
   if(!ACCESS_CODE) return;
   try{
-    // 1. Сначала забираем актуальное из облака
+    // 1. Сначала забираем актуальное из облака. Не удалось прочитать — НЕ отправляем: иначе наши данные затёрли бы чужие
     const fresh = await sbPull();
-    // 2. Объединяем облачное с локальным (данные только прибавляются)
+    if(lastSyncError){ setSyncStatus('err'); return; }
+    // 2. Объединяем облачное с локальным
+    const before=syncSig();
     if(fresh) mergePayload(fresh);
     // 3. Пушим уже объединённый payload
-    const r=await fetch(`${SB_URL}/rest/v1/material_data`,{
-      method:'POST',
-      headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
-      body:JSON.stringify({id:sbRowId(), payload:sbPayload(), updated_at:new Date().toISOString()})
-    });
-    if(!r.ok){ const txt=await r.text(); throw new Error(`${r.status}: ${txt}`); }
+    await sbPostPayload();
     saveLocal();
+    if(syncSig()!==before) renderAfterSync();
     setSyncStatus('ok');
   }catch(e){
     lastSyncError=sbErrText(e);
@@ -158,7 +206,7 @@ async function sbPush(){
 async function sbPull(){
   if(!ACCESS_CODE) return null;
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/material_data?id=eq.${encodeURIComponent(sbRowId())}&select=payload,updated_at`,{headers:SB_HDR});
+    const r=await sbFetch(`${SB_URL}/rest/v1/material_data?id=eq.${encodeURIComponent(sbRowId())}&select=payload,updated_at`,{headers:SB_HDR},15000);
     if(!r.ok){ const txt=await r.text().catch(()=>''); throw new Error(`${r.status}: ${txt}`); }
     const rows=await r.json();
     lastSyncError=null;               // запрос прошёл успешно
@@ -171,30 +219,46 @@ async function sbPull(){
   }
 }
 
-async function manualSync(){
-  setSyncStatus('load');
-  toast('🔄 Синхронизация...','info');
-  const fresh=await sbPull();
-  if(lastSyncError){
-    setSyncStatus('err');
-    toast('⚠️ Нет связи с облаком: '+lastSyncError,'err');
-    return;
-  }
-  if(fresh){
-    // Объединяем — не заменяем
-    mergePayload(fresh);
-    saveLocal();
-    fillAllSelects();
-    renderAll();
-    setSyncStatus('ok');
-    toast('✅ Данные обновлены','ok');
-  } else {
-    // Связь есть, но для этого кода в облаке ещё нет данных — отправляем локальные
-    await sbPush();
-    if(lastSyncError) toast('⚠️ Нет связи с облаком: '+lastSyncError,'err');
-    else toast('☁️ В облаке было пусто — данные отправлены','ok');
-  }
+// ── Единая синхронизация: забрать из облака → объединить → при необходимости отправить своё. Её вызывают старт, возврат в окно,
+// таймер (каждые 30 с), появление сети и кнопка «Обновить» ──
+let syncBusy=false, lastSyncAt=0, pendingRender=false;
+function syncSig(){
+  const s=JSON.stringify(sbPayload()); let h=5381;
+  for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0;
+  return h+':'+s.length;
 }
+function isTyping(){ const a=document.activeElement; return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); }
+function renderAfterSync(){
+  if(isTyping()){ pendingRender=true; return; }           // человек вводит данные — не перерисовываем под руками, сделаем после
+  pendingRender=false; fillAllSelects(); renderAll();
+}
+document.addEventListener('focusout',()=>{ if(pendingRender) setTimeout(()=>{ if(pendingRender&&!isTyping()) renderAfterSync(); },400); });
+function setSyncBtn(on){ document.getElementById('sync-btn')?.classList.toggle('spin',!!on); }
+async function syncNow(opts){
+  opts=opts||{};
+  if(!ACCESS_CODE) return false;
+  if(syncBusy) return false;
+  if(!opts.manual && Date.now()-lastSyncAt<4000) return false;      // фокус + видимость срабатывают почти одновременно
+  syncBusy=true; setSyncBtn(true); setSyncStatus('load');
+  try{
+    const before=syncSig();
+    const fresh=await sbPull();
+    if(lastSyncError){ setSyncStatus('err'); if(opts.manual) toast('⚠️ Нет связи с облаком: '+lastSyncError,'err'); return false; }
+    if(fresh) mergePayload(fresh);
+    const changed=syncSig()!==before;
+    if(changed){ saveLocal(); renderAfterSync(); }
+    let pushed=false;
+    if(!fresh||localAheadOf(fresh)){ await sbPostPayload(); saveLocal(); pushed=true; }   // в облаке пусто или у нас есть то, чего там нет
+    lastSyncAt=Date.now(); setSyncStatus('ok');
+    if(opts.manual) toast(changed?'✅ Данные обновлены':(pushed?'☁️ Ваши изменения отправлены':'✅ Всё актуально'),'ok');
+    return true;
+  }catch(e){
+    lastSyncError=sbErrText(e); setSyncStatus('err');
+    if(opts.manual) toast('⚠️ Не удалось синхронизировать: '+lastSyncError,'err');
+    return false;
+  }finally{ syncBusy=false; setSyncBtn(false); }
+}
+function manualSync(){ return syncNow({manual:true}); }
 
 function setSyncStatus(state){
   const el=document.getElementById('sync-status');
@@ -205,7 +269,7 @@ function setSyncStatus(state){
     el.style.color='var(--green)';
     localStorage.setItem('lm7_last_sync',t);
   }
-  if(state==='err')  { el.textContent='⚠️ Нет связи'; el.style.color='var(--warn)'; }
+  if(state==='err')  { el.textContent='⚠️ Нет связи'; el.style.color='var(--warn)'; el.title=lastSyncError||''; }
   if(state==='sync') { el.textContent='🔄 Сохранение...'; el.style.color='var(--muted)'; }
   if(state==='load') {
     const last=localStorage.getItem('lm7_last_sync');
